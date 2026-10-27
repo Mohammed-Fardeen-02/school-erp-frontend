@@ -13,8 +13,10 @@ import {
   Sun,
   Moon,
   Laptop,
+  RefreshCw,
 } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -44,16 +46,25 @@ export const Header: React.FC = () => {
     }
   };
 
-  const handleSignOut = () => {
+  const { user, workspaces, getActiveWorkspace, logout } = useAuthStore();
+  const activeWorkspace = getActiveWorkspace();
+
+  const handleSignOut = async () => {
     setShowProfileMenu(false);
-    navigate('/');
+    await logout();
+    navigate('/login');
   };
 
-  const userName = 'Administrator';
-  const userEmail = 'admin@schoolerp.io';
-  const userInitials = 'AD';
-  const schoolName = "St. Mary's Academy";
-  const roleName = 'Principal / Superadmin';
+  const userName = user?.name || 'Authorized User';
+  const userEmail = user?.email || 'user@schoolerp.io';
+  const userInitials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const schoolName = activeWorkspace?.name || 'School Workspace';
+  const roleName = activeWorkspace?.roleInSchool || user?.roleName || 'Faculty / Staff';
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-md sm:px-6">
@@ -229,7 +240,39 @@ export const Header: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowProfileMenu(false);
-                    navigate('/settings');
+                    navigate('/workspace');
+                  }}
+                  className="group flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-surface-muted"
+                >
+                  <span className="flex items-center gap-2">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                    Workspace Launcher
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                </button>
+
+                {workspaces.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/select-workspace');
+                    }}
+                    className="group flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-surface-muted"
+                  >
+                    <span className="flex items-center gap-2">
+                      <RefreshCw className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                      Switch School Workspace
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    navigate('/app/settings');
                   }}
                   className="group flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-surface-muted"
                 >

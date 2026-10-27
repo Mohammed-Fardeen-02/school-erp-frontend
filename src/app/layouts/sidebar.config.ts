@@ -24,6 +24,7 @@ export interface SidebarItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  moduleId?: string;
   badge?: string;
   platformOnly?: boolean;
   children?: SidebarSubItem[];
@@ -31,76 +32,83 @@ export interface SidebarItem {
 
 export const sidebarConfig: SidebarItem[] = [
   {
-    label: 'Dashboard',
-    href: '/',
+    label: 'Workspace Overview',
+    href: '/workspace',
     icon: LayoutDashboard,
   },
   {
-    label: 'Students',
-    href: '/students',
-    icon: GraduationCap,
+    label: 'Academics',
+    href: '/app/academics',
+    icon: BookOpen,
+    moduleId: 'academics',
     children: [
-      { label: 'Student Directory', href: '/students' },
-      { label: 'Admissions & Enrollment', href: '/students/admissions' },
-      { label: 'Guardians & Contacts', href: '/students/guardians' },
+      { label: 'Classes & Sections', href: '/app/academics/classes' },
+      { label: 'Curriculum & Subjects', href: '/app/academics/subjects' },
+      { label: 'Class Timetable', href: '/app/academics/timetable' },
     ],
   },
   {
-    label: 'Academics',
-    href: '/academics',
-    icon: BookOpen,
+    label: 'Students',
+    href: '/app/students',
+    icon: GraduationCap,
+    moduleId: 'students',
     children: [
-      { label: 'Classes & Sections', href: '/academics/classes' },
-      { label: 'Subjects & Curriculum', href: '/academics/subjects' },
-      { label: 'Class Timetable', href: '/academics/timetable' },
+      { label: 'Student Directory', href: '/app/students' },
+      { label: 'Admissions & Intake', href: '/app/students/admissions' },
+      { label: 'Guardians & Contacts', href: '/app/students/guardians' },
     ],
   },
   {
     label: 'Attendance',
-    href: '/attendance',
+    href: '/app/attendance',
     icon: CalendarCheck,
+    moduleId: 'attendance',
     children: [
-      { label: 'Daily Attendance', href: '/attendance' },
-      { label: 'Attendance Reports', href: '/attendance/reports' },
+      { label: 'Daily Registers', href: '/app/attendance' },
+      { label: 'Attendance Reports', href: '/app/attendance/reports' },
     ],
   },
   {
     label: 'Fees & Finance',
-    href: '/fees',
+    href: '/app/fees',
     icon: Receipt,
+    moduleId: 'fees',
     children: [
-      { label: 'Fee Invoices', href: '/fees' },
-      { label: 'Fee Structures', href: '/fees/structures' },
-      { label: 'Payment Receipts', href: '/fees/payments' },
+      { label: 'Fee Invoices', href: '/app/fees' },
+      { label: 'Fee Structures', href: '/app/fees/structures' },
+      { label: 'Payment Receipts', href: '/app/fees/payments' },
     ],
   },
   {
-    label: 'Staff & Teachers',
-    href: '/staff',
+    label: 'Staff & Faculty',
+    href: '/app/staff',
     icon: Users,
+    moduleId: 'staff',
     children: [
-      { label: 'Staff Directory', href: '/staff' },
-      { label: 'Teacher Allocations', href: '/staff/allocations' },
-      { label: 'Leave Requests', href: '/staff/leaves' },
+      { label: 'Staff Directory', href: '/app/staff' },
+      { label: 'Subject Allocations', href: '/app/staff/allocations' },
+      { label: 'Staff Leaves', href: '/app/staff/leaves' },
     ],
   },
   {
     label: 'Examinations',
-    href: '/exams',
+    href: '/app/exams',
     icon: FileSpreadsheet,
+    moduleId: 'exams',
     children: [
-      { label: 'Exam Schedules', href: '/exams' },
-      { label: 'Gradebook & Marks', href: '/exams/gradebook' },
+      { label: 'Exam Schedules', href: '/app/exams' },
+      { label: 'Marks & Gradebook', href: '/app/exams/grades' },
     ],
   },
   {
     label: 'School Settings',
-    href: '/settings',
+    href: '/app/settings',
     icon: Settings,
+    moduleId: 'settings',
     children: [
-      { label: 'School Profile', href: '/settings' },
-      { label: 'Academic Years', href: '/settings/academic-years' },
-      { label: 'Roles & Security', href: '/settings/roles' },
+      { label: 'School Profile', href: '/app/settings' },
+      { label: 'Academic Years', href: '/app/settings/academic-years' },
+      { label: 'Roles & Security', href: '/app/settings/roles' },
     ],
   },
   {

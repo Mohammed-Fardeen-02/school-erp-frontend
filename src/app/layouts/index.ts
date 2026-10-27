@@ -1,5 +1,7 @@
 export * from './root-layout';
 export * from './main-layout';
+export * from './public-layout';
+export * from './auth-layout';
 export * from './header';
 export * from './sidebar';
 export * from './breadcrumb';

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { sidebarConfig, type SidebarItem } from './sidebar.config';
 
 export const Sidebar: React.FC = () => {
@@ -9,10 +10,12 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
 
   const { sidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useUiStore();
+  const { hasModuleAccess, getActiveWorkspace } = useAuthStore();
+  const activeWorkspace = getActiveWorkspace();
 
   const [expandedSections, setExpandedSections] = React.useState<string[]>([
-    '/students',
-    '/academics',
+    '/app/students',
+    '/app/academics',
   ]);
 
   const handleNav = (href: string) => {
@@ -52,7 +55,7 @@ export const Sidebar: React.FC = () => {
   };
 
   const isItemActive = (href: string): boolean => {
-    if (href === '/') return location.pathname === '/';
+    if (href === '/workspace') return location.pathname === '/workspace';
     return location.pathname.startsWith(href);
   };
 
@@ -60,6 +63,17 @@ export const Sidebar: React.FC = () => {
     if (!item.children) return false;
     return item.children.some(child => isItemActive(child.href));
   };
+
+  // Permission-aware sidebar navigation: filter modules by active school permissions
+  const visibleNavItems = sidebarConfig.filter(
+    item => !item.moduleId || hasModuleAccess(item.moduleId)
+  );
+
+  const schoolName = activeWorkspace?.name || 'School Workspace';
+  const schoolYear = activeWorkspace?.academicYear
+    ? `Academic Year ${activeWorkspace.academicYear}`
+    : 'Active Session';
+  const schoolInitials = (activeWorkspace?.code || 'SE').slice(0, 2).toUpperCase();
 
   return (
     <>
@@ -80,8 +94,10 @@ export const Sidebar: React.FC = () => {
       >
         {/* Brand Header */}
         <div className="flex h-16 items-center border-b border-border px-3">
-          <div
-            className={`flex items-center gap-2.5 transition-all duration-300 ${
+          <button
+            type="button"
+            onClick={() => handleNav('/workspace')}
+            className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
               sidebarCollapsed ? 'lg:w-full lg:justify-center' : ''
             }`}
           >
@@ -96,7 +112,7 @@ export const Sidebar: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
+          </button>
         </div>
 
         {/* Navigation List */}
@@ -105,7 +121,7 @@ export const Sidebar: React.FC = () => {
           style={{ scrollbarWidth: 'none' }}
         >
           <nav className={`space-y-1 ${sidebarCollapsed ? 'lg:px-1.5' : 'px-3'}`}>
-            {sidebarConfig.map(item => {
+            {visibleNavItems.map(item => {
               const Icon = item.icon;
               const hasChildren = !!item.children?.length;
               const hasActiveChild = isChildActive(item);
@@ -208,15 +224,13 @@ export const Sidebar: React.FC = () => {
           <div className="mt-auto border-t border-border p-3">
             <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-muted p-2">
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                SE
+                {schoolInitials}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-semibold text-foreground">
-                  St. Mary's Academy
+                <div className="truncate text-xs font-semibold text-foreground" title={schoolName}>
+                  {schoolName}
                 </div>
-                <div className="truncate text-[11px] text-muted-foreground">
-                  Academic Year 2026-27
-                </div>
+                <div className="truncate text-[11px] text-muted-foreground">{schoolYear}</div>
               </div>
             </div>
           </div>
@@ -224,9 +238,9 @@ export const Sidebar: React.FC = () => {
           <div className="mt-auto flex justify-center border-t border-border p-3">
             <div
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary"
-              title="St. Mary's Academy (2026-27)"
+              title={`${schoolName} (${schoolYear})`}
             >
-              SE
+              {schoolInitials}
             </div>
           </div>
         )}

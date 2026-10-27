@@ -2,15 +2,184 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-  }
+/* ============================================
+   SCHOOL ERP ?" GLOBAL DESIGN SYSTEM
+   Theme variables wired to Tailwind utilities
+   Change values here to alter template palette.
+   ============================================ */
 
-  body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
-    margin: 0;
-    padding: 0;
+:root {
+  /* --- Brand / Primary --- */
+  --color-primary: #7c3aed;
+  --color-primary-rgb: 124 58 237;
+  --color-primary-hover: #6d28d9;
+  --color-primary-light: #ddd6fe;
+  --color-primary-ghost: #ede9fe;
+  --color-primary-dark: #4c1d95;
+
+  /* --- Semantic --- */
+  --color-success: #10b981;
+  --color-success-rgb: 16 185 129;
+  --color-warning: #f59e0b;
+  --color-warning-rgb: 245 158 11;
+  --color-danger: #ef4444;
+  --color-danger-rgb: 239 68 68;
+  --color-info: #3b82f6;
+  --color-info-rgb: 59 130 246;
+
+  /* --- Surface & Background --- */
+  --color-background: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-rgb: 255 255 255;
+  --color-surface-muted: #f3f4f6;
+  --color-surface-muted-rgb: 243 244 246;
+  --color-surface-hover: #f9fafb;
+  --color-surface-active: #ede9fe;
+
+  /* --- Text --- */
+  --color-foreground: #111827;
+  --color-muted-foreground: #6b7280;
+  --color-subtle-foreground: #9ca3af;
+
+  /* --- Borders --- */
+  --color-border: #e5e7eb;
+  --color-border-rgb: 229 231 235;
+  --color-border-strong: #d1d5db;
+
+  /* --- Sidebar-specific --- */
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-text: #374151;
+  --color-sidebar-muted: #6b7280;
+
+  /* --- Table Header --- */
+  --color-table-header-bg: #ede9fe;
+  --color-table-header-text: #4c1d95;
+  --color-table-header-border: #c4b5fd;
+
+  /* --- Layout Constants --- */
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 64px;
+}
+
+/* ============================================
+   BASE RESET & TYPOGRAPHY
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+/* ============================================
+   HIDE SCROLLBARS GLOBALLY
+   ============================================ */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   INDETERMINATE BAR (Gmail-style loader)
+   ============================================ */
+@keyframes bar-primary {
+  0% {
+    left: -35%;
+    right: 100%;
   }
+  30% {
+    left: 0%;
+    right: 60%;
+  }
+  60% {
+    left: 40%;
+    right: 0%;
+  }
+  100% {
+    left: 100%;
+    right: -35%;
+  }
+}
+
+@keyframes bar-secondary {
+  0% {
+    left: -200%;
+    right: 100%;
+  }
+  40% {
+    left: 107%;
+    right: -8%;
+  }
+  100% {
+    left: 107%;
+    right: -8%;
+  }
+}
+
+.bar-primary {
+  animation: bar-primary 2s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
+
+.bar-secondary {
+  animation: bar-secondary 2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+  animation-delay: 1.15s;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+.dark {
+  --color-background: #0b0f19;
+  --color-surface: #111827;
+  --color-surface-rgb: 17 24 39;
+  --color-surface-muted: #1f2937;
+  --color-surface-muted-rgb: 31 41 55;
+  --color-surface-hover: #374151;
+  --color-surface-active: #2e1065;
+  --color-foreground: #f9fafb;
+  --color-muted-foreground: #9ca3af;
+  --color-subtle-foreground: #6b7280;
+  --color-border: #374151;
+  --color-border-rgb: 55 65 81;
+  --color-border-strong: #4b5563;
+  --color-sidebar-bg: #111827;
+  --color-sidebar-text: #e5e7eb;
+  --color-sidebar-muted: #9ca3af;
+}
+
+.dark .stats-card {
+  background-color: var(--color-surface) !important;
+  background-image: none !important;
+  border-color: var(--color-border) !important;
+}
+
+.dark .stats-card .stats-card-title {
+  color: var(--color-muted-foreground) !important;
+}
+
+.dark .stats-card .stats-card-value {
+  color: var(--color-foreground) !important;
+}
+
+.dark .stats-card .stats-card-subtitle {
+  color: var(--color-muted-foreground) !important;
 }

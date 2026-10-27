@@ -3,16 +3,28 @@ import type { ThemeMode } from '@/types/common.types';
 
 interface UiState {
   theme: ThemeMode;
-  sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
+  mobileSidebarOpen: boolean;
+  pageTitle: string;
+  pageSubtitle: string;
   setTheme: (theme: ThemeMode) => void;
   toggleSidebar: () => void;
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleMobileSidebar: () => void;
+  setMobileSidebarOpen: (open: boolean) => void;
+  setHeaderTitle: (title: string, subtitle?: string) => void;
 }
 
 export const useUiStore = create<UiState>(set => ({
   theme: 'system',
-  sidebarOpen: true,
+  sidebarCollapsed: false,
+  mobileSidebarOpen: false,
+  pageTitle: 'School ERP',
+  pageSubtitle: '',
   setTheme: theme => set({ theme }),
-  toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
-  setSidebarOpen: open => set({ sidebarOpen: open }),
+  toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  setSidebarCollapsed: collapsed => set({ sidebarCollapsed: collapsed }),
+  toggleMobileSidebar: () => set(state => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
+  setMobileSidebarOpen: open => set({ mobileSidebarOpen: open }),
+  setHeaderTitle: (title, subtitle = '') => set({ pageTitle: title, pageSubtitle: subtitle }),
 }));

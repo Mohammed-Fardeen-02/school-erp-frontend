@@ -16,3 +16,4 @@ export const RoleStatusBadge: React.FC<RoleStatusBadgeProps> = ({ isActive, clas
     />
   );
 };
+

@@ -157,3 +157,52 @@ export function useDeleteRole() {
     },
   });
 }
+
+/**
+ * Hook to retrieve full capability matrix for a role against the active canonical catalog.
+ */
+export function useRolePermissionsMatrix(roleId: string | null | undefined) {
+  const activeWorkspaceId = useAuthStore((state) => state.activeWorkspaceId);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const queryKey = rbacQueryKeys.rolePermissions(activeWorkspaceId, roleId || 'none');
+
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!roleId) throw new Error('Role ID is required');
+      return RolesApi.getPermissionsMatrix(roleId);
+    },
+    enabled: isAuthenticated && Boolean(activeWorkspaceId) && Boolean(roleId),
+  });
+}
+
+/**
+ * Hook to atomically update a role's capability matrix.
+ */
+export function useUpdateRolePermissions() {
+  const queryClient = useQueryClient();
+  const activeWorkspaceId = useAuthStore((state) => state.activeWorkspaceId);
+
+  return useMutation<
+    void,
+    Error,
+    { roleId: string; permissions: Array<{ nodeId?: string; nodeCode?: string; isGranted: boolean | null }> }
+  >({
+    mutationFn: async ({ roleId, permissions }) => {
+      return RolesApi.updatePermissionsMatrix(roleId, { permissions });
+    },
+    onSuccess: (_, { roleId }) => {
+      queryClient.invalidateQueries({
+        queryKey: rbacQueryKeys.rolePermissions(activeWorkspaceId, roleId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: rbacQueryKeys.roleDetail(activeWorkspaceId, roleId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: rbacQueryKeys.effectivePermissions(activeWorkspaceId, null),
+      });
+    },
+  });
+}
+

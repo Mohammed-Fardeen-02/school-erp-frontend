@@ -4,4 +4,5 @@ export * from './utils';
 export * from './hooks';
 export * from './components/guards';
 export * from './components/role-list';
+export * from './components/permission-matrix';
 export * from './pages';

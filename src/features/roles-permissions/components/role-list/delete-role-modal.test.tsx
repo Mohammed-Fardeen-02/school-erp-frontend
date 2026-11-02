@@ -66,3 +66,4 @@ describe('DeleteRoleModal Component', () => {
     expect(handleConfirm).toHaveBeenCalledTimes(1);
   });
 });
+

@@ -31,3 +31,4 @@ export const RoleTypeBadge: React.FC<RoleTypeBadgeProps> = ({ type, className })
     </span>
   );
 };
+

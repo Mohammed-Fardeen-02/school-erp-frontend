@@ -16,6 +16,7 @@ import { RolesTable } from '../components/role-list/roles-table';
 import { CreateRoleModal } from '../components/role-list/create-role-modal';
 import { CloneRoleModal } from '../components/role-list/clone-role-modal';
 import { DeleteRoleModal } from '../components/role-list/delete-role-modal';
+import { RoleMatrixModal } from '../components/permission-matrix/role-matrix-modal';
 import { StatsCard } from '@/components/data-display/stats-card';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/feedback/alert';
@@ -41,6 +42,7 @@ export const RolesManagementPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [cloneTarget, setCloneTarget] = useState<RoleSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleSummary | null>(null);
+  const [matrixTarget, setMatrixTarget] = useState<RoleSummary | null>(null);
 
   // Permissions
   const { hasPermission: canCreate } = usePermission('settings.roles_permissions.rbac.create');
@@ -289,6 +291,7 @@ export const RolesManagementPage: React.FC = () => {
         <RolesTable
           roles={filteredRoles}
           loading={isLoading}
+          onConfigureMatrix={(role) => setMatrixTarget(role)}
           onCloneTemplate={(role) => setCloneTarget(role)}
           onToggleStatus={handleToggleStatus}
           onDeleteRole={(role) => setDeleteTarget(role)}
@@ -298,6 +301,12 @@ export const RolesManagementPage: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <RoleMatrixModal
+        isOpen={Boolean(matrixTarget)}
+        role={matrixTarget}
+        onClose={() => setMatrixTarget(null)}
+      />
+
       <CreateRoleModal
         isOpen={isCreateOpen}
         loading={createMutation.isPending}
@@ -325,3 +334,4 @@ export const RolesManagementPage: React.FC = () => {
     </PageWrapper>
   );
 };
+

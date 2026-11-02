@@ -65,7 +65,7 @@ export interface RolePermissionsMatrixDto {
 export interface PermissionGrantItem {
   nodeId?: string;
   nodeCode?: string;
-  isGranted: boolean;
+  isGranted: boolean | null;
 }
 
 export interface CreateRolePayload {

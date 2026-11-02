@@ -6,6 +6,7 @@ import type {
   AssignmentRecord,
   AssignRolePayload,
   RevokeAssignmentPayload,
+  ListAssignmentsOptions,
   ListMembersFilters,
   ListMembersResult,
   CampusLocation,
@@ -37,6 +38,38 @@ export function useWorkspaceMembers(
       (options?.enabled !== undefined ? options.enabled : true),
     staleTime: 30 * 1000,
     placeholderData: (previousData) => previousData,
+  });
+}
+
+/**
+ * Hook to retrieve assignments for a specific user in the active organization.
+ */
+export function useUserAssignments(
+  userId: string | null | undefined,
+  filters: ListAssignmentsOptions = {},
+  options?: { enabled?: boolean }
+) {
+  const activeWorkspaceId = useAuthStore((state) => state.activeWorkspaceId);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const queryKey = rbacQueryKeys.userAssignments(
+    activeWorkspaceId,
+    userId || 'none',
+    filters.locationId ?? null
+  );
+
+  return useQuery<AssignmentRecord[], Error>({
+    queryKey,
+    queryFn: async () => {
+      if (!userId) return [];
+      return AssignmentsApi.getUserAssignments(userId, filters);
+    },
+    enabled:
+      isAuthenticated &&
+      Boolean(activeWorkspaceId) &&
+      Boolean(userId) &&
+      (options?.enabled !== undefined ? options.enabled : true),
+    staleTime: 30 * 1000,
   });
 }
 
@@ -130,4 +163,3 @@ export function useRevokeRole() {
     },
   });
 }
-

@@ -8,6 +8,7 @@ import {
   AlertCircle,
   CheckCircle2,
   UserCheck,
+  Users,
 } from 'lucide-react';
 import { useRolesList, useCreateRole, useCloneTemplate, useDeleteRole, useToggleRoleStatus } from '../hooks/use-roles';
 import { usePermission } from '../hooks/use-permission';
@@ -18,6 +19,7 @@ import { CloneRoleModal } from '../components/role-list/clone-role-modal';
 import { DeleteRoleModal } from '../components/role-list/delete-role-modal';
 import { RoleMatrixModal } from '../components/permission-matrix/role-matrix-modal';
 import { AssignRoleModal } from '../components/assignments/assign-role-modal';
+import { UserAssignmentsPanel } from '../components/assignments/user-assignments-panel';
 import { StatsCard } from '@/components/data-display/stats-card';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/feedback/alert';
@@ -29,11 +31,13 @@ import type { RoleSummary, CreateRolePayload, CloneTemplatePayload } from '../ty
 import type { AssignmentRecord } from '../types/assignments.types';
 
 export type RoleTab = 'all' | 'custom' | 'templates';
+export type ViewMode = 'ROLES' | 'ASSIGNMENTS';
 
 export const RolesManagementPage: React.FC = () => {
   const { getActiveWorkspace } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
 
+  const [viewMode, setViewMode] = useState<ViewMode>('ROLES');
   const [activeTab, setActiveTab] = useState<RoleTab>('all');
   const [feedbackMessage, setFeedbackMessage] = useState<{
     type: 'success' | 'error';
@@ -207,6 +211,36 @@ export const RolesManagementPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Top Level View Mode Switcher (Role Profiles vs Member Role Allocations) */}
+      <div className="flex items-center gap-2 border-b border-border">
+        <button
+          type="button"
+          data-testid="view-mode-roles"
+          onClick={() => setViewMode('ROLES')}
+          className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold transition-all border-b-2 -mb-px cursor-pointer ${
+            viewMode === 'ROLES'
+              ? 'border-primary text-primary bg-primary/5'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Shield className="w-4 h-4" />
+          Roles & Capability Matrix
+        </button>
+        <button
+          type="button"
+          data-testid="view-mode-assignments"
+          onClick={() => setViewMode('ASSIGNMENTS')}
+          className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold transition-all border-b-2 -mb-px cursor-pointer ${
+            viewMode === 'ASSIGNMENTS'
+              ? 'border-primary text-primary bg-primary/5'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Member Role Allocations
+        </button>
+      </div>
+
       {/* Feedback Alert */}
       {feedbackMessage && (
         <Alert
@@ -231,92 +265,104 @@ export const RolesManagementPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Query Error Alert */}
-      {queryError && (
-        <Alert variant="error" className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>Failed to load roles: {queryError.message}</span>
-        </Alert>
+      {/* View Mode 1: Roles Catalog & Matrix Builder */}
+      {viewMode === 'ROLES' && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Query Error Alert */}
+          {queryError && (
+            <Alert variant="error" className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>Failed to load roles: {queryError.message}</span>
+            </Alert>
+          )}
+
+          {/* Stats Summary Overview Cards */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatsCard
+              title="Total Profiles"
+              value={stats.total}
+              subtitle="System & Custom roles"
+              icon={<Layers className="h-5 w-5 text-primary" />}
+            />
+            <StatsCard
+              title="Active Roles"
+              value={stats.active}
+              subtitle="Operational in tenant"
+              icon={<Shield className="h-5 w-5 text-emerald-600" />}
+            />
+            <StatsCard
+              title="Custom Roles"
+              value={stats.custom}
+              subtitle="Tenant defined"
+              icon={<ShieldPlus className="h-5 w-5 text-purple-600" />}
+            />
+            <StatsCard
+              title="System Templates"
+              value={stats.templates}
+              subtitle="Pre-seeded baselines"
+              icon={<Sparkles className="h-5 w-5 text-blue-600" />}
+            />
+          </div>
+
+          {/* Tab Navigation & Search Toolbar */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-border pb-px">
+              <button
+                type="button"
+                onClick={() => setActiveTab('all')}
+                className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
+                  activeTab === 'all'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                All Roles ({stats.total})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('custom')}
+                className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
+                  activeTab === 'custom'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Custom Roles ({stats.custom})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('templates')}
+                className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
+                  activeTab === 'templates'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                System Templates ({stats.templates})
+              </button>
+            </div>
+
+            {/* Roles Data Table */}
+            <RolesTable
+              roles={filteredRoles}
+              loading={isLoading}
+              onConfigureMatrix={(role) => setMatrixTarget(role)}
+              onCloneTemplate={(role) => setCloneTarget(role)}
+              onToggleStatus={handleToggleStatus}
+              onDeleteRole={(role) => setDeleteTarget(role)}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Stats Summary Overview Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatsCard
-          title="Total Profiles"
-          value={stats.total}
-          subtitle="System & Custom roles"
-          icon={<Layers className="h-5 w-5 text-primary" />}
-        />
-        <StatsCard
-          title="Active Roles"
-          value={stats.active}
-          subtitle="Operational in tenant"
-          icon={<Shield className="h-5 w-5 text-emerald-600" />}
-        />
-        <StatsCard
-          title="Custom Roles"
-          value={stats.custom}
-          subtitle="Tenant defined"
-          icon={<ShieldPlus className="h-5 w-5 text-purple-600" />}
-        />
-        <StatsCard
-          title="System Templates"
-          value={stats.templates}
-          subtitle="Pre-seeded baselines"
-          icon={<Sparkles className="h-5 w-5 text-blue-600" />}
-        />
-      </div>
-
-      {/* Tab Navigation & Search Toolbar */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b border-border pb-px">
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
-              activeTab === 'all'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            All Roles ({stats.total})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('custom')}
-            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
-              activeTab === 'custom'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Custom Roles ({stats.custom})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('templates')}
-            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
-              activeTab === 'templates'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            System Templates ({stats.templates})
-          </button>
+      {/* View Mode 2: Member Role Allocations Panel */}
+      {viewMode === 'ASSIGNMENTS' && (
+        <div className="animate-in fade-in duration-150">
+          <UserAssignmentsPanel />
         </div>
-
-        {/* Roles Data Table */}
-        <RolesTable
-          roles={filteredRoles}
-          loading={isLoading}
-          onConfigureMatrix={(role) => setMatrixTarget(role)}
-          onCloneTemplate={(role) => setCloneTarget(role)}
-          onToggleStatus={handleToggleStatus}
-          onDeleteRole={(role) => setDeleteTarget(role)}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
-      </div>
+      )}
 
       {/* Modals */}
       <RoleMatrixModal

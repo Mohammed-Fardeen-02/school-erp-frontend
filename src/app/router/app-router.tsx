@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicLayout } from '@/app/layouts/public-layout';
-import { AuthLayout } from '@/app/layouts/auth-layout';
 import { MainLayout } from '@/app/layouts/main-layout';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AuthGuard } from '@/app/guards/auth-guard';
@@ -10,12 +9,9 @@ import { GuestGuard } from '@/app/guards/guest-guard';
 import { WorkspaceGuard } from '@/app/guards/workspace-guard';
 import { ModuleAccessGuard } from '@/app/guards/module-access-guard';
 import { LandingPage } from '@/pages/public/landing-page';
-import { LoginPage } from '@/pages/auth/login-page';
-import { ForgotPasswordPage } from '@/pages/auth/forgot-password-page';
-import { ResetPasswordPage } from '@/pages/auth/reset-password-page';
-import { SelectWorkspacePage } from '@/pages/workspace/select-workspace-page';
-import { WorkspaceLauncherPage } from '@/pages/workspace/workspace-launcher-page';
 import { ModuleContainerPage } from '@/pages/module/module-container-page';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@/features/auth';
+import { WorkspaceLauncherPage, SelectWorkspacePage } from '@/features/workspace';
 import { Button } from '@/components/ui/button';
 
 const NotFoundPage: React.FC = () => {
@@ -52,20 +48,33 @@ export const AppRouter: React.FC = () => {
         <Route index element={<LandingPage />} />
       </Route>
 
-      {/* 2. Authentication Flow (Guest Only) */}
+      {/* 2. Authentication Flow (Guest Only, Feature-driven) */}
       <Route
+        path={ROUTES.LOGIN}
         element={
           <GuestGuard>
-            <AuthLayout />
+            <LoginPage />
           </GuestGuard>
         }
-      >
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
-        <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
-      </Route>
+      />
+      <Route
+        path={ROUTES.FORGOT_PASSWORD}
+        element={
+          <GuestGuard>
+            <ForgotPasswordPage />
+          </GuestGuard>
+        }
+      />
+      <Route
+        path={ROUTES.RESET_PASSWORD}
+        element={
+          <GuestGuard>
+            <ResetPasswordPage />
+          </GuestGuard>
+        }
+      />
 
-      {/* 3. Conditional Workspace Selection (Authenticated) */}
+      {/* 3. Conditional Campus / Workspace Selection (Authenticated) */}
       <Route
         path={ROUTES.SELECT_WORKSPACE}
         element={
@@ -75,7 +84,19 @@ export const AppRouter: React.FC = () => {
         }
       />
 
-      {/* 4. Authenticated Workspace Launcher & Module Shell */}
+      {/* 4. Authenticated ERPNext-Style Module Launcher Desk */}
+      <Route
+        path={ROUTES.WORKSPACE}
+        element={
+          <AuthGuard>
+            <WorkspaceGuard>
+              <WorkspaceLauncherPage />
+            </WorkspaceGuard>
+          </AuthGuard>
+        }
+      />
+
+      {/* 5. Authenticated Business Module Workspace (MainLayout with Sidebar & Navigation) */}
       <Route
         element={
           <AuthGuard>
@@ -85,7 +106,6 @@ export const AppRouter: React.FC = () => {
           </AuthGuard>
         }
       >
-        <Route path={ROUTES.WORKSPACE} element={<WorkspaceLauncherPage />} />
         <Route
           path={ROUTES.APP_MODULE}
           element={
@@ -96,7 +116,7 @@ export const AppRouter: React.FC = () => {
         />
       </Route>
 
-      {/* 5. Fallback 404 Route */}
+      {/* 6. Fallback 404 Route */}
       <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
     </Routes>
   );

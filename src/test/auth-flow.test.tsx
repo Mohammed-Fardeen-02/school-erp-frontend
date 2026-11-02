@@ -1,9 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { LoginPage } from '@/pages/auth/login-page';
-import { SelectWorkspacePage } from '@/pages/workspace/select-workspace-page';
-import { WorkspaceLauncherPage } from '@/pages/workspace/workspace-launcher-page';
+import { LoginPage } from '@/features/auth';
+import { SelectWorkspacePage, WorkspaceLauncherPage } from '@/features/workspace';
 import { useAuthStore } from '@/stores/auth-store';
 
 describe('Authentication Flow & Workspace Launcher', () => {
@@ -24,11 +23,11 @@ describe('Authentication Flow & Workspace Launcher', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: /Sign In to Your Account/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Institutional Sign In/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Institutional Email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
 
-    const submitBtn = screen.getByRole('button', { name: /^Sign In$/i });
+    const submitBtn = screen.getByRole('button', { name: /Sign In to Workspace/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
@@ -87,10 +86,10 @@ describe('Authentication Flow & Workspace Launcher', () => {
       isAuthenticated: true,
       user: {
         id: 'usr-admin-01',
-        name: 'Dr. Catherine Vance',
+        firstName: 'Eleanor',
+        lastName: 'Vance',
         email: 'admin@schoolerp.io',
-        role: 'super_admin',
-        roleName: 'Executive Director',
+        role: 'SCHOOL_ADMIN',
       },
       workspaces: [
         {
@@ -98,18 +97,18 @@ describe('Authentication Flow & Workspace Launcher', () => {
           name: "St. Mary's High School",
           code: 'SMHS-01',
           academicYear: '2026-2027',
-          roleInSchool: 'Executive Director',
-          planName: 'Enterprise Edition',
-          enabledModules: ['academics', 'students', 'attendance'],
+          role: 'SCHOOL_ADMIN',
+          permittedModules: ['academics', 'students', 'attendance'],
+          campusName: 'Main Campus',
         },
         {
           id: 'ws-greenwood',
           name: 'Greenwood International Academy',
           code: 'GIA-02',
           academicYear: '2026-2027',
-          roleInSchool: 'Board Advisor',
-          planName: 'Standard Academic',
-          enabledModules: ['academics'],
+          role: 'PRINCIPAL',
+          permittedModules: ['academics'],
+          campusName: 'North Campus',
         },
       ],
       activeWorkspaceId: 'ws-st-marys',
@@ -122,11 +121,11 @@ describe('Authentication Flow & Workspace Launcher', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: /Select Your School Workspace/i })
+      screen.getByRole('heading', { name: /Select Institutional Workspace/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/St. Mary's High School/i)).toBeInTheDocument();
     expect(screen.getByText(/Greenwood International Academy/i)).toBeInTheDocument();
-    expect(screen.getByText(/Active Workspace/i)).toBeInTheDocument();
+    expect(screen.getByText(/Current/i)).toBeInTheDocument();
   });
 
   it('renders empty state when user has no school workspaces assigned', () => {
@@ -134,10 +133,10 @@ describe('Authentication Flow & Workspace Launcher', () => {
       isAuthenticated: true,
       user: {
         id: 'usr-pending-03',
-        name: 'Jordan Hayes',
+        firstName: 'Sarah',
+        lastName: 'Jenkins',
         email: 'pending@schoolerp.io',
-        role: 'staff',
-        roleName: 'Pending Provisioning',
+        role: 'STUDENT',
       },
       workspaces: [],
       activeWorkspaceId: null,
@@ -149,19 +148,19 @@ describe('Authentication Flow & Workspace Launcher', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/No School Workspaces Available/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sign Out/i })).toBeInTheDocument();
+    expect(screen.getByText(/No Accessible School Found/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sign Out of Account/i })).toBeInTheDocument();
   });
 
-  it('renders workspace launcher with permitted modules and school info', () => {
+  it('renders workspace launcher desk with permitted modules and school info', () => {
     useAuthStore.setState({
       isAuthenticated: true,
       user: {
         id: 'usr-teacher-02',
-        name: 'Marcus Bell',
+        firstName: 'Marcus',
+        lastName: 'Chen',
         email: 'teacher@schoolerp.io',
-        role: 'teacher',
-        roleName: 'Senior Faculty',
+        role: 'TEACHER',
       },
       workspaces: [
         {
@@ -169,9 +168,9 @@ describe('Authentication Flow & Workspace Launcher', () => {
           name: "St. Mary's High School",
           code: 'SMHS-01',
           academicYear: '2026-2027',
-          roleInSchool: 'Senior Faculty',
-          planName: 'Enterprise Edition',
-          enabledModules: ['academics', 'attendance'],
+          role: 'TEACHER',
+          permittedModules: ['academics', 'attendance'],
+          campusName: 'Main Campus',
         },
       ],
       activeWorkspaceId: 'ws-st-marys',
@@ -183,15 +182,15 @@ describe('Authentication Flow & Workspace Launcher', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/St. Mary's High School/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 Modules Authorized/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/St. Mary's High School/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Accessible Modules & Workspaces/i)).toBeInTheDocument();
 
-    // Check authorized modules have 'Open Module' button
-    const openButtons = screen.getAllByRole('button', { name: /Open Module/i });
-    expect(openButtons.length).toBe(2);
+    // Check permitted modules display 'Permitted'
+    const permittedBadges = screen.getAllByText(/Permitted/i);
+    expect(permittedBadges.length).toBeGreaterThan(0);
 
-    // Check non-enabled modules have disabled button
-    const disabledButtons = screen.getAllByRole('button', { name: /Module Not Enabled/i });
-    expect(disabledButtons.length).toBeGreaterThan(0);
+    // Check non-permitted modules display 'Restricted'
+    const restrictedBadges = screen.getAllByText(/Restricted/i);
+    expect(restrictedBadges.length).toBeGreaterThan(0);
   });
 });

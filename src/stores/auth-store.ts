@@ -1,16 +1,21 @@
 import { create } from 'zustand';
-import type { User, SchoolWorkspace, LoginCredentials } from '@/types/auth.types';
-import { authService } from '@/services/auth.service';
+import type { User, SchoolWorkspace, LoginCredentials } from '@/features/auth/types';
+import { AuthApi } from '@/features/auth/api';
+import { apiClient } from '@/lib/api-client';
+import { queryClient } from '@/lib/query-client';
 
 interface AuthState {
   isAuthenticated: boolean;
+  accessToken: string | null; // Stored strictly in memory, never persisted
   user: User | null;
   workspaces: SchoolWorkspace[];
   activeWorkspaceId: string | null;
+  activeLocationId: string | null;
   isInitialized: boolean;
   login: (credentials: LoginCredentials) => Promise<{ workspaceCount: number }>;
   logout: () => Promise<void>;
-  setActiveWorkspace: (workspaceId: string) => void;
+  setActiveWorkspace: (workspaceId: string, locationId?: string) => void;
+  setTenantContext: (organizationId: string | null, locationId?: string | null) => void;
   getActiveWorkspace: () => SchoolWorkspace | null;
   hasModuleAccess: (moduleId: string) => boolean;
 }
@@ -21,6 +26,7 @@ interface StoredSession {
   user: User;
   workspaces: SchoolWorkspace[];
   activeWorkspaceId: string | null;
+  activeLocationId?: string | null;
 }
 
 const loadSession = (): StoredSession | null => {
@@ -46,71 +52,143 @@ const saveSession = (session: StoredSession | null) => {
 };
 
 const initialSession = loadSession();
+const initialActiveId =
+  initialSession?.activeWorkspaceId ?? (initialSession?.workspaces?.[0]?.id ?? null);
+const initialLocationId = initialSession?.activeLocationId ?? null;
+
+// Initialize apiClient tenant headers if saved session exists
+if (initialActiveId) {
+  apiClient.setTenantContext(initialActiveId, initialLocationId);
+}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: !!initialSession?.user,
+  accessToken: null, // Initialized to null in memory; populated during login or silent refresh
   user: initialSession?.user ?? null,
   workspaces: initialSession?.workspaces ?? [],
-  activeWorkspaceId: initialSession?.activeWorkspaceId ?? null,
+  activeWorkspaceId: initialActiveId,
+  activeLocationId: initialLocationId,
   isInitialized: true,
 
   login: async (credentials: LoginCredentials) => {
-    const { user, workspaces } = await authService.login(credentials);
+    const response = await AuthApi.login(credentials);
+    const { user, workspaces, token } = response;
 
-    // Auto-select workspace if user has exactly one workspace
-    const autoActiveId = workspaces.length === 1 && workspaces[0] ? workspaces[0].id : null;
+    // Auto-select first workspace by default so school selection screen is bypassed
+    const autoActiveId = workspaces.length > 0 && workspaces[0] ? workspaces[0].id : null;
+
+    if (token) {
+      apiClient.setToken(token);
+    }
+    apiClient.setTenantContext(autoActiveId, null);
 
     set({
       isAuthenticated: true,
+      accessToken: token || null,
       user,
       workspaces,
       activeWorkspaceId: autoActiveId,
+      activeLocationId: null,
     });
 
     saveSession({
       user,
       workspaces,
       activeWorkspaceId: autoActiveId,
+      activeLocationId: null,
     });
 
     return { workspaceCount: workspaces.length };
   },
 
   logout: async () => {
-    await authService.logout();
+    try {
+      await apiClient.post('/auth/logout');
+    } catch {
+      // Ignore network errors on logout
+    }
+    saveSession(null);
+    apiClient.setToken(null);
+    apiClient.setTenantContext(null, null);
+    queryClient.clear();
+
     set({
       isAuthenticated: false,
+      accessToken: null,
       user: null,
       workspaces: [],
       activeWorkspaceId: null,
+      activeLocationId: null,
     });
-    saveSession(null);
   },
 
-  setActiveWorkspace: (workspaceId: string) => {
+  setActiveWorkspace: (workspaceId: string, locationId?: string) => {
     const { user, workspaces } = get();
     const exists = workspaces.some(w => w.id === workspaceId);
     if (!exists) return;
 
-    set({ activeWorkspaceId: workspaceId });
+    // Abort inflight queries and purge tenant cache to prevent cross-tenant data leaks
+    queryClient.cancelQueries();
+    queryClient.removeQueries({ queryKey: ['tenant'] });
+
+    const chosenLocId = locationId ?? null;
+    apiClient.setTenantContext(workspaceId, chosenLocId);
+
+    set({
+      activeWorkspaceId: workspaceId,
+      activeLocationId: chosenLocId,
+    });
+
     if (user) {
       saveSession({
         user,
         workspaces,
         activeWorkspaceId: workspaceId,
+        activeLocationId: chosenLocId,
       });
     }
   },
 
+  setTenantContext: (organizationId: string | null, locationId?: string | null) => {
+    queryClient.cancelQueries();
+    queryClient.removeQueries({ queryKey: ['tenant'] });
+
+    apiClient.setTenantContext(organizationId, locationId ?? null);
+    set({
+      activeWorkspaceId: organizationId,
+      activeLocationId: locationId ?? null,
+    });
+  },
+
   getActiveWorkspace: () => {
     const { workspaces, activeWorkspaceId } = get();
-    return workspaces.find(w => w.id === activeWorkspaceId) ?? null;
+    return (
+      (activeWorkspaceId ? workspaces.find(w => w.id === activeWorkspaceId) : null) ??
+      workspaces[0] ??
+      null
+    );
   },
 
   hasModuleAccess: (moduleId: string) => {
-    const { workspaces, activeWorkspaceId } = get();
-    const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
+    const { workspaces, activeWorkspaceId, user } = get();
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'SCHOOL_ADMIN') {
+      return true;
+    }
+    const activeWs =
+      (activeWorkspaceId ? workspaces.find(w => w.id === activeWorkspaceId) : null) ??
+      workspaces[0];
     if (!activeWs) return false;
-    return activeWs.enabledModules.includes(moduleId);
+    const modules =
+      activeWs.permittedModules ||
+      (activeWs as { enabledModules?: string[] }).enabledModules ||
+      [];
+
+    // Module aliases
+    if (moduleId === 'accounting' && (modules.includes('fees') || modules.includes('accounting'))) return true;
+    if (moduleId === 'people-ops' && (modules.includes('staff') || modules.includes('people-ops'))) return true;
+    if (moduleId === 'erpnext-settings' && (modules.includes('settings') || modules.includes('erpnext-settings'))) return true;
+    if (moduleId === 'frappe-hr' && (modules.includes('staff') || modules.includes('hr') || modules.includes('frappe-hr'))) return true;
+
+    return modules.includes(moduleId);
   },
 }));

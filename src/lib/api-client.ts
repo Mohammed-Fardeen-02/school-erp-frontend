@@ -18,6 +18,9 @@ export class ApiClientError extends Error {
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly defaultTimeout: number;
+  private token: string | null = null;
+  private activeOrganizationId: string | null = null;
+  private activeLocationId: string | null = null;
 
   constructor(
     baseUrl: string = env.VITE_API_BASE_URL,
@@ -25,6 +28,33 @@ export class ApiClient {
   ) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.defaultTimeout = defaultTimeout;
+  }
+
+  /**
+   * Set the in-memory access token (never stored in localStorage)
+   */
+  public setToken(token: string | null): void {
+    this.token = token;
+  }
+
+  public getToken(): string | null {
+    return this.token;
+  }
+
+  /**
+   * Set active multi-tenant context headers for subsequent API calls
+   */
+  public setTenantContext(organizationId: string | null, locationId: string | null = null): void {
+    this.activeOrganizationId = organizationId;
+    this.activeLocationId = locationId;
+  }
+
+  public getOrganizationId(): string | null {
+    return this.activeOrganizationId;
+  }
+
+  public getLocationId(): string | null {
+    return this.activeLocationId;
   }
 
   private buildUrl(path: string, params?: RequestOptions['params']): string {
@@ -49,13 +79,31 @@ export class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+    const defaultHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    };
+
+    if (this.token) {
+      defaultHeaders['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (this.activeOrganizationId) {
+      defaultHeaders['X-Organization-Id'] = this.activeOrganizationId;
+    }
+
+    if (this.activeLocationId) {
+      defaultHeaders['X-Location-Id'] = this.activeLocationId;
+    }
+
     try {
       const response = await fetch(url, {
         ...init,
+        credentials: 'include', // Include HTTP-only cookies for refresh tokens
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+          ...defaultHeaders,
           ...headers,
         },
       });

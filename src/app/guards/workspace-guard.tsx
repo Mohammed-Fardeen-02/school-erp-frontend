@@ -1,8 +1,6 @@
 import * as React from 'react';
-import { Navigate } from 'react-router-dom';
 import { Building2, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
-import { ROUTES } from '@/app/router/routes';
 import { EmptyState } from '@/components/data-display/empty-state';
 import { Button } from '@/components/ui/button';
 
@@ -38,15 +36,12 @@ export const WorkspaceGuard: React.FC<WorkspaceGuardProps> = ({ children }) => {
     );
   }
 
-  // If multiple workspaces exist and none is actively selected
-  if (!activeWorkspaceId && workspaces.length > 1) {
-    return <Navigate to={ROUTES.SELECT_WORKSPACE} replace />;
-  }
-
-  // Auto-select single workspace if not set
-  if (!activeWorkspaceId && workspaces.length === 1 && workspaces[0]) {
-    setActiveWorkspace(workspaces[0].id);
-  }
+  // Auto-activate first workspace if not set (bypassing manual school selection)
+  React.useEffect(() => {
+    if (!activeWorkspaceId && workspaces.length > 0 && workspaces[0]) {
+      setActiveWorkspace(workspaces[0].id);
+    }
+  }, [activeWorkspaceId, workspaces, setActiveWorkspace]);
 
   return <>{children}</>;
 };

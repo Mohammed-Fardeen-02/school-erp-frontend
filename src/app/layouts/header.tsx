@@ -55,16 +55,13 @@ export const Header: React.FC = () => {
     navigate('/login');
   };
 
-  const userName = user?.name || 'Authorized User';
+  const userName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Authorized User';
   const userEmail = user?.email || 'user@schoolerp.io';
-  const userInitials = userName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const userInitials = (
+    user ? `${user.firstName[0] || ''}${user.lastName[0] || ''}` : 'AU'
+  ).toUpperCase();
   const schoolName = activeWorkspace?.name || 'School Workspace';
-  const roleName = activeWorkspace?.roleInSchool || user?.roleName || 'Faculty / Staff';
+  const roleName = (activeWorkspace?.role || user?.role || 'Staff').replace('_', ' ');
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-md sm:px-6">

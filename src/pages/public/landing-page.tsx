@@ -29,11 +29,7 @@ export const LandingPage: React.FC = () => {
 
   const handlePrimaryAction = () => {
     if (isAuthenticated) {
-      if (activeWorkspaceId) {
-        navigate(ROUTES.WORKSPACE);
-      } else {
-        navigate(ROUTES.SELECT_WORKSPACE);
-      }
+      navigate(ROUTES.WORKSPACE);
     } else {
       navigate(ROUTES.LOGIN);
     }

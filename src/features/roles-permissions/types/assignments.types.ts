@@ -49,3 +49,38 @@ export interface ListAssignmentsOptions {
   locationId?: string;
 }
 
+export interface WorkspaceMemberSummary {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  isActive: boolean;
+}
+
+export interface WorkspaceMemberPaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ListMembersFilters {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ListMembersResult {
+  members: WorkspaceMemberSummary[];
+  meta: WorkspaceMemberPaginationMeta;
+}
+
+export interface CampusLocation {
+  id: string;
+  code: string;
+  name: string;
+  locationType?: string;
+  isMainCampus?: boolean;
+  isActive?: boolean;
+}

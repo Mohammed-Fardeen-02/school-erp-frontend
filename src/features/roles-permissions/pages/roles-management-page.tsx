@@ -3,11 +3,11 @@ import { useState, useMemo } from 'react';
 import {
   Shield,
   ShieldPlus,
-  Copy,
   Layers,
   Sparkles,
   AlertCircle,
   CheckCircle2,
+  UserCheck,
 } from 'lucide-react';
 import { useRolesList, useCreateRole, useCloneTemplate, useDeleteRole, useToggleRoleStatus } from '../hooks/use-roles';
 import { usePermission } from '../hooks/use-permission';
@@ -17,6 +17,7 @@ import { CreateRoleModal } from '../components/role-list/create-role-modal';
 import { CloneRoleModal } from '../components/role-list/clone-role-modal';
 import { DeleteRoleModal } from '../components/role-list/delete-role-modal';
 import { RoleMatrixModal } from '../components/permission-matrix/role-matrix-modal';
+import { AssignRoleModal } from '../components/assignments/assign-role-modal';
 import { StatsCard } from '@/components/data-display/stats-card';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/feedback/alert';
@@ -25,6 +26,7 @@ import { Breadcrumb } from '@/app/layouts/breadcrumb';
 import { ROUTES } from '@/app/router/routes';
 import { useAuthStore } from '@/stores/auth-store';
 import type { RoleSummary, CreateRolePayload, CloneTemplatePayload } from '../types/roles.types';
+import type { AssignmentRecord } from '../types/assignments.types';
 
 export type RoleTab = 'all' | 'custom' | 'templates';
 
@@ -40,12 +42,12 @@ export const RolesManagementPage: React.FC = () => {
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [cloneTarget, setCloneTarget] = useState<RoleSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleSummary | null>(null);
   const [matrixTarget, setMatrixTarget] = useState<RoleSummary | null>(null);
 
   // Permissions
-  const { hasPermission: canCreate } = usePermission('settings.roles_permissions.rbac.create');
   const { hasPermission: canEdit } = usePermission('settings.roles_permissions.rbac.edit');
   const { hasPermission: canDelete } = usePermission('settings.roles_permissions.rbac.delete');
 
@@ -137,6 +139,14 @@ export const RolesManagementPage: React.FC = () => {
     }
   };
 
+  const handleAssignSuccess = (assignment: AssignmentRecord) => {
+    setIsAssignOpen(false);
+    setFeedbackMessage({
+      type: 'success',
+      text: `Role assigned successfully${assignment.role?.roleName ? ` (${assignment.role.roleName})` : ''}`,
+    });
+  };
+
   return (
     <PageWrapper className="space-y-6">
       {/* Breadcrumb Navigation */}
@@ -172,6 +182,18 @@ export const RolesManagementPage: React.FC = () => {
 
         {/* Action CTAs guarded by canonical permission */}
         <div className="flex items-center gap-2.5">
+          <PermissionGate permission="settings.user_assignments.allocations.assign">
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="open-assign-role-button"
+              onClick={() => setIsAssignOpen(true)}
+              icon={<UserCheck className="h-4 w-4" />}
+            >
+              Assign Role
+            </Button>
+          </PermissionGate>
+
           <PermissionGate permission="settings.roles_permissions.rbac.create">
             <Button
               variant="primary"
@@ -209,54 +231,52 @@ export const RolesManagementPage: React.FC = () => {
         </Alert>
       )}
 
+      {/* Query Error Alert */}
       {queryError && (
-        <Alert variant="error" title="Failed to load roles">
-          {queryError.message}
+        <Alert variant="error" className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Failed to load roles: {queryError.message}</span>
         </Alert>
       )}
 
-      {/* High-Level Role Metrics */}
+      {/* Stats Summary Overview Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatsCard
           title="Total Profiles"
           value={stats.total}
-          subtitle="Configured in organization"
-          icon={<Layers className="h-5 w-5" />}
-          color="indigo"
+          subtitle="System & Custom roles"
+          icon={<Layers className="h-5 w-5 text-primary" />}
+        />
+        <StatsCard
+          title="Active Roles"
+          value={stats.active}
+          subtitle="Operational in tenant"
+          icon={<Shield className="h-5 w-5 text-emerald-600" />}
         />
         <StatsCard
           title="Custom Roles"
           value={stats.custom}
-          subtitle="Tenant-created roles"
-          icon={<ShieldPlus className="h-5 w-5" />}
-          color="blue"
+          subtitle="Tenant defined"
+          icon={<ShieldPlus className="h-5 w-5 text-purple-600" />}
         />
         <StatsCard
           title="System Templates"
           value={stats.templates}
-          subtitle="Standard baseline profiles"
-          icon={<Sparkles className="h-5 w-5" />}
-          color="purple"
-        />
-        <StatsCard
-          title="Active Status"
-          value={stats.active}
-          subtitle="Currently assignable roles"
-          icon={<Shield className="h-5 w-5" />}
-          color="green"
+          subtitle="Pre-seeded baselines"
+          icon={<Sparkles className="h-5 w-5 text-blue-600" />}
         />
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center justify-between border-b border-border pb-1">
-        <div className="flex gap-2">
+      {/* Tab Navigation & Search Toolbar */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-border pb-px">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
               activeTab === 'all'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             All Roles ({stats.total})
@@ -264,10 +284,10 @@ export const RolesManagementPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('custom')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
               activeTab === 'custom'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Custom Roles ({stats.custom})
@@ -275,19 +295,17 @@ export const RolesManagementPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('templates')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`cursor-pointer px-4 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${
               activeTab === 'templates'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             System Templates ({stats.templates})
           </button>
         </div>
-      </div>
 
-      {/* Roles Data Table */}
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
+        {/* Roles Data Table */}
         <RolesTable
           roles={filteredRoles}
           loading={isLoading}
@@ -331,7 +349,12 @@ export const RolesManagementPage: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      <AssignRoleModal
+        isOpen={isAssignOpen}
+        onClose={() => setIsAssignOpen(false)}
+        onSuccess={handleAssignSuccess}
+      />
     </PageWrapper>
   );
 };
-

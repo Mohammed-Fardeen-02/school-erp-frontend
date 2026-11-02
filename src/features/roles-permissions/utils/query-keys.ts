@@ -47,5 +47,16 @@ export const rbacQueryKeys = {
       'user-roles',
       userId,
     ] as const,
-};
 
+  // General assignments list (tenant-scoped, optional filters)
+  assignmentsList: (orgId: string | null, filters?: Record<string, unknown>) =>
+    ['tenant', orgId ?? 'no-org', 'user-roles', 'list', filters ?? {}] as const,
+
+  // Workspace active members query (tenant-scoped)
+  members: (orgId: string | null, filters?: Record<string, unknown>) =>
+    ['tenant', orgId ?? 'no-org', 'workspace', 'members', filters ?? {}] as const,
+
+  // Organization active campuses/locations query (tenant-scoped)
+  locations: (orgId: string | null) =>
+    ['tenant', orgId ?? 'no-org', 'locations'] as const,
+};

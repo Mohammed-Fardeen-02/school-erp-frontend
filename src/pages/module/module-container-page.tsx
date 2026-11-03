@@ -9,12 +9,17 @@ import { Breadcrumb } from '@/app/layouts/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/data-display/badge';
 import { Card } from '@/components/data-display/card';
+import { RolesManagementPage } from '@/features/roles-permissions';
 
 export const ModuleContainerPage: React.FC = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
   const { getActiveWorkspace } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
+
+  if (moduleId === 'settings') {
+    return <RolesManagementPage />;
+  }
 
   const moduleDef = ERP_MODULES.find(m => m.id === moduleId) || {
     id: moduleId || 'unknown',

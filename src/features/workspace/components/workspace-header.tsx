@@ -19,9 +19,45 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   const { user, getActiveWorkspace, logout } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
 
-  const userInitials = user
-    ? `${user.firstName[0] || ''}${user.lastName[0] || ''}`.toUpperCase()
-    : 'A';
+  const userInitials = React.useMemo(() => {
+    if (!user) return 'A';
+    const first = user.firstName?.[0] || '';
+    const last = user.lastName?.[0] || '';
+    if (first || last) return `${first}${last}`.toUpperCase();
+
+    const rawUser = user as { name?: string; fullName?: string };
+    const customName = rawUser.name || rawUser.fullName;
+    if (customName) {
+      const parts = customName.trim().split(/\s+/);
+      if (parts.length > 1) {
+        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+      }
+      return (customName[0] || 'U').toUpperCase();
+    }
+
+    if (user.email) {
+      return (user.email[0] || 'U').toUpperCase();
+    }
+    return 'A';
+  }, [user]);
+
+  const userDisplayName = React.useMemo(() => {
+    if (!user) return 'Administrator';
+    const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+    if (fullName) return fullName;
+
+    const rawUser = user as { name?: string; fullName?: string };
+    if (rawUser.name) return rawUser.name;
+    if (rawUser.fullName) return rawUser.fullName;
+    if (user.email) return user.email;
+
+    return 'Administrator';
+  }, [user]);
+
+  const userRole = React.useMemo(() => {
+    if (!user?.role) return 'Admin';
+    return String(user.role).toLowerCase().replace('_', ' ');
+  }, [user?.role]);
 
   const handleLogout = async () => {
     await logout();
@@ -81,10 +117,10 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             </div>
             <div className="hidden text-left sm:block">
               <div className="text-xs font-bold text-foreground">
-                {user ? `${user.firstName} ${user.lastName}` : 'Administrator'}
+                {userDisplayName}
               </div>
               <div className="text-[10px] font-medium text-muted-foreground capitalize">
-                {user?.role.toLowerCase().replace('_', ' ') || 'Admin'}
+                {userRole}
               </div>
             </div>
           </div>

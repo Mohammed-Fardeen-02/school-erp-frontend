@@ -181,23 +181,30 @@ export const RolesListPage: React.FC = () => {
       {feedbackMessage && (
         <Alert
           variant={feedbackMessage.type === 'success' ? 'success' : 'error'}
-          dismissible
-          onDismiss={() => setFeedbackMessage(null)}
-          icon={
-            feedbackMessage.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )
-          }
+          className="flex items-center justify-between"
         >
-          {feedbackMessage.text}
+          <div className="flex items-center gap-2">
+            {feedbackMessage.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0" />
+            )}
+            <span>{feedbackMessage.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedbackMessage(null)}
+            className="text-xs font-semibold hover:underline"
+          >
+            Dismiss
+          </button>
         </Alert>
       )}
 
       {queryError && (
-        <Alert variant="error" icon={<AlertCircle className="h-4 w-4" />}>
-          Failed to load roles: {queryError.message}
+        <Alert variant="error" className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Failed to load roles: {queryError.message}</span>
         </Alert>
       )}
 

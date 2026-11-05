@@ -3,7 +3,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { RolesApi, type ListRolesResult } from '../api/roles.api';
 import { rbacQueryKeys } from '../utils/query-keys';
 import type {
-  RoleSummary,
   RoleDetail,
   CreateRolePayload,
   UpdateRolePayload,

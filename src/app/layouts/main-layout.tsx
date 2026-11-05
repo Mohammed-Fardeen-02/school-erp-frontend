@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from './header';
 import { Sidebar } from './sidebar';
 import { PageLoader } from '@/components/feedback/loader';
+import { ErrorBoundary } from '@/components/feedback/error-boundary';
 
 export const MainLayout: React.FC = () => {
   return (
@@ -12,7 +13,9 @@ export const MainLayout: React.FC = () => {
         <Header />
         <main className="relative flex-1 overflow-y-auto bg-background">
           <PageLoader />
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

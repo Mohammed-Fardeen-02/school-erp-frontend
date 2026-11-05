@@ -1,4 +1,3 @@
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, render, fireEvent } from '@testing-library/react';
 import { CreateRoleModal } from './create-role-modal';

@@ -102,7 +102,6 @@ describe('UserAssignmentsPanel Component', () => {
       total: 0,
       page: 1,
       limit: 100,
-      totalPages: 0,
     });
   });
 

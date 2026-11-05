@@ -117,7 +117,6 @@ describe('AssignRoleModal Component', () => {
       total: 2,
       page: 1,
       limit: 100,
-      totalPages: 1,
     });
 
     vi.mocked(AssignmentsApi.getCampuses).mockResolvedValue(mockCampuses);

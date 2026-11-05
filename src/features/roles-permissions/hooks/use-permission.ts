@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useAuthStore } from '@/stores/auth-store';
 import { useEffectivePermissions } from './use-effective-permissions';
 
 export interface UsePermissionResult {
@@ -39,6 +40,7 @@ export interface UsePermissionResult {
  * - Checks exact membership in the backend-provided normalized permission set.
  */
 export function usePermission(permissionCode?: string): UsePermissionResult {
+  const isSuperAdmin = useAuthStore((state) => state.user?.role === 'SUPER_ADMIN');
   const {
     permissionsSet,
     isLoading,
@@ -49,23 +51,27 @@ export function usePermission(permissionCode?: string): UsePermissionResult {
 
   const checkPermission = useCallback(
     (code: string): boolean => {
+      // Platform super-admins possess universal bypass
+      if (isSuperAdmin) {
+        return true;
+      }
       // Fail-closed security rule: any unready or error state denies access
       if (isLoading || isError || !permissionsSet) {
         return false;
       }
       return permissionsSet.has(code);
     },
-    [isLoading, isError, permissionsSet]
+    [isSuperAdmin, isLoading, isError, permissionsSet]
   );
 
-  const hasPermission = permissionCode ? checkPermission(permissionCode) : false;
+  const hasPermission = isSuperAdmin ? true : (permissionCode ? checkPermission(permissionCode) : false);
 
   return {
     hasPermission,
-    isLoading,
-    isError,
-    isSuccess,
-    error,
+    isLoading: isSuperAdmin ? false : isLoading,
+    isError: isSuperAdmin ? false : isError,
+    isSuccess: isSuperAdmin ? true : isSuccess,
+    error: isSuperAdmin ? null : error,
     checkPermission,
   };
 }

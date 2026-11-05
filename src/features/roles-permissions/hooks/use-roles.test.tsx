@@ -81,7 +81,7 @@ describe('use-roles Hooks', () => {
     });
 
     expect(result.current.data?.roles).toHaveLength(1);
-    expect(result.current.data?.roles[0].roleCode).toBe('TEACHER');
+    expect(result.current.data?.roles[0]?.roleCode).toBe('TEACHER');
   });
 
   it('useRoleDetails retrieves single role details by ID', async () => {

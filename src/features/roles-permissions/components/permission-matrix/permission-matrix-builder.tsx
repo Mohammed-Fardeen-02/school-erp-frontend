@@ -1,14 +1,10 @@
 import * as React from 'react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Shield,
   Layers,
-  ChevronDown,
-  ChevronRight,
-  Filter,
 } from 'lucide-react';
 import { usePermissionTree } from '../../hooks/use-permission-tree';
 import { useRolePermissionsMatrix, useUpdateRolePermissions } from '../../hooks/use-roles';
@@ -38,7 +34,7 @@ export const PermissionMatrixBuilder: React.FC<PermissionMatrixBuilderProps> = (
   roleName,
   roleCode,
   isReadOnly = false,
-  onClose,
+  onClose: _onClose,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [overrides, setOverrides] = useState<Map<string, MatrixExplicitState>>(new Map());

@@ -31,6 +31,8 @@ const mockTree: CanonicalTreeNode[] = [
     nodeName: 'Academics Management',
     nodeType: 'MODULE',
     nodeLevel: 1,
+    displayOrder: 1,
+    isActive: true,
     description: 'Academic modules and curriculum',
     parentId: null,
     children: [
@@ -40,6 +42,8 @@ const mockTree: CanonicalTreeNode[] = [
         nodeName: 'Courses & Curriculum',
         nodeType: 'SECTION',
         nodeLevel: 2,
+        displayOrder: 1,
+        isActive: true,
         description: 'Course catalog',
         parentId: 'node-acad',
         children: [
@@ -49,6 +53,8 @@ const mockTree: CanonicalTreeNode[] = [
             nodeName: 'View Courses',
             nodeType: 'ACTION',
             nodeLevel: 3,
+            displayOrder: 1,
+            isActive: true,
             description: 'Read course catalog',
             parentId: 'node-acad-courses',
             children: [],
@@ -59,6 +65,8 @@ const mockTree: CanonicalTreeNode[] = [
             nodeName: 'Create Courses',
             nodeType: 'ACTION',
             nodeLevel: 3,
+            displayOrder: 2,
+            isActive: true,
             description: 'Create new course',
             parentId: 'node-acad-courses',
             children: [],
@@ -73,6 +81,7 @@ const mockRoleMatrix: RolePermissionsMatrixDto = {
   roleId: 'role-123',
   roleCode: 'TEACHER',
   roleName: 'Teacher',
+  roleType: 'CUSTOM',
   permissions: [
     {
       nodeId: 'node-acad-courses-view',
@@ -80,9 +89,10 @@ const mockRoleMatrix: RolePermissionsMatrixDto = {
       nodeName: 'View Courses',
       nodeType: 'ACTION',
       nodeLevel: 3,
+      displayOrder: 1,
+      description: 'Read course catalog',
       isGranted: true,
       isDirect: true,
-      inheritedFrom: null,
     },
   ],
 };
@@ -104,9 +114,9 @@ describe('PermissionMatrixBuilder Component', () => {
     vi.spyOn(permissionsApi.PermissionsApi, 'getPermissionTree').mockResolvedValue(mockTree);
     vi.spyOn(rolesApi.RolesApi, 'getPermissionsMatrix').mockResolvedValue(mockRoleMatrix);
     vi.spyOn(permissionsApi.PermissionsApi, 'getMyPermissions').mockResolvedValue({
-      organizationId: 'org-test-1',
-      campusId: null,
       permissions: ['academics', 'academics.courses', 'academics.courses.view', 'academics.courses.create'],
+      count: 4,
+      computedAt: '2026-11-01T00:00:00Z',
     });
     vi.spyOn(rolesApi.RolesApi, 'updatePermissionsMatrix').mockResolvedValue(undefined);
   });
@@ -311,9 +321,9 @@ describe('PermissionMatrixBuilder Component', () => {
   it('enforces delegation ceiling lock when actor lacks capability', async () => {
     // Actor only possesses 'academics.courses.view', NOT 'academics.courses.create'
     vi.spyOn(permissionsApi.PermissionsApi, 'getMyPermissions').mockResolvedValue({
-      organizationId: 'org-test-1',
-      campusId: null,
       permissions: ['academics.courses.view'],
+      count: 1,
+      computedAt: '2026-11-01T00:00:00Z',
     });
 
     renderWithClient(

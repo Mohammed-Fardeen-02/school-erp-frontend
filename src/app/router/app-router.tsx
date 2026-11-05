@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicLayout } from '@/app/layouts/public-layout';
 import { MainLayout } from '@/app/layouts/main-layout';
@@ -113,6 +113,8 @@ export const AppRouter: React.FC = () => {
         <Route path="/tenants/*" element={<TenantsRoutes />} />
         <Route path="/roles/*" element={<RolesRoutes />} />
         <Route path="/users/*" element={<UsersRoutes />} />
+        <Route path="/settings" element={<Navigate to="/roles" replace />} />
+        <Route path="/settings/*" element={<Navigate to="/roles" replace />} />
 
         {/* Catch-All Business Module Container */}
         <Route

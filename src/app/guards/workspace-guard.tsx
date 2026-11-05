@@ -9,10 +9,11 @@ export interface WorkspaceGuardProps {
 }
 
 export const WorkspaceGuard: React.FC<WorkspaceGuardProps> = ({ children }) => {
-  const { workspaces, activeWorkspaceId, setActiveWorkspace, logout } = useAuthStore();
+  const { user, workspaces, activeWorkspaceId, setActiveWorkspace, logout } = useAuthStore();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-  // If user has no workspaces assigned
-  if (workspaces.length === 0) {
+  // If user has no workspaces assigned and is not a platform super-admin
+  if (!isSuperAdmin && workspaces.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-xl">

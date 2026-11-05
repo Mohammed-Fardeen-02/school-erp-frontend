@@ -31,7 +31,7 @@ export const ModuleContainerPage: React.FC = () => {
     requiredPermission: moduleId || '',
   };
 
-  const Icon = moduleDef.icon;
+  const Icon = (moduleDef.icon || Layers) as React.ElementType;
 
   return (
     <PageWrapper>

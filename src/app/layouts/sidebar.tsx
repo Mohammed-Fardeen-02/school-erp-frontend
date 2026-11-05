@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
 import { sidebarConfig, type SidebarItem } from './sidebar.config';
 
 export const Sidebar: React.FC = () => {
@@ -64,10 +65,31 @@ export const Sidebar: React.FC = () => {
     return item.children.some(child => isItemActive(child.href));
   };
 
-  // Permission-aware sidebar navigation: filter modules by active school permissions
-  const visibleNavItems = sidebarConfig.filter(
-    item => !item.moduleId || hasModuleAccess(item.moduleId)
-  );
+  // Permission and capability-aware sidebar navigation: filter by permissions & active modules
+  const { checkPermission } = usePermission();
+  const user = useAuthStore(state => state.user);
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  const visibleNavItems = sidebarConfig
+    .filter(item => {
+      if (item.permission) {
+        if (!isSuperAdmin && !checkPermission(item.permission)) return false;
+      }
+      if (item.moduleId) {
+        if (!hasModuleAccess(item.moduleId)) return false;
+      }
+      return true;
+    })
+    .map(item => {
+      if (!item.children) return item;
+      const filteredChildren = item.children.filter(child => {
+        if (child.permission) {
+          if (!isSuperAdmin && !checkPermission(child.permission)) return false;
+        }
+        return true;
+      });
+      return { ...item, children: filteredChildren };
+    });
 
   const schoolName = activeWorkspace?.name || 'School Workspace';
   const schoolYear = activeWorkspace?.academicYear

@@ -12,6 +12,9 @@ import { LandingPage } from '@/pages/public/landing-page';
 import { ModuleContainerPage } from '@/pages/module/module-container-page';
 import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@/features/auth';
 import { WorkspaceLauncherPage, SelectWorkspacePage } from '@/features/workspace';
+import { TenantsRoutes } from '@/features/tenants';
+import { RolesRoutes } from '@/features/roles';
+import { UsersRoutes } from '@/features/users';
 import { Button } from '@/components/ui/button';
 
 const NotFoundPage: React.FC = () => {
@@ -96,7 +99,7 @@ export const AppRouter: React.FC = () => {
         }
       />
 
-      {/* 5. Authenticated Business Module Workspace (MainLayout with Sidebar & Navigation) */}
+      {/* 5. Authenticated Feature Workspace (MainLayout with Sidebar & Navigation) */}
       <Route
         element={
           <AuthGuard>
@@ -106,6 +109,12 @@ export const AppRouter: React.FC = () => {
           </AuthGuard>
         }
       >
+        {/* Modular Feature Sub-Routers */}
+        <Route path="/tenants/*" element={<TenantsRoutes />} />
+        <Route path="/roles/*" element={<RolesRoutes />} />
+        <Route path="/users/*" element={<UsersRoutes />} />
+
+        {/* Catch-All Business Module Container */}
         <Route
           path={ROUTES.APP_MODULE}
           element={

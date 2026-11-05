@@ -5,6 +5,10 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   SELECT_WORKSPACE: '/select-workspace',
   WORKSPACE: '/workspace',
+  TENANTS: '/tenants',
+  USERS: '/users',
+  ROLES: '/roles',
+  SETTINGS: '/settings',
   APP_MODULE: '/app/:moduleId/*',
   NOT_FOUND: '*',
 } as const;

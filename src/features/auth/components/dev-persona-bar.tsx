@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { UserCheck, Shield, Building2, BookOpen, Clock } from 'lucide-react';
+import { UserCheck, Shield, Building2, BookOpen } from 'lucide-react';
 
 export interface DevPersonaBarProps {
   onSelectPersona: (email: string, pass: string) => void;

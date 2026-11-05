@@ -9,7 +9,6 @@ import {
   FileSpreadsheet,
   Settings,
   ShieldCheck,
-  Activity,
   Building2,
 } from 'lucide-react';
 
@@ -18,6 +17,7 @@ export interface SidebarSubItem {
   href: string;
   icon?: React.ElementType;
   badge?: string;
+  permission?: string;
 }
 
 export interface SidebarItem {
@@ -25,8 +25,8 @@ export interface SidebarItem {
   href: string;
   icon: React.ElementType;
   moduleId?: string;
+  permission?: string;
   badge?: string;
-  platformOnly?: boolean;
   children?: SidebarSubItem[];
 }
 
@@ -35,6 +35,32 @@ export const sidebarConfig: SidebarItem[] = [
     label: 'Workspace Overview',
     href: '/workspace',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'Institutions & Schools',
+    href: '/tenants',
+    icon: Building2,
+    permission: 'organizations.manage',
+    children: [
+      { label: 'Institutions Directory', href: '/tenants' },
+      { label: 'Provision School', href: '/tenants/new' },
+    ],
+  },
+  {
+    label: 'Roles & Permissions',
+    href: '/roles',
+    icon: ShieldCheck,
+    permission: 'settings.roles_permissions.rbac.view',
+    children: [
+      { label: 'Roles Directory', href: '/roles' },
+      { label: 'New Custom Role', href: '/roles/new' },
+    ],
+  },
+  {
+    label: 'Members & Allocations',
+    href: '/users',
+    icon: Users,
+    permission: 'settings.user_assignments.allocations.view',
   },
   {
     label: 'Academics',
@@ -108,17 +134,7 @@ export const sidebarConfig: SidebarItem[] = [
     children: [
       { label: 'School Profile', href: '/app/settings' },
       { label: 'Academic Years', href: '/app/settings/academic-years' },
-      { label: 'Roles & Security', href: '/app/settings/roles' },
-    ],
-  },
-  {
-    label: 'Multi-Tenant Admin',
-    href: '/admin',
-    icon: ShieldCheck,
-    platformOnly: true,
-    children: [
-      { label: 'Schools Overview', href: '/admin/overview', icon: Activity },
-      { label: 'Tenant Provisioning', href: '/admin/tenants', icon: Building2 },
+      { label: 'Roles & Security', href: '/roles' },
     ],
   },
 ];

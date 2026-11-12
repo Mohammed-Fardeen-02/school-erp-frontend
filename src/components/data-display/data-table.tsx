@@ -368,13 +368,19 @@ export function DataTable<T extends Record<string, any> = any>({
       {/* Sticky Table Body */}
       <div className="overflow-x-auto">
         <div className="overflow-auto" style={{ maxHeight }}>
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse border border-border">
             <thead className="sticky top-0 z-20">
-              <tr className="bg-primary/5 text-primary border-b border-border/80">
+              <tr style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}>
                 {draggable && (
-                  <th className="w-10 px-4 py-3 bg-primary/5 border-r border-border/60" />
+                  <th
+                    className="w-10 px-4 py-3"
+                    style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderRight: '1px solid var(--color-table-header-border, #c4b5fd)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}
+                  />
                 )}
-                <th className="w-12 px-4 py-3 text-center bg-primary/5 border-r border-border/60">
+                <th
+                  className="w-12 px-4 py-3 text-center"
+                  style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderRight: '1px solid var(--color-table-header-border, #c4b5fd)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}
+                >
                   <input
                     type="checkbox"
                     checked={allPageSelected}
@@ -393,9 +399,15 @@ export function DataTable<T extends Record<string, any> = any>({
                     <th
                       key={colKey}
                       onClick={() => col.sortable && handleSort(col.key)}
-                      className={`px-4 py-3 text-xs font-bold uppercase tracking-wider bg-primary/5 border-r border-border/60 text-primary ${
-                        col.sortable ? 'cursor-pointer select-none hover:text-primary-dark' : ''
+                      className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${
+                        col.sortable ? 'cursor-pointer select-none hover:opacity-85' : ''
                       }`}
+                      style={{
+                        backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                        color: 'var(--color-table-header-text, #4c1d95)',
+                        borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                        borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                      }}
                     >
                       <div
                         className={`flex items-center gap-1.5 ${
@@ -415,21 +427,28 @@ export function DataTable<T extends Record<string, any> = any>({
                               <ChevronDown className="w-3.5 h-3.5 text-primary" />
                             )
                           ) : (
-                            <ChevronsUpDown className="w-3.5 h-3.5 text-primary/60" />
+                            <ChevronsUpDown className="w-3.5 h-3.5 text-primary/70" />
                           ))}
                       </div>
                     </th>
                   );
                 })}
                 {actionConfig && (
-                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider w-36 bg-primary/5 text-primary">
+                  <th
+                    className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider w-36"
+                    style={{
+                      backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                      color: 'var(--color-table-header-text, #4c1d95)',
+                      borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                    }}
+                  >
                     ACTION
                   </th>
                 )}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-border bg-surface">
+            <tbody className="bg-surface">
               {loading ? (
                 <tr>
                   <td colSpan={colSpan} className="px-6 py-14 text-center">
@@ -482,14 +501,19 @@ export function DataTable<T extends Record<string, any> = any>({
                       className={`transition-colors hover:bg-primary/5 ${
                         onRowClick ? 'cursor-pointer' : ''
                       }`}
+                      style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                     >
                       {draggable && (
-                        <td className="px-4 py-3 text-center text-muted-foreground border-r border-border/60">
+                        <td
+                          className="px-4 py-3 text-center text-muted-foreground"
+                          style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                        >
                           ⋮⋮
                         </td>
                       )}
                       <td
-                        className="px-4 py-3 text-center border-r border-border/60"
+                        className="px-4 py-3 text-center"
+                        style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                         onClick={e => toggleRow(id, e)}
                       >
                         <input
@@ -505,13 +529,14 @@ export function DataTable<T extends Record<string, any> = any>({
                         return (
                           <td
                             key={colKey}
-                            className={`px-4 py-3 text-xs text-foreground border-r border-border/60 ${
+                            className={`px-4 py-3 text-xs text-foreground ${
                               align === 'center'
                                 ? 'text-center'
                                 : align === 'right'
                                   ? 'text-right'
                                   : 'text-left'
                             }`}
+                            style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                           >
                             {col.render
                               ? col.render(row[col.key], row)
@@ -522,6 +547,7 @@ export function DataTable<T extends Record<string, any> = any>({
                       {actionConfig && (
                         <td
                           className="px-4 py-3 text-center w-36"
+                          style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                           onClick={e => e.stopPropagation()}
                         >
                           <ActionMenu

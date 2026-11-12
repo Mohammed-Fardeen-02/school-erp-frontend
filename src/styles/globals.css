@@ -51,10 +51,11 @@
   --color-sidebar-text: #374151;
   --color-sidebar-muted: #6b7280;
 
-  /* --- Table Header --- */
+  /* --- Table Header & Grid Lines --- */
   --color-table-header-bg: #ede9fe;
   --color-table-header-text: #4c1d95;
   --color-table-header-border: #c4b5fd;
+  --color-table-grid: #e5e7eb;
 
   /* --- Layout Constants --- */
   --sidebar-width: 240px;
@@ -164,6 +165,12 @@ body {
   --color-sidebar-bg: #111827;
   --color-sidebar-text: #e5e7eb;
   --color-sidebar-muted: #9ca3af;
+
+  /* --- Dark Table Header & Grid Lines --- */
+  --color-table-header-bg: #2e1065;
+  --color-table-header-text: #ddd6fe;
+  --color-table-header-border: #6b21a8;
+  --color-table-grid: #374151;
 }
 
 .dark .stats-card {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/data-display/badge';
+import { DataTable, type DataTableColumn } from '@/components/data-display/data-table';
 import type { AuditLogRecord } from '../../types/admin.types';
 
 export interface AuditLogsTableProps {
@@ -10,55 +10,87 @@ export interface AuditLogsTableProps {
   isLoading?: boolean;
 }
 
-export const AuditLogsTable: React.FC<AuditLogsTableProps> = ({ logs, onInspect, isLoading: _isLoading }) => {
+export const AuditLogsTable: React.FC<AuditLogsTableProps> = ({
+  logs,
+  onInspect,
+  isLoading,
+}) => {
+  const columns: DataTableColumn<AuditLogRecord>[] = [
+    {
+      key: 'createdAt',
+      label: 'TIMESTAMP',
+      sortable: true,
+      align: 'left',
+      render: (val) => (
+        <span className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+          {new Date(val as string).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: 'actorName',
+      label: 'ACTOR',
+      sortable: true,
+      align: 'left',
+      render: (_, row) => (
+        <div>
+          <div className="font-bold text-xs text-foreground">{row.actorName}</div>
+          <div className="text-[11px] text-muted-foreground">{row.actorEmail}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'action',
+      label: 'ACTION',
+      sortable: true,
+      align: 'center',
+      render: (val) => (
+        <span className="font-mono text-xs">
+          <Badge variant="primary">{String(val)}</Badge>
+        </span>
+      ),
+    },
+    {
+      key: 'entity',
+      label: 'TARGET ENTITY',
+      sortable: true,
+      align: 'left',
+      render: (_, row) => (
+        <span className="font-semibold text-xs text-foreground">
+          {row.entity} {row.entityId ? `#${row.entityId}` : ''}
+        </span>
+      ),
+    },
+    {
+      key: 'ipAddress',
+      label: 'IP ADDRESS',
+      sortable: true,
+      align: 'left',
+      render: (val) => (
+        <span className="font-mono text-xs text-muted-foreground">
+          {String(val || 'Internal')}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-surface-muted/60 text-muted-foreground uppercase font-bold text-[10px] tracking-wider border-b border-border">
-            <tr>
-              <th className="py-3 px-4">Timestamp</th>
-              <th className="py-3 px-4">Actor</th>
-              <th className="py-3 px-4">Action</th>
-              <th className="py-3 px-4">Target Entity</th>
-              <th className="py-3 px-4">IP Address</th>
-              <th className="py-3 px-4 text-right">Details</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {logs.map((log) => (
-              <tr key={log.id} className="hover:bg-surface-muted/30 transition-colors">
-                <td className="py-3 px-4 font-mono text-muted-foreground whitespace-nowrap">
-                  {new Date(log.createdAt).toLocaleString()}
-                </td>
-                <td className="py-3 px-4">
-                  <div className="font-bold text-foreground">{log.actorName}</div>
-                  <div className="text-[11px] text-muted-foreground">{log.actorEmail}</div>
-                </td>
-                <td className="py-3 px-4 font-mono">
-                  <Badge variant="primary">{log.action}</Badge>
-                </td>
-                <td className="py-3 px-4 font-semibold text-foreground">
-                  {log.entity} {log.entityId ? `#${log.entityId}` : ''}
-                </td>
-                <td className="py-3 px-4 font-mono text-muted-foreground">
-                  {log.ipAddress || 'Internal'}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onInspect(log)}
-                    icon={<Eye className="h-3.5 w-3.5" />}
-                  >
-                    Inspect
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <DataTable<AuditLogRecord>
+      columns={columns}
+      data={logs}
+      loading={isLoading}
+      rowIdKey="id"
+      resultLabel="audit logs"
+      actionConfig={{
+        onView: (row) => onInspect(row),
+        customActions: (row) => [
+          {
+            label: 'Inspect Diff',
+            icon: <Eye className="h-4 w-4 text-primary" />,
+            onClick: () => onInspect(row),
+          },
+        ],
+      }}
+    />
   );
 };

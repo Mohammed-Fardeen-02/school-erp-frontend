@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Breadcrumb } from '@/app/layouts/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useUiStore } from '@/stores/ui-store';
 
 export interface AdminPageHeaderProps {
   title: string;
@@ -18,55 +19,49 @@ export interface AdminPageHeaderProps {
 export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   title,
   subtitle,
-  icon: Icon,
-  badge,
+  icon: _Icon,
+  badge: _badge,
   breadcrumbs,
   actionLabel,
   onActionClick,
   actionIcon = <Plus className="h-4 w-4" />,
   extraActions,
 }) => {
+  const setHeaderTitle = useUiStore((s) => s.setHeaderTitle);
+
+  useEffect(() => {
+    setHeaderTitle(title, subtitle || '');
+  }, [setHeaderTitle, title, subtitle]);
+
+  const hasActions = Boolean(extraActions || (actionLabel && onActionClick));
+
   return (
-    <div className="space-y-4">
-      <Breadcrumb items={breadcrumbs} />
+    <>
+      {/* Screen-reader and accessible heading for semantic accessibility and test suites */}
+      <h1 className="sr-only">{title}</h1>
 
-      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          {Icon && (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Icon className="h-6 w-6" />
+      {/* Unified division: Breadcrumb on the left, action buttons on the right */}
+      <Breadcrumb
+        items={breadcrumbs}
+        actions={
+          hasActions ? (
+            <div className="flex items-center gap-2">
+              {extraActions}
+              {actionLabel && onActionClick && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={onActionClick}
+                  icon={actionIcon}
+                >
+                  {actionLabel}
+                </Button>
+              )}
             </div>
-          )}
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                {title}
-              </h1>
-              {badge}
-            </div>
-            {subtitle && (
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                {subtitle}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          {extraActions}
-          {actionLabel && onActionClick && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={onActionClick}
-              icon={actionIcon}
-            >
-              {actionLabel}
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+          ) : undefined
+        }
+      />
+    </>
   );
 };
 

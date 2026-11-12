@@ -208,20 +208,23 @@ export const ERP_MODULES: ModuleConfig[] = [
       { label: 'Mess Schedule', href: '/app/hostel' },
     ],
   },
-  // 12. Settings
+  // 12. Administration & Access Management
   {
     id: 'settings',
-    name: 'Institutional Settings',
-    shortName: 'Settings',
-    description: 'School profile, academic calendar terms, role permissions, and system audit logs.',
+    name: 'Administration & Access',
+    shortName: 'Admin & Access',
+    description: 'Centralized administration workspace: organizations, user management, RBAC matrix, security, billing, and audit logs.',
     icon: Settings,
-    route: '/app/settings',
+    route: '/admin',
     category: 'system',
     requiredPermission: 'settings',
     shortcuts: [
-      { label: 'School Profile', href: '/app/settings' },
-      { label: 'Academic Terms', href: '/app/settings' },
-      { label: 'Roles & Security', href: '/app/settings' },
+      { label: 'Organizations', href: '/admin/organizations' },
+      { label: 'User Directory', href: '/admin/users' },
+      { label: 'Roles & Matrix', href: '/admin/roles' },
+      { label: 'Security & Sessions', href: '/admin/security' },
+      { label: 'Subscriptions & Billing', href: '/admin/billing' },
+      { label: 'Audit Trails', href: '/admin/audit-logs' },
     ],
   },
 ];

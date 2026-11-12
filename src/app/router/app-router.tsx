@@ -12,9 +12,7 @@ import { LandingPage } from '@/pages/public/landing-page';
 import { ModuleContainerPage } from '@/pages/module/module-container-page';
 import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@/features/auth';
 import { WorkspaceLauncherPage, SelectWorkspacePage } from '@/features/workspace';
-import { TenantsRoutes } from '@/features/tenants';
-import { RolesRoutes } from '@/features/roles';
-import { UsersRoutes } from '@/features/users';
+import { AdminRoutes } from '@/features/administration';
 import { Button } from '@/components/ui/button';
 
 const NotFoundPage: React.FC = () => {
@@ -110,11 +108,12 @@ export const AppRouter: React.FC = () => {
         }
       >
         {/* Modular Feature Sub-Routers */}
-        <Route path="/tenants/*" element={<TenantsRoutes />} />
-        <Route path="/roles/*" element={<RolesRoutes />} />
-        <Route path="/users/*" element={<UsersRoutes />} />
-        <Route path="/settings" element={<Navigate to="/roles" replace />} />
-        <Route path="/settings/*" element={<Navigate to="/roles" replace />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/tenants/*" element={<Navigate to="/admin/organizations" replace />} />
+        <Route path="/roles/*" element={<Navigate to="/admin/roles" replace />} />
+        <Route path="/users/*" element={<Navigate to="/admin/users" replace />} />
+        <Route path="/settings" element={<Navigate to="/admin" replace />} />
+        <Route path="/settings/*" element={<Navigate to="/admin" replace />} />
 
         {/* Catch-All Business Module Container */}
         <Route

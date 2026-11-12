@@ -10,6 +10,11 @@ import {
   Settings,
   ShieldCheck,
   Building2,
+  Lock,
+  CreditCard,
+  Sliders,
+  History,
+  KeyRound,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -37,30 +42,20 @@ export const sidebarConfig: SidebarItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: 'Institutions & Schools',
-    href: '/tenants',
-    icon: Building2,
-    permission: 'organizations.manage',
-    children: [
-      { label: 'Institutions Directory', href: '/tenants' },
-      { label: 'Provision School', href: '/tenants/new' },
-    ],
-  },
-  {
-    label: 'Roles & Permissions',
-    href: '/roles',
+    label: 'Administration & Access',
+    href: '/admin',
     icon: ShieldCheck,
     permission: 'settings.roles_permissions.rbac.view',
     children: [
-      { label: 'Roles Directory', href: '/roles' },
-      { label: 'New Custom Role', href: '/roles/new' },
+      { label: 'Admin Hub Overview', href: '/admin', icon: LayoutDashboard },
+      { label: 'Organization Management', href: '/admin/organizations', permission: 'organizations.manage', icon: Building2 },
+      { label: 'User Management', href: '/admin/users', permission: 'settings.user_assignments.allocations.view', icon: Users },
+      { label: 'Roles & Permissions', href: '/admin/roles', permission: 'settings.roles_permissions.rbac.view', icon: KeyRound },
+      { label: 'Authentication & Security', href: '/admin/security', permission: 'settings.roles_permissions.rbac.view', icon: Lock },
+      { label: 'Subscriptions & Billing', href: '/admin/billing', permission: 'organizations.manage', icon: CreditCard },
+      { label: 'Plans & Entitlements', href: '/admin/plans', permission: 'organizations.manage', icon: Sliders },
+      { label: 'Audit & Activity Logs', href: '/admin/audit-logs', permission: 'settings.roles_permissions.rbac.view', icon: History },
     ],
-  },
-  {
-    label: 'Members & Allocations',
-    href: '/users',
-    icon: Users,
-    permission: 'settings.user_assignments.allocations.view',
   },
   {
     label: 'Academics',

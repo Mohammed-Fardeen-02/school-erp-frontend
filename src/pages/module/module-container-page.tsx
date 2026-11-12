@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { ArrowLeft, Layers, Info } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { ERP_MODULES } from '@/app/config/modules.config';
@@ -9,7 +9,6 @@ import { Breadcrumb } from '@/app/layouts/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/data-display/badge';
 import { Card } from '@/components/data-display/card';
-import { RolesManagementPage } from '@/features/roles-permissions';
 
 export const ModuleContainerPage: React.FC = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
@@ -17,8 +16,8 @@ export const ModuleContainerPage: React.FC = () => {
   const { getActiveWorkspace } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
 
-  if (moduleId === 'settings') {
-    return <RolesManagementPage />;
+  if (moduleId === 'settings' || moduleId === 'admin') {
+    return <Navigate to="/admin" replace />;
   }
 
   const moduleDef = ERP_MODULES.find(m => m.id === moduleId) || {

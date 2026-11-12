@@ -21,6 +21,7 @@ export class ApiClient {
   private token: string | null = null;
   private activeOrganizationId: string | null = null;
   private activeLocationId: string | null = null;
+  private isPlatformSuperAdmin: boolean = false;
 
   constructor(
     baseUrl: string = env.VITE_API_BASE_URL,
@@ -39,6 +40,17 @@ export class ApiClient {
 
   public getToken(): string | null {
     return this.token;
+  }
+
+  /**
+   * Enable/disable Platform Super Admin override headers for institutional operations
+   */
+  public setPlatformSuperAdmin(isSuperAdmin: boolean): void {
+    this.isPlatformSuperAdmin = isSuperAdmin;
+  }
+
+  public getPlatformSuperAdmin(): boolean {
+    return this.isPlatformSuperAdmin;
   }
 
   /**
@@ -95,6 +107,11 @@ export class ApiClient {
 
     if (this.activeLocationId) {
       defaultHeaders['X-Location-Id'] = this.activeLocationId;
+    }
+
+    if (this.isPlatformSuperAdmin) {
+      defaultHeaders['X-Platform-Override'] = 'true';
+      defaultHeaders['X-Override-Reason'] = 'Platform Super Admin institutional administration';
     }
 
     try {

@@ -64,6 +64,9 @@ if (initialSession?.token) {
 if (initialActiveId) {
   apiClient.setTenantContext(initialActiveId, initialLocationId);
 }
+if (initialSession?.user?.role === 'SUPER_ADMIN') {
+  apiClient.setPlatformSuperAdmin(true);
+}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: !!initialSession?.user,
@@ -85,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       apiClient.setToken(token);
     }
     apiClient.setTenantContext(autoActiveId, null);
+    apiClient.setPlatformSuperAdmin(user.role === 'SUPER_ADMIN');
 
     set({
       isAuthenticated: true,
@@ -115,6 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     saveSession(null);
     apiClient.setToken(null);
     apiClient.setTenantContext(null, null);
+    apiClient.setPlatformSuperAdmin(false);
     queryClient.clear();
 
     set({

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, GraduationCap, ArrowLeft } from 'lucide-react';
+import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
@@ -124,38 +124,23 @@ export const Sidebar: React.FC = () => {
         {/* Module / Brand Header */}
         <div className="flex flex-col border-b border-border px-3 py-3 justify-center min-h-[64px]">
           {isScopedModule ? (
-            <div>
-              {/* Back to All Workspaces Launcher button */}
-              <button
-                type="button"
-                onClick={() => handleNav('/workspace')}
-                title="Return to Workspace Launcher"
-                className={`group flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-2 ${
-                  isCollapsedDesktop ? 'justify-center w-full px-0' : 'px-1'
-                }`}
-              >
-                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5 shrink-0" />
-                {!isCollapsedDesktop && <span>All Workspaces</span>}
-              </button>
-
-              {/* Active Workspace Banner */}
-              <div
-                className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
-                  isCollapsedDesktop ? 'w-full justify-center' : ''
-                }`}
-              >
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
-                  <ModuleIcon className="h-4 w-4" />
-                </div>
-                {!isCollapsedDesktop && (
-                  <div className="min-w-0 overflow-hidden">
-                    <div className="truncate text-sm font-bold text-foreground">{moduleName}</div>
-                    <div className="truncate text-[11px] font-medium text-muted-foreground">
-                      {moduleDescription}
-                    </div>
-                  </div>
-                )}
+            /* Active Module Workspace Banner */
+            <div
+              className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
+                isCollapsedDesktop ? 'w-full justify-center' : ''
+              }`}
+            >
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
+                <ModuleIcon className="h-4 w-4" />
               </div>
+              {!isCollapsedDesktop && (
+                <div className="min-w-0 overflow-hidden">
+                  <div className="truncate text-sm font-bold text-foreground">{moduleName}</div>
+                  <div className="truncate text-[11px] font-medium text-muted-foreground">
+                    {moduleDescription}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* General Workspace Header */

@@ -11,6 +11,7 @@ import {
   BillingPage,
   PlansPage,
   AuditLogsPage,
+  TenantConfigurationPage,
 } from '../pages';
 import { RoleMatrixPage } from '@/features/roles/pages/role-matrix-page';
 import { NewTenantPage, TenantDetailPage } from '@/features/tenants/pages';
@@ -126,6 +127,16 @@ export const AdminRoutes: React.FC = () => {
         element={
           <PermissionGuard permission="settings.roles_permissions.rbac.view">
             <AuditLogsPage />
+          </PermissionGuard>
+        }
+      />
+
+      {/* 9. Tenant Configuration & Integrations */}
+      <Route
+        path="configuration"
+        element={
+          <PermissionGuard permission="organizations.manage">
+            <TenantConfigurationPage />
           </PermissionGuard>
         }
       />

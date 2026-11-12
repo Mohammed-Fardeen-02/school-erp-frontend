@@ -7,4 +7,5 @@ export * from './security-page';
 export * from './billing-page';
 export * from './plans-page';
 export * from './audit-logs-page';
+export * from './tenant-configuration-page';
 

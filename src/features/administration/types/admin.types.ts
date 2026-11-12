@@ -242,3 +242,101 @@ export interface AuditLogFilters {
   page?: number;
   limit?: number;
 }
+
+// ==========================================
+// 8. Tenant Configuration & Integrations Types
+// ==========================================
+
+export type SmtpSecurityMode = 'STARTTLS' | 'SSL_TLS' | 'NONE';
+
+export interface TenantSmtpConfig {
+  host: string;
+  port: number;
+  security: SmtpSecurityMode;
+  username?: string;
+  password?: string;
+  isPasswordSet?: boolean;
+  fromAddress: string;
+  fromName: string;
+  replyTo?: string;
+  isActive: boolean;
+  lastVerifiedAt?: string | null;
+  lastError?: string | null;
+}
+
+export type StorageProvider = 'AWS_S3' | 'CLOUDFLARE_R2' | 'MINIO' | 'GCS' | 'LOCAL';
+
+export interface TenantStorageConfig {
+  provider: StorageProvider;
+  bucket: string;
+  region: string;
+  endpointUrl?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  isSecretSet?: boolean;
+  cdnCustomDomain?: string;
+  maxUploadSizeMb: number;
+  allowedExtensions: string[];
+  isActive: boolean;
+  lastTestedAt?: string | null;
+}
+
+export type PaymentGatewayMode = 'TEST' | 'LIVE';
+
+export interface TenantRazorpayConfig {
+  isEnabled: boolean;
+  mode: PaymentGatewayMode;
+  keyId: string;
+  keySecret?: string;
+  isSecretSet?: boolean;
+  webhookSecret?: string;
+  merchantDisplayName?: string;
+  currency: string;
+  autoCapture: boolean;
+  generateInvoicesOnSuccess: boolean;
+  lastVerifiedAt?: string | null;
+}
+
+export interface TenantThemeConfig {
+  institutionName: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  primaryColor: string;
+  accentColor: string;
+  tagline?: string;
+  emailSignature?: string;
+  defaultTheme: 'SYSTEM' | 'LIGHT' | 'DARK';
+}
+
+export interface TenantConfigurationDto {
+  organizationId: string;
+  smtp: TenantSmtpConfig;
+  storage: TenantStorageConfig;
+  razorpay: TenantRazorpayConfig;
+  theme: TenantThemeConfig;
+  updatedAt: string;
+}
+
+export type EmailTemplateType =
+  | 'USER_INVITATION'
+  | 'ORG_WELCOME'
+  | 'PASSWORD_RESET'
+  | 'EMAIL_VERIFICATION';
+
+export interface EmailTemplatePreviewDto {
+  id: EmailTemplateType;
+  name: string;
+  category: 'Onboarding' | 'Security' | 'Account';
+  subject: string;
+  description: string;
+  sampleVariables: Record<string, string>;
+  htmlContent: string;
+  plainTextContent: string;
+}
+
+export interface SendTestEmailPayload {
+  toEmail: string;
+  templateType: EmailTemplateType;
+  customSubject?: string;
+  customVariables?: Record<string, string>;
+}

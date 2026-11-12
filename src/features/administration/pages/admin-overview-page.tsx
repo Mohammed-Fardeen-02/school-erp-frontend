@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Download,
   Layers,
+  Settings,
 } from 'lucide-react';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AdminPageHeader } from '../components/common/admin-page-header';
@@ -145,6 +146,14 @@ export const AdminOverviewPage: React.FC = () => {
       icon: History,
       badge: 'SHA-256 Cryptographic Trail',
       tag: 'Compliance',
+    },
+    {
+      title: 'Tenant Configuration & Integrations',
+      description: 'Configure custom SMTP mail servers, S3 cloud document storage, Razorpay gateway, and branding.',
+      href: '/admin/configuration',
+      icon: Settings,
+      badge: 'SMTP • Storage • Razorpay',
+      tag: 'Integrations',
     },
   ];
 

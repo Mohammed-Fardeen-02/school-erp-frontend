@@ -107,5 +107,17 @@ describe('AdminRoutes Feature Router', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Audit & Activity Logs' })).toBeInTheDocument();
     expect(screen.getByText('Total Audit Trails')).toBeInTheDocument();
   });
+
+  it('renders TenantConfigurationPage on /admin/configuration', async () => {
+    render(<AdminRoutes />, { wrapper: createWrapper('/admin/configuration') });
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Tenant System Configuration & Integrations' })
+    ).toBeInTheDocument();
+    expect(await screen.findByText('SMTP Mail Server')).toBeInTheDocument();
+    expect(screen.getByText('File Storage')).toBeInTheDocument();
+    expect(screen.getByText('Razorpay Gateway')).toBeInTheDocument();
+    expect(screen.getByText('Theme & Branding')).toBeInTheDocument();
+    expect(screen.getByText('Email Templates')).toBeInTheDocument();
+  });
 });
 

@@ -10,6 +10,10 @@ import type {
   SaveRoleWithCapabilitiesPayload,
   SecurityPolicyConfig,
   AuditLogFilters,
+  TenantConfigurationDto,
+  TenantStorageConfig,
+  TenantRazorpayConfig,
+  SendTestEmailPayload,
 } from '../types/admin.types';
 
 export const adminQueryKeys = {
@@ -24,6 +28,7 @@ export const adminQueryKeys = {
   invoices: () => ['admin', 'billing', 'invoices'] as const,
   plans: (orgId?: string) => ['admin', 'plans', orgId] as const,
   auditLogs: (filters?: AuditLogFilters) => ['admin', 'audit-logs', filters] as const,
+  configuration: (orgId?: string) => ['admin', 'configuration', orgId] as const,
 };
 
 // ------------------------------------------
@@ -244,6 +249,54 @@ export function useAuditLogs(filters: AuditLogFilters = {}) {
     queryKey: adminQueryKeys.auditLogs(filters),
     queryFn: () => AdminApi.listAuditLogs(filters),
     staleTime: 15 * 1000,
+  });
+}
+
+// ------------------------------------------
+// 8. Tenant Configuration & Integrations Hooks
+// ------------------------------------------
+export function useTenantConfiguration(organizationId?: string) {
+  const activeWorkspaceId = useAuthStore((state) => state.activeWorkspaceId);
+  const targetId = organizationId || activeWorkspaceId || undefined;
+  return useQuery({
+    queryKey: adminQueryKeys.configuration(targetId),
+    queryFn: () => AdminApi.getTenantConfiguration(targetId),
+  });
+}
+
+export function useUpdateTenantConfiguration() {
+  const queryClient = useQueryClient();
+  const activeWorkspaceId = useAuthStore((state) => state.activeWorkspaceId);
+  return useMutation({
+    mutationFn: ({
+      organizationId,
+      payload,
+    }: {
+      organizationId?: string;
+      payload: Partial<TenantConfigurationDto>;
+    }) =>
+      AdminApi.updateTenantConfiguration(organizationId || activeWorkspaceId || '', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'configuration'] });
+    },
+  });
+}
+
+export function useSendTestEmail() {
+  return useMutation({
+    mutationFn: (payload: SendTestEmailPayload) => AdminApi.sendTestEmail(payload),
+  });
+}
+
+export function useTestStorageConnection() {
+  return useMutation({
+    mutationFn: (config: TenantStorageConfig) => AdminApi.testStorageConnection(config),
+  });
+}
+
+export function useVerifyPaymentGateway() {
+  return useMutation({
+    mutationFn: (config: TenantRazorpayConfig) => AdminApi.verifyPaymentGateway(config),
   });
 }
 

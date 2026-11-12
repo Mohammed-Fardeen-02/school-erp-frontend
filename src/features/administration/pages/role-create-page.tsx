@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldPlus } from 'lucide-react';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AdminPageHeader } from '../components/common/admin-page-header';
-import { RoleCapabilityForm } from '../components/roles/role-capability-form';
+import { RoleBuilderStudio } from '../components/roles/role-builder-studio';
 import { useSaveRoleWithCapabilities } from '../hooks/use-admin';
 import type { SaveRoleWithCapabilitiesPayload } from '../types/admin.types';
 
@@ -30,7 +30,7 @@ export const RoleCreatePage: React.FC = () => {
         ]}
       />
 
-      <RoleCapabilityForm
+      <RoleBuilderStudio
         onSubmit={handleSubmit}
         onCancel={() => navigate('/admin/roles')}
         isLoading={saveRoleMutation.isPending}

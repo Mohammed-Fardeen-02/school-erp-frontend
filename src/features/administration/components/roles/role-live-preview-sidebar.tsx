@@ -123,123 +123,125 @@ export const RoleLivePreviewSidebar: React.FC<RoleLivePreviewSidebarProps> = ({
   }, [selectedPermissionCodes.length]);
 
   return (
-    <div className="sticky top-20 space-y-4">
+    <div className="h-full">
       {/* Role Live Summary Card */}
-      <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs space-y-4">
-        {/* Header Badge */}
-        <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">
-              <Shield className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-bold text-sm text-foreground truncate">
-                {roleName || 'Unnamed Role'}
+      <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs flex flex-col justify-between h-full space-y-4">
+        <div className="space-y-4">
+          {/* Header Badge */}
+          <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">
+                <Shield className="h-5 w-5" />
               </div>
-              <div className="font-mono text-xs text-muted-foreground truncate">
-                {roleCode || 'CUSTOM_ROLE_CODE'}
-              </div>
-            </div>
-          </div>
-          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
-            {isEdit ? 'Editing Role' : 'New Custom Role'}
-          </span>
-        </div>
-
-        {/* Scope Pill */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground font-medium">Scope:</span>
-          {campusScope === 'ALL' ? (
-            <span className="inline-flex items-center gap-1 font-bold text-xs text-primary bg-primary/5 border border-primary/20 px-2 py-0.5 rounded-md">
-              <Building2 className="h-3 w-3" />
-              <span>All Institutional Campuses</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 font-bold text-xs text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
-              <MapPin className="h-3 w-3" />
-              <span>{specificCampusName || 'Designated Campus'}</span>
-            </span>
-          )}
-        </div>
-
-        {description && (
-          <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-2 leading-relaxed">
-            "{description}"
-          </p>
-        )}
-
-        {/* Privilege Tier Meter */}
-        <div className="rounded-xl border border-border p-3.5 bg-surface-muted/30 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-semibold">Access Level</span>
-            <span className={`font-bold ${tierInfo.color}`}>{tierInfo.tier}</span>
-          </div>
-
-          <div className="h-2 w-full rounded-full bg-surface-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${tierInfo.bar}`}
-              style={{ width: `${tierInfo.pct}%` }}
-            />
-          </div>
-
-          <p className="text-[11px] text-muted-foreground">{tierInfo.desc}</p>
-        </div>
-
-        {/* Capability Counter */}
-        <div className="space-y-2 pt-1 border-t border-border">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-foreground">Capabilities Granted</span>
-            <span className="font-bold text-xs text-foreground">
-              <strong className="text-primary">{selectedPermissionCodes.length}</strong> / {totalCapabilities}
-            </span>
-          </div>
-
-          {/* Module Breakdown List */}
-          <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
-            {moduleBreakdown.length > 0 ? (
-              moduleBreakdown.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between text-[11px] p-1.5 rounded-lg bg-surface-muted/50"
-                >
-                  <span className="text-foreground truncate pr-2 font-medium">{m.name}</span>
-                  <span className="font-mono text-muted-foreground shrink-0 font-semibold">
-                    {m.granted} / {m.total}
-                  </span>
+              <div className="min-w-0">
+                <div className="font-bold text-sm text-foreground truncate">
+                  {roleName || 'Unnamed Role'}
                 </div>
-              ))
+                <div className="font-mono text-xs text-muted-foreground truncate">
+                  {roleCode || 'CUSTOM_ROLE_CODE'}
+                </div>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+              {isEdit ? 'Editing Role' : 'New Custom Role'}
+            </span>
+          </div>
+
+          {/* Scope Pill */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground font-medium">Scope:</span>
+            {campusScope === 'ALL' ? (
+              <span className="inline-flex items-center gap-1 font-bold text-xs text-primary bg-primary/5 border border-primary/20 px-2 py-0.5 rounded-md">
+                <Building2 className="h-3 w-3" />
+                <span>All Institutional Campuses</span>
+              </span>
             ) : (
-              <p className="text-xs text-muted-foreground py-2 text-center">
-                No capabilities selected yet.
-              </p>
+              <span className="inline-flex items-center gap-1 font-bold text-xs text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                <MapPin className="h-3 w-3" />
+                <span>{specificCampusName || 'Designated Campus'}</span>
+              </span>
             )}
           </div>
-        </div>
 
-        {/* High Risk Security Alert Warning Box */}
-        {highRiskSelected.length > 0 && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1.5 animate-in fade-in-0">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-              <span>{highRiskSelected.length} Sensitive Capabilities</span>
-            </div>
-            <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-              This role grants sensitive operations (e.g. publishing final grades or modifying fee structures).
+          {description && (
+            <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-2 leading-relaxed">
+              "{description}"
             </p>
-            <ul className="text-[10px] space-y-0.5 text-amber-900 dark:text-amber-200 font-mono list-disc list-inside">
-              {highRiskSelected.slice(0, 3).map((h) => (
-                <li key={h.code} className="truncate">
-                  {h.label}
-                </li>
-              ))}
-              {highRiskSelected.length > 3 && (
-                <li className="font-sans font-semibold">
-                  +{highRiskSelected.length - 3} more sensitive privileges
-                </li>
-              )}
-            </ul>
+          )}
+
+          {/* Privilege Tier Meter */}
+          <div className="rounded-xl border border-border p-3.5 bg-surface-muted/30 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground font-semibold">Access Level</span>
+              <span className={`font-bold ${tierInfo.color}`}>{tierInfo.tier}</span>
+            </div>
+
+            <div className="h-2 w-full rounded-full bg-surface-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${tierInfo.bar}`}
+                style={{ width: `${tierInfo.pct}%` }}
+              />
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">{tierInfo.desc}</p>
           </div>
-        )}
+
+          {/* Capability Counter */}
+          <div className="space-y-2 pt-1 border-t border-border">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-foreground">Capabilities Granted</span>
+              <span className="font-bold text-xs text-foreground">
+                <strong className="text-primary">{selectedPermissionCodes.length}</strong> / {totalCapabilities}
+              </span>
+            </div>
+
+            {/* Module Breakdown List */}
+            <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
+              {moduleBreakdown.length > 0 ? (
+                moduleBreakdown.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between text-[11px] p-1.5 rounded-lg bg-surface-muted/50"
+                  >
+                    <span className="text-foreground truncate pr-2 font-medium">{m.name}</span>
+                    <span className="font-mono text-muted-foreground shrink-0 font-semibold">
+                      {m.granted} / {m.total}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground py-2 text-center">
+                  No capabilities selected yet.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* High Risk Security Alert Warning Box */}
+          {highRiskSelected.length > 0 && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1.5 animate-in fade-in-0">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                <span>{highRiskSelected.length} Sensitive Capabilities</span>
+              </div>
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                This role grants sensitive operations (e.g. publishing final grades or modifying fee structures).
+              </p>
+              <ul className="text-[10px] space-y-0.5 text-amber-900 dark:text-amber-200 font-mono list-disc list-inside">
+                {highRiskSelected.slice(0, 3).map((h) => (
+                  <li key={h.code} className="truncate">
+                    {h.label}
+                  </li>
+                ))}
+                {highRiskSelected.length > 3 && (
+                  <li className="font-sans font-semibold">
+                    +{highRiskSelected.length - 3} more sensitive privileges
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
 
         {/* Action Buttons */}
         <div className="pt-2 space-y-2 border-t border-border">

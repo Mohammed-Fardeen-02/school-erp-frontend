@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { TemplateArchetypeCarousel, type RoleArchetype } from './template-archetype-carousel';
 import { RoleProfileCard } from './role-profile-card';
 import { GranularCapabilitySelector } from './granular-capability-selector';
 import { RoleLivePreviewSidebar } from './role-live-preview-sidebar';
@@ -47,7 +46,6 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
     initialData?.permissionCodes || []
   );
-  const [selectedArchetypeId, setSelectedArchetypeId] = useState<string | null>(null);
   const [campusScope, setCampusScope] = useState<'ALL' | 'SPECIFIC'>(
     initialData?.campusScope || 'ALL'
   );
@@ -61,7 +59,6 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<RoleFormData>({
@@ -77,21 +74,6 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
   const watchedRoleCode = watch('roleCode');
   const watchedDescription = watch('description');
 
-  const handleSelectArchetype = (archetype: RoleArchetype) => {
-    setSelectedArchetypeId(archetype.id);
-    if (archetype.id === 'BLANK') {
-      setSelectedPermissions([]);
-      return;
-    }
-
-    if (!isEdit) {
-      setValue('roleName', archetype.name);
-      setValue('roleCode', archetype.codePrefix);
-      setValue('description', archetype.description);
-    }
-    setSelectedPermissions(archetype.recommendedPermissions);
-  };
-
   const handleSave = async (data: RoleFormData, isDraft = false) => {
     const payload: SaveRoleWithCapabilitiesPayload = {
       roleCode: data.roleCode,
@@ -104,55 +86,48 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left 8 Columns: Builder Studio Canvas */}
-      <div className="lg:col-span-8 space-y-6">
-        {/* 1. Quick-Starter Role Archetypes (only shown on create) */}
-        {!isEdit && (
-          <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
-            <TemplateArchetypeCarousel
-              selectedArchetypeId={selectedArchetypeId}
-              onSelectArchetype={handleSelectArchetype}
-            />
-          </div>
-        )}
+    <div className="space-y-5">
+      {/* Top Section: Role Profile & Scope Configuration (left) alongside New Custom Role Live Preview (right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="lg:col-span-7">
+          <RoleProfileCard
+            register={register}
+            errors={errors}
+            isEdit={isEdit}
+            campusScope={campusScope}
+            onCampusScopeChange={setCampusScope}
+            specificCampusId={specificCampusId}
+            onSpecificCampusChange={setSpecificCampusId}
+          />
+        </div>
 
-        {/* 2. Role Profile & Identity Card */}
-        <RoleProfileCard
-          register={register}
-          errors={errors}
-          isEdit={isEdit}
-          campusScope={campusScope}
-          onCampusScopeChange={setCampusScope}
-          specificCampusId={specificCampusId}
-          onSpecificCampusChange={setSpecificCampusId}
-        />
+        <div className="lg:col-span-5">
+          <RoleLivePreviewSidebar
+            roleName={watchedRoleName}
+            roleCode={watchedRoleCode}
+            description={watchedDescription}
+            campusScope={campusScope}
+            specificCampusName={specificCampusName}
+            selectedPermissionCodes={selectedPermissions}
+            isEdit={isEdit}
+            isSubmitting={isSubmitting || isLoading}
+            onSaveDraft={
+              !isEdit ? handleSubmit((data) => handleSave(data, true)) : undefined
+            }
+            onPublish={handleSubmit((data) => handleSave(data, false))}
+            onCancel={onCancel}
+          />
+        </div>
+      </div>
 
-        {/* 3. Granular Capability Matrix Builder */}
+      {/* Bottom Section: Granted Capabilities & Access Checkboxes across Full Width */}
+      <div className="w-full">
         <GranularCapabilitySelector
           selectedCodes={selectedPermissions}
           onChange={setSelectedPermissions}
         />
       </div>
-
-      {/* Right 4 Columns: Sticky Live Role Privilege Preview Sidebar */}
-      <div className="lg:col-span-4">
-        <RoleLivePreviewSidebar
-          roleName={watchedRoleName}
-          roleCode={watchedRoleCode}
-          description={watchedDescription}
-          campusScope={campusScope}
-          specificCampusName={specificCampusName}
-          selectedPermissionCodes={selectedPermissions}
-          isEdit={isEdit}
-          isSubmitting={isSubmitting || isLoading}
-          onSaveDraft={
-            !isEdit ? handleSubmit((data) => handleSave(data, true)) : undefined
-          }
-          onPublish={handleSubmit((data) => handleSave(data, false))}
-          onCancel={onCancel}
-        />
-      </div>
     </div>
   );
 };
+

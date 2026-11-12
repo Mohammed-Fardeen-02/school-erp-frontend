@@ -27,43 +27,45 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
   const { data: campuses = [] } = useAdminCampuses();
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs space-y-4">
-      <div className="flex items-center gap-2.5 border-b border-border pb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Shield className="h-4 w-4" />
+    <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs space-y-4 h-full flex flex-col justify-between">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2.5 border-b border-border pb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Shield className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-foreground">Role Profile & Scope Configuration</h2>
+            <p className="text-xs text-muted-foreground">
+              Define identity, identifier code, and organizational campus authorization boundaries.
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-base font-bold text-foreground">Role Profile & Scope Configuration</h2>
-          <p className="text-xs text-muted-foreground">
-            Define identity, identifier code, and organizational campus authorization boundaries.
-          </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Role Code (Unique Identifier)"
+            placeholder="e.g. EXAM_COORDINATOR"
+            disabled={isEdit}
+            error={errors.roleCode?.message as string | undefined}
+            helperText={!isEdit ? 'Uppercase alphanumeric characters and underscores only' : undefined}
+            {...register('roleCode')}
+          />
+          <Input
+            label="Role Display Name"
+            placeholder="e.g. Examination Coordinator"
+            error={errors.roleName?.message as string | undefined}
+            {...register('roleName')}
+          />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Role Code (Unique Identifier)"
-          placeholder="e.g. EXAM_COORDINATOR"
-          disabled={isEdit}
-          error={errors.roleCode?.message as string | undefined}
-          helperText={!isEdit ? 'Uppercase alphanumeric characters and underscores only' : undefined}
-          {...register('roleCode')}
-        />
-        <Input
-          label="Role Display Name"
-          placeholder="e.g. Examination Coordinator"
-          error={errors.roleName?.message as string | undefined}
-          {...register('roleName')}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        <Input
-          label="Role Description"
-          placeholder="Detailed description of responsibilities and permissions associated with this role..."
-          error={errors.description?.message as string | undefined}
-          {...register('description')}
-        />
+        <div className="grid grid-cols-1 gap-4">
+          <Input
+            label="Role Description"
+            placeholder="Detailed description of responsibilities and permissions associated with this role..."
+            error={errors.description?.message as string | undefined}
+            {...register('description')}
+          />
+        </div>
       </div>
 
       {/* Campus Scoping Options */}
@@ -151,3 +153,4 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
     </div>
   );
 };
+

@@ -239,3 +239,4 @@ export const TemplateArchetypeCarousel: React.FC<TemplateArchetypeCarouselProps>
     </div>
   );
 };
+

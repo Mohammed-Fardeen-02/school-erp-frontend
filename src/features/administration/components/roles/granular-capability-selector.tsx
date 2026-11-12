@@ -310,11 +310,36 @@ export const GranularCapabilitySelector: React.FC<GranularCapabilitySelectorProp
             >
               {/* Module Header Bar */}
               <div className="flex items-center justify-between px-4 py-3 bg-surface-muted/40 border-b border-border">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                  {!isReadOnly && (
+                    <input
+                      type="checkbox"
+                      data-testid={`module-checkbox-${module.id}`}
+                      checked={isAllSelected}
+                      ref={(el) => {
+                        if (el) {
+                          el.indeterminate = selectedCount > 0 && !isAllSelected;
+                        }
+                      }}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleModule(module);
+                      }}
+                      title={
+                        isAllSelected
+                          ? `Deselect all capabilities in ${module.name}`
+                          : `Select all capabilities in ${module.name}`
+                      }
+                      aria-label={`Select all capabilities in ${module.name}`}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer shrink-0"
+                    />
+                  )}
+
                   <button
                     type="button"
                     onClick={() => setCollapsed((p) => ({ ...p, [module.id]: !p[module.id] }))}
-                    className="text-muted-foreground hover:text-foreground p-0.5 rounded"
+                    className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-surface-muted transition-colors cursor-pointer"
+                    aria-label={isCollapsed ? `Expand ${module.name}` : `Collapse ${module.name}`}
                   >
                     {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
@@ -350,7 +375,7 @@ export const GranularCapabilitySelector: React.FC<GranularCapabilitySelectorProp
 
               {/* Actions Grid */}
               {!isCollapsed && (
-                <div className="p-3.5 grid grid-cols-1 md:grid-cols-2 gap-2.5 bg-surface">
+                <div className="p-3.5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-surface">
                   {module.actions.map((action) => {
                     const isChecked = selectedSet.has(action.code);
 
@@ -365,6 +390,7 @@ export const GranularCapabilitySelector: React.FC<GranularCapabilitySelectorProp
                       >
                         <input
                           type="checkbox"
+                          data-testid={`action-checkbox-${action.code}`}
                           checked={isChecked}
                           onChange={() => toggleAction(action.code)}
                           disabled={isReadOnly}

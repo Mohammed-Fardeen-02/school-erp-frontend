@@ -8,15 +8,17 @@ import { RoleLivePreviewSidebar } from './role-live-preview-sidebar';
 import { useAdminCampuses } from '../../hooks/use-admin';
 import type { SaveRoleWithCapabilitiesPayload } from '../../types/admin.types';
 
+// Validations strictly enforced ONLY for required fields
 const roleSchema = z.object({
   roleCode: z
     .string()
+    .trim()
     .min(3, 'Role code must be at least 3 characters')
     .max(32, 'Role code cannot exceed 32 characters')
     .regex(/^[A-Z0-9_]+$/, 'Must be uppercase alphanumeric with underscores')
     .transform((v) => v.toUpperCase()),
-  roleName: z.string().min(3, 'Role name must be at least 3 characters'),
-  description: z.string().optional(),
+  roleName: z.string().trim().min(3, 'Role name must be at least 3 characters'),
+  description: z.string().optional().or(z.literal('')),
 });
 
 type RoleFormData = z.infer<typeof roleSchema>;

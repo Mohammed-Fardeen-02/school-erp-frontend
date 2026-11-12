@@ -56,42 +56,111 @@ export const TenantsTable: React.FC<TenantsTableProps> = ({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border bg-surface-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th scope="col" className="px-6 py-3.5">
+        <table className="w-full border-collapse border border-border text-left text-sm">
+          <thead className="sticky top-0 z-10">
+            <tr style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}>
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 School Institution
               </th>
-              <th scope="col" className="px-4 py-3.5">
+              <th
+                scope="col"
+                className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Type
               </th>
-              <th scope="col" className="px-4 py-3.5">
+              <th
+                scope="col"
+                className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-center"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Plan
               </th>
-              <th scope="col" className="px-4 py-3.5">
+              <th
+                scope="col"
+                className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-center"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Status
               </th>
-              <th scope="col" className="px-4 py-3.5">
+              <th
+                scope="col"
+                className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-center"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Campuses
               </th>
-              <th scope="col" className="px-4 py-3.5">
+              <th
+                scope="col"
+                className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Created
               </th>
-              <th scope="col" className="px-6 py-3.5 text-right">
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center"
+                style={{
+                  backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                  color: 'var(--color-table-header-text, #4c1d95)',
+                  borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                }}
+              >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="bg-surface">
             {tenants.map((tenant) => {
               const initials = (tenant.code || tenant.displayName).slice(0, 2).toUpperCase();
 
               return (
                 <tr
                   key={tenant.id}
-                  className="group transition-colors hover:bg-surface-muted/30"
+                  className="group transition-colors hover:bg-primary/5"
+                  style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                 >
-                  <td className="px-6 py-4">
+                  <td
+                    className="px-6 py-4"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <div
                         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl font-bold text-white text-xs shadow-xs"
@@ -116,28 +185,58 @@ export const TenantsTable: React.FC<TenantsTableProps> = ({
                     </div>
                   </td>
 
-                  <td className="px-4 py-4 text-xs text-muted-foreground">
+                  <td
+                    className="px-4 py-4 text-xs text-muted-foreground"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     {tenant.organizationType ? tenant.organizationType.replace(/_/g, ' ') : 'INDEPENDENT'}
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td
+                    className="px-4 py-4 text-center"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     <Badge variant="outline" className="font-mono text-[11px]">
                       {tenant.subscriptionPlan || 'STANDARD'}
                     </Badge>
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td
+                    className="px-4 py-4 text-center"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     <TenantStatusBadge status={tenant.status} />
                   </td>
 
-                  <td className="px-4 py-4 text-xs text-muted-foreground">
+                  <td
+                    className="px-4 py-4 text-xs text-muted-foreground text-center"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     <span className="font-semibold text-foreground">
                       {tenant._count?.locations ?? 1}
                     </span>{' '}
                     / {tenant.maxLocations}
                   </td>
 
-                  <td className="px-4 py-4 text-xs text-muted-foreground">
+                  <td
+                    className="px-4 py-4 text-xs text-muted-foreground"
+                    style={{
+                      borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                      borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                    }}
+                  >
                     {new Date(tenant.createdAt).toLocaleDateString(undefined, {
                       year: 'numeric',
                       month: 'short',
@@ -145,7 +244,10 @@ export const TenantsTable: React.FC<TenantsTableProps> = ({
                     })}
                   </td>
 
-                  <td className="px-6 py-4 text-right">
+                  <td
+                    className="px-6 py-4 text-right"
+                    style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                  >
                     <div className="flex items-center justify-end gap-2">
                       <Button
                         variant="outline"

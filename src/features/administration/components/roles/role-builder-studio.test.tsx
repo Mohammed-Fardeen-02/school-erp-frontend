@@ -77,4 +77,38 @@ describe('RoleBuilderStudio Custom Role Layout & Capabilities', () => {
     expect(academicsCheckbox.checked).toBe(false);
     expect(academicsCheckbox.indeterminate).toBe(true);
   });
+
+  it('validates strictly required fields only (roleCode and roleName) and allows empty description', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderStudio({ onSubmit });
+
+    const submitBtn = screen.getByRole('button', { name: /save as inactive draft/i });
+    fireEvent.click(submitBtn);
+
+    // Validation errors show for required fields
+    expect(await screen.findByText('Role code must be at least 3 characters')).toBeInTheDocument();
+    expect(await screen.findByText('Role name must be at least 3 characters')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    // Now fill required fields with valid input and leave description empty
+    fireEvent.change(screen.getByPlaceholderText('e.g. EXAM_COORDINATOR'), {
+      target: { value: 'EXAM_HEAD' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('e.g. Examination Coordinator'), {
+      target: { value: 'Head of Examination' },
+    });
+
+    fireEvent.click(submitBtn);
+
+    await vi.waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          roleCode: 'EXAM_HEAD',
+          roleName: 'Head of Examination',
+          description: '',
+        }),
+        undefined
+      );
+    });
+  });
 });

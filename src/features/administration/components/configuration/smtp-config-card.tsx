@@ -218,3 +218,4 @@ export const SmtpConfigCard: React.FC<SmtpConfigCardProps> = ({
     </div>
   );
 };
+

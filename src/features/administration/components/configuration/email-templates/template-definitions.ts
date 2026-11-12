@@ -482,3 +482,4 @@ export function renderEmailTemplate(
 
   return { subject, html, text };
 }
+

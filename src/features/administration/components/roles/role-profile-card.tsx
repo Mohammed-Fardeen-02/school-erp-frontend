@@ -43,7 +43,7 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Role Code (Unique Identifier)"
+            label="Role Code (Unique Identifier) *"
             placeholder="e.g. EXAM_COORDINATOR"
             disabled={isEdit}
             error={errors.roleCode?.message as string | undefined}
@@ -51,7 +51,7 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
             {...register('roleCode')}
           />
           <Input
-            label="Role Display Name"
+            label="Role Display Name *"
             placeholder="e.g. Examination Coordinator"
             error={errors.roleName?.message as string | undefined}
             {...register('roleName')}
@@ -60,7 +60,7 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
 
         <div className="grid grid-cols-1 gap-4">
           <Input
-            label="Role Description"
+            label="Role Description (Optional)"
             placeholder="Detailed description of responsibilities and permissions associated with this role..."
             error={errors.description?.message as string | undefined}
             {...register('description')}

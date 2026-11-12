@@ -104,14 +104,14 @@ export const CampusManagerModal: React.FC<CampusManagerModalProps> = ({
               <h4 className="text-xs font-bold text-primary">New Campus Setup</h4>
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Campus Name"
+                  label="Campus Name *"
                   placeholder="e.g. North Branch"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                 />
                 <Input
-                  label="Campus Code"
+                  label="Campus Code *"
                   placeholder="e.g. NORTH"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
@@ -120,19 +120,19 @@ export const CampusManagerModal: React.FC<CampusManagerModalProps> = ({
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <Input
-                  label="City"
+                  label="City (Optional)"
                   placeholder="Springfield"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                 />
                 <Input
-                  label="Contact Email"
+                  label="Contact Email (Optional)"
                   placeholder="north@school.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <Input
-                  label="Phone"
+                  label="Phone (Optional)"
                   placeholder="+1-555-0102"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}

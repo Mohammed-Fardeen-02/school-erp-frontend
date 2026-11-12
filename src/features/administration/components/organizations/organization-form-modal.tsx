@@ -6,13 +6,20 @@ import { X, Building2, Save, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
 import { Select } from '@/components/forms/select';
+import { AddressLocationPicker } from '@/components/forms/address-location-picker';
 import type { TenantDto } from '@/features/tenants/types/tenants.types';
 import type { SaveOrganizationPayload } from '../../types/admin.types';
 
+// Validations strictly enforced ONLY for required fields
 const orgSchema = z.object({
-  legalName: z.string().min(2, 'Legal name is required'),
-  displayName: z.string().min(2, 'Display name is required'),
-  code: z.string().min(2, 'Code must be at least 2 characters').toUpperCase(),
+  legalName: z.string().trim().min(2, 'Legal school name is required'),
+  displayName: z.string().trim().min(2, 'Display name is required'),
+  code: z
+    .string()
+    .trim()
+    .min(2, 'Institutional code is required')
+    .regex(/^[A-Z0-9_-]+$/, 'Code must contain uppercase letters, numbers, hyphens or underscores')
+    .transform((v) => v.toUpperCase()),
   organizationType: z.enum([
     'K12_SCHOOL_CHAIN',
     'INDEPENDENT_SCHOOL',
@@ -20,15 +27,15 @@ const orgSchema = z.object({
     'POLYTECHNIC_INSTITUTE',
     'VOCATIONAL_CENTER',
   ]),
-  email: z.string().email('Valid institutional email is required'),
-  phone: z.string().min(5, 'Phone number is required'),
-  website: z.string().optional(),
-  taxId: z.string().optional(),
-  addressLine1: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  postalCode: z.string().optional(),
+  email: z.string().trim().email('Valid institutional email is required'),
+  phone: z.string().trim().min(5, 'Contact phone is required'),
+  website: z.string().optional().or(z.literal('')),
+  taxId: z.string().optional().or(z.literal('')),
+  addressLine1: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
+  state: z.string().optional().or(z.literal('')),
+  country: z.string().optional().or(z.literal('')),
+  postalCode: z.string().optional().or(z.literal('')),
 });
 
 type OrgFormData = z.infer<typeof orgSchema>;
@@ -53,6 +60,8 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<OrgFormData>({
@@ -73,6 +82,11 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
       postalCode: '',
     },
   });
+
+  const watchCountry = watch('country');
+  const watchState = watch('state');
+  const watchCity = watch('city');
+  const watchPostalCode = watch('postalCode');
 
   useEffect(() => {
     if (initialData) {
@@ -159,13 +173,13 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Legal School / Trust Name"
+              label="Legal School / Trust Name *"
               placeholder="e.g. St. Mary's Educational Academy"
               error={errors.legalName?.message}
               {...register('legalName')}
             />
             <Input
-              label="Display Name"
+              label="Display Name *"
               placeholder="e.g. St. Mary's High School"
               error={errors.displayName?.message}
               {...register('displayName')}
@@ -174,14 +188,14 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Institutional Code"
+              label="Institutional Code *"
               placeholder="e.g. SMH-2026"
               error={errors.code?.message}
               disabled={isEdit}
               {...register('code')}
             />
             <Select
-              label="Organization Category"
+              label="Organization Category *"
               error={Boolean(errors.organizationType?.message)}
               {...register('organizationType')}
             >
@@ -195,14 +209,14 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Official Contact Email"
+              label="Official Contact Email *"
               type="email"
               placeholder="admin@school.edu"
               error={errors.email?.message}
               {...register('email')}
             />
             <Input
-              label="Official Phone"
+              label="Official Phone *"
               placeholder="+1-555-0100"
               error={errors.phone?.message}
               {...register('phone')}
@@ -217,7 +231,7 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
               {...register('website')}
             />
             <Input
-              label="Tax ID / Registration No"
+              label="Tax ID / Registration No (Optional)"
               placeholder="TAX-998822"
               error={errors.taxId?.message}
               {...register('taxId')}
@@ -226,19 +240,23 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
 
           <div className="space-y-3 pt-2 border-t border-border">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Campus Address Details
+              Campus Address Details (Optional)
             </h4>
             <Input
               label="Address Line 1"
               placeholder="123 Academic Way"
               {...register('addressLine1')}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Input label="City" placeholder="Springfield" {...register('city')} />
-              <Input label="State / Province" placeholder="OR" {...register('state')} />
-              <Input label="Country" placeholder="USA" {...register('country')} />
-              <Input label="Postal Code" placeholder="97477" {...register('postalCode')} />
-            </div>
+            <AddressLocationPicker
+              country={watchCountry || ''}
+              state={watchState || ''}
+              city={watchCity || ''}
+              postalCode={watchPostalCode || ''}
+              onCountryChange={(val) => setValue('country', val, { shouldValidate: true })}
+              onStateChange={(val) => setValue('state', val, { shouldValidate: true })}
+              onCityChange={(val) => setValue('city', val, { shouldValidate: true })}
+              onPostalCodeChange={(val) => setValue('postalCode', val, { shouldValidate: true })}
+            />
           </div>
         </form>
 

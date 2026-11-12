@@ -202,3 +202,4 @@ export const EmailTemplatesGallery: React.FC<EmailTemplatesGalleryProps> = ({
     </div>
   );
 };
+

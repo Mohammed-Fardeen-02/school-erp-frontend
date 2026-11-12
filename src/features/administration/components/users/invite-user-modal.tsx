@@ -9,13 +9,14 @@ import { Select } from '@/components/forms/select';
 import { Checkbox } from '@/components/forms/checkbox';
 import type { InviteUserPayload } from '../../types/admin.types';
 
+// Validations strictly enforced ONLY for required fields
 const inviteSchema = z.object({
-  email: z.string().email('Valid institutional email is required'),
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  phone: z.string().optional(),
+  email: z.string().trim().email('Valid institutional email is required'),
+  firstName: z.string().trim().min(2, 'First name is required'),
+  lastName: z.string().trim().min(2, 'Last name is required'),
+  phone: z.string().optional().or(z.literal('')),
   roleId: z.string().min(1, 'Please select an assigned role'),
-  locationId: z.string().optional(),
+  locationId: z.string().optional().or(z.literal('')),
   sendEmailNotification: z.boolean().default(true),
 });
 
@@ -107,13 +108,13 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
         <form onSubmit={handleSubmit(onFormSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="First Name"
+              label="First Name *"
               placeholder="e.g. Marcus"
               error={errors.firstName?.message}
               {...register('firstName')}
             />
             <Input
-              label="Last Name"
+              label="Last Name *"
               placeholder="e.g. Chen"
               error={errors.lastName?.message}
               {...register('lastName')}
@@ -121,7 +122,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
           </div>
 
           <Input
-            label="Institutional Email Address"
+            label="Institutional Email Address *"
             type="email"
             placeholder="marcus.chen@school.edu"
             leftIcon={<Mail className="h-4 w-4 text-muted-foreground" />}
@@ -138,7 +139,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <Select
-              label="Assigned Role"
+              label="Assigned Role *"
               error={Boolean(errors.roleId?.message)}
               {...register('roleId')}
             >
@@ -150,7 +151,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             </Select>
 
             <Select
-              label="Campus Scope"
+              label="Campus Scope (Optional)"
               error={Boolean(errors.locationId?.message)}
               {...register('locationId')}
             >

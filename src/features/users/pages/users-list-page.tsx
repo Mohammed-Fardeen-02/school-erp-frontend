@@ -1,292 +1,181 @@
 import * as React from 'react';
-import { useState, useDeferredValue } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserPlus, Search, ShieldCheck, ArrowRight, UserCheck, Phone, Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Users, UserPlus, ShieldCheck, ArrowRight, UserCheck, Phone, Mail } from 'lucide-react';
+import { PageWrapper } from '@/app/layouts/page-wrapper';
+import { AdminPageHeader } from '@/features/administration/components/common/admin-page-header';
+import { StatsCard } from '@/components/data-display/stats-card';
 import { Badge } from '@/components/data-display/badge';
+import { DataTable, type DataTableColumn } from '@/components/data-display/data-table';
 import { AssignRoleModal } from '@/features/roles-permissions/components/assignments/assign-role-modal';
 import { useWorkspaceMembers } from '@/features/roles-permissions/hooks/use-assignments';
 import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
-import { PermissionGate } from '@/features/roles-permissions/components/guards/permission-gate';
 import type { WorkspaceMemberSummary } from '@/features/roles-permissions/types/assignments.types';
 
 export const UsersListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const deferredSearch = useDeferredValue(searchTerm);
-  const [page, setPage] = useState(1);
-  const limit = 15;
-
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [preselectedMember, setPreselectedMember] = useState<WorkspaceMemberSummary | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useWorkspaceMembers({
-    search: deferredSearch.trim() || undefined,
-    page,
-    limit,
+  const { data, isLoading } = useWorkspaceMembers({
+    limit: 50,
   });
 
   const { hasPermission: canAssign } = usePermission(
     'settings.user_assignments.allocations.assign'
   );
 
-  const members = data?.members ?? [];
-  const meta = data?.meta ?? { total: 0, page: 1, limit: 15, totalPages: 1 };
+  const members: WorkspaceMemberSummary[] = data?.members ?? [];
+  const meta = data?.meta ?? { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const handleOpenAssign = (member?: WorkspaceMemberSummary) => {
     setPreselectedMember(member ?? null);
     setIsAssignModalOpen(true);
   };
 
-  return (
-    <div className="space-y-6 p-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-            Members & User Allocations
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Discover active institutional faculty, staff, and students and manage their campus-scoped role allocations.
-          </p>
+  const columns: DataTableColumn<WorkspaceMemberSummary>[] = [
+    {
+      key: 'name',
+      label: 'MEMBER INFO',
+      sortable: true,
+      align: 'left',
+      render: (_, row) => {
+        const initials = `${row.firstName?.[0] || ''}${row.lastName?.[0] || ''}`.toUpperCase() || 'U';
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-bold text-primary text-xs shadow-xs">
+              {initials}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => navigate(`/users/${row.id}/allocations`)}
+                className="font-bold text-foreground hover:text-primary transition-colors text-left text-xs sm:text-sm"
+              >
+                {row.firstName} {row.lastName}
+              </button>
+              <span className="block text-[11px] text-muted-foreground font-mono">
+                ID: {row.id.slice(0, 8)}...
+              </span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'email',
+      label: 'CONTACT EMAIL',
+      sortable: true,
+      align: 'left',
+      render: (val) => (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Mail className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <span>{String(val || '—')}</span>
         </div>
+      ),
+    },
+    {
+      key: 'phone',
+      label: 'PHONE',
+      sortable: true,
+      align: 'left',
+      render: (val) =>
+        val ? (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Phone className="h-3.5 w-3.5 text-muted-foreground/60" />
+            <span>{String(val)}</span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground/40">—</span>
+        ),
+    },
+    {
+      key: 'isActive',
+      label: 'STATUS',
+      sortable: true,
+      align: 'center',
+      render: (val) => (
+        <Badge variant={val ? 'success' : 'danger'}>
+          {val ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
+  ];
 
-        <div className="flex items-center gap-3">
-          <PermissionGate permission="settings.user_assignments.allocations.assign">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleOpenAssign()}
-              icon={<UserPlus className="h-4 w-4" />}
-            >
-              Allocate Role
-            </Button>
-          </PermissionGate>
-        </div>
-      </div>
+  return (
+    <PageWrapper className="space-y-6">
+      {/* Unified division: Breadcrumb on the left, action buttons on the right */}
+      <AdminPageHeader
+        title="Members & User Allocations"
+        subtitle="Discover active institutional faculty, staff, and students and manage their campus-scoped role allocations."
+        icon={Users}
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Administration', href: '/admin' },
+          { label: 'Members & Allocations' },
+        ]}
+        actionLabel={canAssign ? 'Allocate Role' : undefined}
+        onActionClick={canAssign ? () => handleOpenAssign() : undefined}
+        actionIcon={<UserPlus className="h-4 w-4" />}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Active Members
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Users className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-foreground">{meta.total}</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Verified Accounts
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-              <UserCheck className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-foreground">
-            {members.filter((m: WorkspaceMemberSummary) => m.isActive).length}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Current Page Results
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-foreground">{members.length}</div>
-        </div>
+        <StatsCard
+          title="Total Active Members"
+          value={meta.total}
+          subtitle="Registered institutional accounts"
+          color="purple"
+          icon={<Users className="w-5 h-5 text-primary" />}
+        />
+        <StatsCard
+          title="Verified Accounts"
+          value={members.filter((m: WorkspaceMemberSummary) => m.isActive).length}
+          subtitle="Active credentials"
+          color="green"
+          icon={<UserCheck className="w-5 h-5 text-emerald-600" />}
+        />
+        <StatsCard
+          title="Current Page Records"
+          value={members.length}
+          subtitle="Displayed in table"
+          color="blue"
+          icon={<ShieldCheck className="w-5 h-5 text-blue-600" />}
+        />
       </div>
 
-      {/* Search Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search member name, email, or phone..."
-            className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
-          />
-        </div>
-      </div>
-
-      {/* Error Notice */}
-      {isError && (
-        <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger flex items-center justify-between">
-          <span>Failed to load organization members: {error?.message || 'Network error'}</span>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
-          </Button>
-        </div>
-      )}
-
-      {/* Table */}
-      {isLoading ? (
-        <div className="flex h-64 items-center justify-center rounded-2xl border border-border bg-surface">
-          <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span>Discovering organization members...</span>
-          </div>
-        </div>
-      ) : members.length === 0 ? (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-muted text-muted-foreground mb-3">
-            <Users className="h-6 w-6" />
-          </div>
-          <h3 className="text-base font-bold text-foreground">No Members Found</h3>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            No active members matched your search query in this organization workspace.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-surface-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th scope="col" className="px-6 py-3.5">
-                    Member Name
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Contact Email
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Phone
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3.5 text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {members.map((member: WorkspaceMemberSummary) => {
-                  const initials = `${member.firstName?.[0] || ''}${member.lastName?.[0] || ''}`.toUpperCase();
-
-                  return (
-                    <tr
-                      key={member.id}
-                      className="group transition-colors hover:bg-surface-muted/30"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 font-bold text-primary text-xs shadow-xs">
-                            {initials || 'U'}
-                          </div>
-                          <div>
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/users/${member.id}/allocations`)}
-                              className="font-bold text-foreground hover:text-primary transition-colors text-left"
-                            >
-                              {member.firstName} {member.lastName}
-                            </button>
-                            <span className="block text-[11px] text-muted-foreground font-mono">
-                              ID: {member.id.slice(0, 8)}...
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <Mail className="h-3.5 w-3.5 text-muted-foreground/60" />
-                          <span>{member.email}</span>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 text-xs text-muted-foreground">
-                        {member.phone ? (
-                          <div className="flex items-center gap-1.5">
-                            <Phone className="h-3.5 w-3.5 text-muted-foreground/60" />
-                            <span>{member.phone}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground/40">—</span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <Badge variant={member.isActive ? 'success' : 'danger'}>
-                          {member.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/users/${member.id}/allocations`)}
-                            title="View Allocations"
-                            className="text-xs"
-                          >
-                            Allocations <ArrowRight className="h-3 w-3 ml-1" />
-                          </Button>
-                          {canAssign && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenAssign(member)}
-                              title="Assign Role"
-                              className="text-xs"
-                            >
-                              + Assign Role
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {meta.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-border pt-4">
-          <div className="text-xs text-muted-foreground">
-            Page <span className="font-semibold text-foreground">{meta.page}</span> of{' '}
-            <span className="font-semibold text-foreground">{meta.totalPages}</span> ({meta.total} total members)
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= meta.totalPages}
-              onClick={() => setPage((p) => Math.min(p + 1, meta.totalPages))}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* DataTable with Grid Borders, Search, Status Popover, and Pagination */}
+      <DataTable<WorkspaceMemberSummary>
+        columns={columns}
+        data={members}
+        loading={isLoading}
+        selectable
+        selectedIds={selected}
+        onSelectionChange={setSelected}
+        onRowClick={(row) => navigate(`/users/${row.id}/allocations`)}
+        rowIdKey="id"
+        resultLabel="members"
+        searchPlaceholder="Search member name, email, or phone..."
+        actionConfig={{
+          customActions: (row) => [
+            {
+              label: 'View Allocations',
+              icon: <ArrowRight className="h-4 w-4" />,
+              onClick: () => navigate(`/users/${row.id}/allocations`),
+            },
+            ...(canAssign
+              ? [
+                  {
+                    label: 'Assign Role',
+                    icon: <UserPlus className="h-4 w-4" />,
+                    onClick: () => handleOpenAssign(row),
+                  },
+                ]
+              : []),
+          ],
+        }}
+      />
 
       {/* Assign Role Modal */}
       <AssignRoleModal
@@ -297,7 +186,7 @@ export const UsersListPage: React.FC = () => {
         }}
         initialMember={preselectedMember}
       />
-    </div>
+    </PageWrapper>
   );
 };
 

@@ -174,18 +174,77 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-xs">
-          <table className="w-full text-left text-xs divide-y divide-border">
-            <thead className="bg-surface-muted/50 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Role Profile</th>
-                <th className="py-3 px-4">Scope</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Assigned</th>
-                <th className="py-3 px-4">Revocation Details</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+          <table className="w-full border-collapse border border-border text-left text-xs">
+            <thead className="sticky top-0 z-10">
+              <tr style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Role Profile
+                </th>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Scope
+                </th>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider text-center"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Status
+                </th>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Assigned
+                </th>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Revocation Details
+                </th>
+                <th
+                  className="py-3 px-4 font-bold uppercase tracking-wider text-center"
+                  style={{
+                    backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                    color: 'var(--color-table-header-text, #4c1d95)',
+                    borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/60">
+            <tbody className="bg-surface">
               {filteredAssignments.map((assignment) => {
                 const isSelf = currentUser?.id === assignment.userId;
                 const isTemplate = assignment.role?.roleType === 'SYSTEM_TEMPLATE';
@@ -194,10 +253,17 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
                   <tr
                     key={assignment.id}
                     data-testid={`assignment-row-${assignment.id}`}
-                    className="hover:bg-surface-muted/30 transition-colors"
+                    className="hover:bg-primary/5 transition-colors"
+                    style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
                   >
                     {/* Role Info */}
-                    <td className="py-3 px-4">
+                    <td
+                      className="py-3 px-4"
+                      style={{
+                        borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                        borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                      }}
+                    >
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-foreground text-xs">
@@ -221,7 +287,13 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
                     </td>
 
                     {/* Scope Info */}
-                    <td className="py-3 px-4">
+                    <td
+                      className="py-3 px-4"
+                      style={{
+                        borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                        borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                      }}
+                    >
                       {assignment.location ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200">
                           <Building2 className="w-3 h-3 text-amber-600" />
@@ -236,7 +308,13 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-3 px-4">
+                    <td
+                      className="py-3 px-4 text-center"
+                      style={{
+                        borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                        borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                      }}
+                    >
                       {assignment.isActive ? (
                         <span
                           data-testid="badge-assignment-active"
@@ -255,12 +333,24 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
                     </td>
 
                     {/* Assigned Date */}
-                    <td className="py-3 px-4 text-muted-foreground">
+                    <td
+                      className="py-3 px-4 text-muted-foreground"
+                      style={{
+                        borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                        borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                      }}
+                    >
                       <span className="font-mono">{formatDate(assignment.assignedAt)}</span>
                     </td>
 
                     {/* Revocation Details */}
-                    <td className="py-3 px-4">
+                    <td
+                      className="py-3 px-4"
+                      style={{
+                        borderRight: '1px solid var(--color-table-grid, #e5e7eb)',
+                        borderBottom: '1px solid var(--color-table-grid, #e5e7eb)',
+                      }}
+                    >
                       {!assignment.isActive && assignment.revokedAt ? (
                         <div className="flex flex-col text-[11px] max-w-xs">
                           <span className="text-muted-foreground font-mono">
@@ -281,7 +371,10 @@ export const UserAssignmentsTable: React.FC<UserAssignmentsTableProps> = ({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3 px-4 text-right">
+                    <td
+                      className="py-3 px-4 text-center"
+                      style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                    >
                       {assignment.isActive && onRevokeAssignment && (
                         <Button
                           type="button"

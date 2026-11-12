@@ -8,14 +8,15 @@ import { Input } from '@/components/forms/input';
 import { Select } from '@/components/forms/select';
 import type { AdminUserRecord, SaveUserPayload, UserStatus } from '../../types/admin.types';
 
+// Validations strictly enforced ONLY for required fields
 const userSchema = z.object({
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  email: z.string().email('Valid institutional email is required'),
-  phone: z.string().optional(),
-  password: z.string().optional(),
+  firstName: z.string().trim().min(2, 'First name is required'),
+  lastName: z.string().trim().min(2, 'Last name is required'),
+  email: z.string().trim().email('Valid institutional email is required'),
+  phone: z.string().optional().or(z.literal('')),
+  password: z.string().optional().or(z.literal('')),
   status: z.enum(['ACTIVE', 'INACTIVE', 'INVITED', 'SUSPENDED']).default('ACTIVE'),
-  roleId: z.string().optional(),
+  roleId: z.string().optional().or(z.literal('')),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -125,13 +126,13 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         <form onSubmit={handleSubmit(onFormSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="First Name"
+              label="First Name *"
               placeholder="Eleanor"
               error={errors.firstName?.message}
               {...register('firstName')}
             />
             <Input
-              label="Last Name"
+              label="Last Name *"
               placeholder="Vance"
               error={errors.lastName?.message}
               {...register('lastName')}
@@ -139,7 +140,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
           </div>
 
           <Input
-            label="Institutional Email"
+            label="Institutional Email *"
             type="email"
             placeholder="name@school.edu"
             error={errors.email?.message}
@@ -148,7 +149,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
           />
 
           <Input
-            label="Phone"
+            label="Phone (Optional)"
             placeholder="+1-555-0100"
             error={errors.phone?.message}
             {...register('phone')}
@@ -156,7 +157,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
           {!isEdit && (
             <Input
-              label="Initial Password"
+              label="Initial Password (Optional)"
               type="password"
               placeholder="••••••••••••"
               error={errors.password?.message}
@@ -165,7 +166,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
           )}
 
           <Select
-            label="Account Status"
+            label="Account Status *"
             error={Boolean(errors.status?.message)}
             {...register('status')}
           >

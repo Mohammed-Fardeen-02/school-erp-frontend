@@ -27,7 +27,6 @@ describe('OrganizationFormModal Validations', () => {
     await waitFor(() => {
       expect(screen.getByText('Legal school name is required')).toBeInTheDocument();
       expect(screen.getByText('Display name is required')).toBeInTheDocument();
-      expect(screen.getByText('Institutional code is required')).toBeInTheDocument();
       expect(screen.getByText('Valid institutional email is required')).toBeInTheDocument();
       expect(screen.getByText('Contact phone is required')).toBeInTheDocument();
     });
@@ -54,9 +53,6 @@ describe('OrganizationFormModal Validations', () => {
     fireEvent.change(screen.getByPlaceholderText("e.g. St. Mary's High School"), {
       target: { value: 'Green Valley School' },
     });
-    fireEvent.change(screen.getByPlaceholderText('e.g. SMH-2026'), {
-      target: { value: 'GVS_01' },
-    });
     fireEvent.change(screen.getByPlaceholderText('admin@school.edu'), {
       target: { value: 'admin@greenvalley.edu' },
     });
@@ -73,7 +69,7 @@ describe('OrganizationFormModal Validations', () => {
         expect.objectContaining({
           legalName: 'Global Green School Foundation',
           displayName: 'Green Valley School',
-          code: 'GVS_01',
+          code: '',
           email: 'admin@greenvalley.edu',
           phone: '+91-9876543210',
           organizationType: 'K12_SCHOOL_CHAIN',

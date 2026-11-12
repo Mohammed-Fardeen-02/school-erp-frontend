@@ -116,8 +116,13 @@ export const UsersPage: React.FC = () => {
             {row.lastName?.[0] || ''}
           </div>
           <div>
-            <div className="font-semibold text-foreground text-xs sm:text-sm">
-              {row.firstName} {row.lastName}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground text-xs sm:text-sm">
+                {row.firstName} {row.lastName}
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-muted text-muted-foreground border border-border">
+                {row.userCode || `USR-${row.id.slice(0, 6).toUpperCase()}`}
+              </span>
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">{row.email}</div>
           </div>

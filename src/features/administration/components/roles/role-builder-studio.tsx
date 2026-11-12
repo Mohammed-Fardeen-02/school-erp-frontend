@@ -12,11 +12,8 @@ import type { SaveRoleWithCapabilitiesPayload } from '../../types/admin.types';
 const roleSchema = z.object({
   roleCode: z
     .string()
-    .trim()
-    .min(3, 'Role code must be at least 3 characters')
-    .max(32, 'Role code cannot exceed 32 characters')
-    .regex(/^[A-Z0-9_]+$/, 'Must be uppercase alphanumeric with underscores')
-    .transform((v) => v.toUpperCase()),
+    .optional()
+    .or(z.literal('')),
   roleName: z.string().trim().min(3, 'Role name must be at least 3 characters'),
   description: z.string().optional().or(z.literal('')),
 });
@@ -26,7 +23,7 @@ type RoleFormData = z.infer<typeof roleSchema>;
 export interface RoleBuilderStudioProps {
   initialData?: {
     id?: string;
-    roleCode: string;
+    roleCode?: string;
     roleName: string;
     description?: string;
     permissionCodes: string[];
@@ -76,9 +73,15 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
   const watchedRoleCode = watch('roleCode');
   const watchedDescription = watch('description');
 
+  const previewRoleCode =
+    watchedRoleCode ||
+    (watchedRoleName
+      ? `ROLE_${watchedRoleName.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`
+      : 'ROLE_AUTO_GENERATED');
+
   const handleSave = async (data: RoleFormData, isDraft = false) => {
     const payload: SaveRoleWithCapabilitiesPayload = {
-      roleCode: data.roleCode,
+      roleCode: data.roleCode || (data.roleName ? `ROLE_${data.roleName.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_')}` : undefined),
       roleName: data.roleName,
       description: data.description,
       permissionCodes: selectedPermissions,
@@ -106,7 +109,7 @@ export const RoleBuilderStudio: React.FC<RoleBuilderStudioProps> = ({
         <div className="lg:col-span-5">
           <RoleLivePreviewSidebar
             roleName={watchedRoleName}
-            roleCode={watchedRoleCode}
+            roleCode={previewRoleCode}
             description={watchedDescription}
             campusScope={campusScope}
             specificCampusName={specificCampusName}

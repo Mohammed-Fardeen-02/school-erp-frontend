@@ -28,7 +28,7 @@ export interface OrganizationDetail extends TenantDto {
 }
 
 export interface SaveOrganizationPayload {
-  code: string;
+  code?: string;
   legalName: string;
   displayName: string;
   organizationType: OrganizationType;
@@ -54,6 +54,7 @@ export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'INVITED' | 'SUSPENDED';
 
 export interface AdminUserRecord {
   id: string;
+  userCode?: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -71,6 +72,7 @@ export interface InviteUserPayload {
   email: string;
   firstName: string;
   lastName: string;
+  userCode?: string;
   phone?: string;
   roleId: string;
   locationId?: string | null;
@@ -81,6 +83,7 @@ export interface SaveUserPayload {
   email: string;
   firstName: string;
   lastName: string;
+  userCode?: string;
   phone?: string;
   password?: string;
   roleId?: string;
@@ -104,7 +107,7 @@ export interface DomainCapabilityGroup {
 }
 
 export interface SaveRoleWithCapabilitiesPayload {
-  roleCode: string;
+  roleCode?: string;
   roleName: string;
   description?: string;
   baseTemplateCode?: string;

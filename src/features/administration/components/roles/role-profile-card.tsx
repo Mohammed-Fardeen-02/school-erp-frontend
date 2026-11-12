@@ -43,11 +43,10 @@ export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Role Code (Unique Identifier) *"
-            placeholder="e.g. EXAM_COORDINATOR"
-            disabled={isEdit}
-            error={errors.roleCode?.message as string | undefined}
-            helperText={!isEdit ? 'Uppercase alphanumeric characters and underscores only' : undefined}
+            label="Role Code (Auto-Generated)"
+            placeholder="Auto-generated from Role Name (e.g. ROLE_EXAM_COORDINATOR)"
+            disabled={true}
+            helperText="Unique role code will be generated automatically by the backend."
             {...register('roleCode')}
           />
           <Input

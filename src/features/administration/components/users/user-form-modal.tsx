@@ -124,6 +124,14 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit(onFormSubmit)} className="p-6 space-y-4">
+          <Input
+            label="User Code (Auto-Generated)"
+            placeholder="Auto-generated on creation (e.g. USR-2026-001)"
+            value={initialData?.userCode || ''}
+            disabled={true}
+            helperText="Unique user identification code is automatically assigned by the backend."
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="First Name *"

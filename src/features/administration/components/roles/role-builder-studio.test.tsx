@@ -34,7 +34,7 @@ describe('RoleBuilderStudio Custom Role Layout & Capabilities', () => {
     renderStudio();
     expect(screen.getByText('Role Profile & Scope Configuration')).toBeInTheDocument();
     expect(screen.getByText('New Custom Role')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('e.g. EXAM_COORDINATOR')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Auto-generated from Role Name/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText('e.g. Examination Coordinator')).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe('RoleBuilderStudio Custom Role Layout & Capabilities', () => {
     expect(academicsCheckbox.indeterminate).toBe(true);
   });
 
-  it('validates strictly required fields only (roleCode and roleName) and allows empty description', async () => {
+  it('validates strictly required fields only (roleName) and allows empty description and auto-generated roleCode', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderStudio({ onSubmit });
 
@@ -86,14 +86,10 @@ describe('RoleBuilderStudio Custom Role Layout & Capabilities', () => {
     fireEvent.click(submitBtn);
 
     // Validation errors show for required fields
-    expect(await screen.findByText('Role code must be at least 3 characters')).toBeInTheDocument();
     expect(await screen.findByText('Role name must be at least 3 characters')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
 
-    // Now fill required fields with valid input and leave description empty
-    fireEvent.change(screen.getByPlaceholderText('e.g. EXAM_COORDINATOR'), {
-      target: { value: 'EXAM_HEAD' },
-    });
+    // Now fill roleName with valid input and leave description empty
     fireEvent.change(screen.getByPlaceholderText('e.g. Examination Coordinator'), {
       target: { value: 'Head of Examination' },
     });
@@ -103,7 +99,6 @@ describe('RoleBuilderStudio Custom Role Layout & Capabilities', () => {
     await vi.waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          roleCode: 'EXAM_HEAD',
           roleName: 'Head of Examination',
           description: '',
         }),

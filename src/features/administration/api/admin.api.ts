@@ -129,6 +129,7 @@ const MOCK_CAMPUSES: OrganizationCampus[] = [
 const MOCK_ADMIN_USERS: AdminUserRecord[] = [
   {
     id: 'usr_admin_001',
+    userCode: 'USR-2026-001',
     email: 'admin@erp.com',
     firstName: 'Eleanor',
     lastName: 'Vance',
@@ -143,6 +144,7 @@ const MOCK_ADMIN_USERS: AdminUserRecord[] = [
   },
   {
     id: 'usr_orgadmin_002',
+    userCode: 'USR-2026-002',
     email: 'orgadmin@greenwood.edu',
     firstName: 'Arthur',
     lastName: 'Pendelton',
@@ -157,6 +159,7 @@ const MOCK_ADMIN_USERS: AdminUserRecord[] = [
   },
   {
     id: 'usr_teacher_003',
+    userCode: 'USR-2026-003',
     email: 'teacher@schoolerp.io',
     firstName: 'Marcus',
     lastName: 'Chen',
@@ -437,6 +440,7 @@ export class AdminApi {
       const members = res.data || [];
       const mapped: AdminUserRecord[] = members.map((m, idx) => ({
         id: m.id,
+        userCode: (m as any).userCode || `USR-${(m.id || '').slice(0, 6).toUpperCase() || (idx + 101)}`,
         email: m.email,
         firstName: m.firstName,
         lastName: m.lastName,

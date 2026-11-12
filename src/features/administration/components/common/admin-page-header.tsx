@@ -36,7 +36,7 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   const hasActions = Boolean(extraActions || (actionLabel && onActionClick));
 
   return (
-    <>
+    <div className="relative">
       {/* Screen-reader and accessible heading for semantic accessibility and test suites */}
       <h1 className="sr-only">{title}</h1>
 
@@ -61,7 +61,7 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
           ) : undefined
         }
       />
-    </>
+    </div>
   );
 };
 

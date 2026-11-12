@@ -6,12 +6,12 @@ import {
   Receipt,
   Users,
   FileSpreadsheet,
-  Settings,
   Bell,
   Clock,
   Bus,
   Library,
   Building,
+  ShieldCheck,
 } from 'lucide-react';
 
 export interface ModuleShortcut {
@@ -208,23 +208,24 @@ export const ERP_MODULES: ModuleConfig[] = [
       { label: 'Mess Schedule', href: '/app/hostel' },
     ],
   },
-  // 12. Administration & Access Management
+  // 12. Administration
   {
     id: 'settings',
-    name: 'Administration & Access',
-    shortName: 'Admin & Access',
-    description: 'Centralized administration workspace: organizations, user management, RBAC matrix, security, billing, and audit logs.',
-    icon: Settings,
+    name: 'Administration',
+    shortName: 'Administration',
+    description: 'Centralized institutional management: organization profiles, campuses, user directory, RBAC permissions, security policies, cloud billing, and audit logs.',
+    icon: ShieldCheck,
     route: '/admin',
     category: 'system',
     requiredPermission: 'settings',
     shortcuts: [
       { label: 'Organizations', href: '/admin/organizations' },
       { label: 'User Directory', href: '/admin/users' },
-      { label: 'Roles & Matrix', href: '/admin/roles' },
-      { label: 'Security & Sessions', href: '/admin/security' },
+      { label: 'Roles & Permissions', href: '/admin/roles' },
+      { label: 'Authentication & Security', href: '/admin/security' },
       { label: 'Subscriptions & Billing', href: '/admin/billing' },
-      { label: 'Audit Trails', href: '/admin/audit-logs' },
+      { label: 'Plans & Entitlements', href: '/admin/plans' },
+      { label: 'Audit & Activity Logs', href: '/admin/audit-logs' },
     ],
   },
 ];

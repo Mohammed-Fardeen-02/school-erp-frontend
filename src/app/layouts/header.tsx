@@ -14,6 +14,7 @@ import {
   Moon,
   Laptop,
   RefreshCw,
+  LayoutGrid,
 } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -84,8 +85,19 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Right side: School badge, theme selector, notification bell, user profile */}
+      {/* Right side: Workspaces switcher, school badge, theme selector, notification bell, user profile */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Workspaces Launcher Quick Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/workspace')}
+          className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-surface hover:border-primary/40 transition-colors shadow-2xs"
+          title="Switch Workspace / App Launcher"
+        >
+          <LayoutGrid className="h-3.5 w-3.5 text-primary" />
+          <span className="hidden sm:inline">Workspaces</span>
+        </button>
+
         {/* School Tenant Badge */}
         <div className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold text-foreground md:flex">
           <Building2 className="h-3.5 w-3.5 text-primary" />

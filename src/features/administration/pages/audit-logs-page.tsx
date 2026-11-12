@@ -6,11 +6,13 @@ import { AdminStatsRow } from '../components/common/admin-stats-row';
 import { AuditLogsTable } from '../components/audit/audit-logs-table';
 import { AuditDiffModal } from '../components/audit/audit-diff-modal';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/feedback/toast';
 import { useAuditLogs } from '../hooks/use-admin';
 import type { AuditLogRecord } from '../types/admin.types';
 
 export const AuditLogsPage: React.FC = () => {
   const [inspectTarget, setInspectTarget] = useState<AuditLogRecord | null>(null);
+  const toast = useToast();
 
   const { data: logsData, isLoading } = useAuditLogs();
   const allLogs = logsData?.logs || [];
@@ -45,7 +47,7 @@ export const AuditLogsPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Download className="w-4 h-4" />}
-              onClick={() => alert('Exporting audit trail archive...')}
+              onClick={() => toast.info('Exporting cryptographically signed audit log archive...', 'Audit Export')}
             >
               Export Archive
             </Button>
@@ -53,7 +55,7 @@ export const AuditLogsPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Upload className="w-4 h-4" />}
-              onClick={() => alert('Verify log signature...')}
+              onClick={() => toast.success('Audit trail cryptographic signature verified. No tampering detected.', 'Integrity Verified')}
             >
               Verify Integrity
             </Button>

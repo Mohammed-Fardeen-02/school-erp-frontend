@@ -3,3 +3,4 @@ export * from './spinner';
 export * from './loader';
 export * from './confirmation-modal';
 export * from './error-boundary';
+export * from './toast';

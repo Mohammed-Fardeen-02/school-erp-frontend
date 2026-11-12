@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/feedback/alert';
+import { useToast } from '@/components/feedback/toast';
 import { TextArea } from '@/components/forms/textarea';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRevokeRole } from '../../hooks/use-assignments';
@@ -31,6 +32,7 @@ export const RevokeAssignmentModal: React.FC<RevokeAssignmentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const toast = useToast();
   const currentUser = useAuthStore((state) => state.user);
 
   // Authorization check for revocation
@@ -86,6 +88,11 @@ export const RevokeAssignmentModal: React.FC<RevokeAssignmentModalProps> = ({
         userId: assignment.userId,
       });
 
+      toast.success(
+        `Role "${assignment.role?.roleName || 'Assignment'}" revoked successfully`,
+        'Role Revoked'
+      );
+
       onSuccess?.(revoked);
       onClose();
     } catch (err: unknown) {
@@ -93,6 +100,7 @@ export const RevokeAssignmentModal: React.FC<RevokeAssignmentModalProps> = ({
       if (err instanceof Error) {
         message = err.message;
       }
+      toast.error(message, 'Revocation Error');
       setSubmitError(message);
     }
   };

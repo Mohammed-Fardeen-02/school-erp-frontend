@@ -20,6 +20,7 @@ import { AdminPageHeader } from '../components/common/admin-page-header';
 import { AdminStatsRow } from '../components/common/admin-stats-row';
 import { AdminAnalyticsOverview } from '../components/overview/admin-analytics-overview';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/feedback/toast';
 import {
   useAdminOrganizations,
   useAdminCampuses,
@@ -33,6 +34,7 @@ import { useRolesList } from '@/features/roles-permissions/hooks/use-roles';
 
 export const AdminOverviewPage: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   // Queries for live metrics & analytics
   const { data: orgsData } = useAdminOrganizations();
@@ -170,7 +172,7 @@ export const AdminOverviewPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Download className="w-4 h-4" />}
-              onClick={() => alert('Generating Executive Administration Governance Report (PDF)...')}
+              onClick={() => toast.info('Generating Executive Administration Governance Report (PDF)...', 'Report Export')}
             >
               Export Report
             </Button>

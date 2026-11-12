@@ -88,8 +88,6 @@ export const AddressLocationPicker: React.FC<AddressLocationPickerProps> = ({
             {countriesLoading && <span className="text-[10px] text-muted-foreground animate-pulse">Loading...</span>}
           </label>
           <Select
-            id="country-select"
-            className="w-full"
             value={country}
             onChange={handleCountrySelect}
             disabled={disabled || countriesLoading}
@@ -117,8 +115,6 @@ export const AddressLocationPicker: React.FC<AddressLocationPickerProps> = ({
           </label>
           {states.length > 0 ? (
             <Select
-              id="state-select"
-              className="w-full"
               value={state}
               onChange={handleStateSelect}
               disabled={disabled || statesLoading || !country}
@@ -171,9 +167,10 @@ export const AddressLocationPicker: React.FC<AddressLocationPickerProps> = ({
               ) : (
                 <button
                   type="button"
-                  onClick={() => void handlePostalCodeLookup(postalCode)}
-                  className="text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                   title="Lookup City & State"
+                  aria-label="Lookup City & State"
+                  onClick={() => handlePostalCodeLookup(postalCode)}
+                  className="p-1 rounded hover:bg-surface-muted transition-colors text-muted-foreground hover:text-primary cursor-pointer flex items-center justify-center"
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -190,3 +187,4 @@ export const AddressLocationPicker: React.FC<AddressLocationPickerProps> = ({
     </div>
   );
 };
+

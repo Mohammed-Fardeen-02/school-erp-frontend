@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
 import { DataTable, type DataTableColumn } from '@/components/data-display/data-table';
+import { useToast } from '@/components/feedback/toast';
 import { AdminStatusBadge } from '../common/admin-status-badge';
 import type { BillingInvoice } from '../../types/admin.types';
 
@@ -9,6 +10,7 @@ export interface InvoicesTableProps {
 }
 
 export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices }) => {
+  const toast = useToast();
   const columns: DataTableColumn<BillingInvoice>[] = [
     {
       key: 'invoiceNumber',
@@ -79,12 +81,12 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices }) => {
         rowIdKey="id"
         resultLabel="invoices"
         actionConfig={{
-          onView: (row) => alert(`Downloading invoice ${row.invoiceNumber}`),
+          onView: (row) => toast.info(`Downloading invoice ${row.invoiceNumber}...`, 'Invoice Download'),
           customActions: (row) => [
             {
               label: 'Download PDF',
               icon: <Download className="h-4 w-4 text-primary" />,
-              onClick: () => alert(`Downloading PDF receipt for invoice ${row.invoiceNumber}`),
+              onClick: () => toast.info(`Downloading official PDF receipt for invoice ${row.invoiceNumber}...`, 'Receipt Download'),
             },
           ],
         }}

@@ -55,11 +55,38 @@ export const Header: React.FC = () => {
     navigate('/login');
   };
 
-  const userName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Authorized User';
+  const userName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(' ').trim() ||
+      (user as { name?: string; fullName?: string }).name ||
+      (user as { name?: string; fullName?: string }).fullName ||
+      user.email ||
+      'Authorized User'
+    : 'Authorized User';
+
   const userEmail = user?.email || 'user@schoolerp.io';
-  const userInitials = (
-    user ? `${user.firstName[0] || ''}${user.lastName[0] || ''}` : 'AU'
-  ).toUpperCase();
+
+  const userInitials = (() => {
+    if (!user) return 'AU';
+    const first = user.firstName?.[0] || '';
+    const last = user.lastName?.[0] || '';
+    if (first || last) return `${first}${last}`.toUpperCase();
+
+    const rawUser = user as { name?: string; fullName?: string };
+    const customName = rawUser.name || rawUser.fullName;
+    if (customName) {
+      const parts = customName.trim().split(/\s+/);
+      if (parts.length > 1) {
+        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+      }
+      return (customName[0] || 'U').toUpperCase();
+    }
+
+    if (user.email) {
+      return (user.email[0] || 'U').toUpperCase();
+    }
+    return 'AU';
+  })();
+
   const schoolName = activeWorkspace?.name || 'School Workspace';
   const roleName = (activeWorkspace?.role || user?.role || 'Staff').replace('_', ' ');
 

@@ -148,8 +148,8 @@ export const UserAssignmentsPanel: React.FC<UserAssignmentsPanelProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-surface-muted/30">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
-                {selectedMember.firstName[0]?.toUpperCase()}
-                {selectedMember.lastName[0]?.toUpperCase()}
+                {selectedMember.firstName?.[0]?.toUpperCase() || ''}
+                {selectedMember.lastName?.[0]?.toUpperCase() || ''}
               </div>
               <div>
                 <div className="flex items-center gap-2">

@@ -38,7 +38,8 @@ export const ActiveSessionsCard: React.FC<ActiveSessionsCardProps> = ({
 
       <div className="space-y-3">
         {sessions.map((sess) => {
-          const isMobile = sess.deviceInfo.toLowerCase().includes('ios') || sess.deviceInfo.toLowerCase().includes('android');
+          const devInfo = (sess.deviceInfo || '').toLowerCase();
+          const isMobile = devInfo.includes('ios') || devInfo.includes('android');
           const Icon = isMobile ? Smartphone : Laptop;
 
           return (

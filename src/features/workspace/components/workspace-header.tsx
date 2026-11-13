@@ -84,7 +84,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                 {user ? `${user.firstName} ${user.lastName}` : 'Administrator'}
               </div>
               <div className="text-[10px] font-medium text-muted-foreground capitalize">
-                {user?.role.toLowerCase().replace('_', ' ') || 'Admin'}
+                {user?.role ? String(user.role).toLowerCase().replace(/_/g, ' ') : 'Admin'}
               </div>
             </div>
           </div>

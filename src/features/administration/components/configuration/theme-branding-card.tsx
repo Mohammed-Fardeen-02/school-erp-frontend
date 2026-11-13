@@ -83,9 +83,11 @@ export const ThemeBrandingCard: React.FC<ThemeBrandingCardProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {PRESET_PALETTES.map((preset) => {
+            const currentPrimary = (config.primaryColor || '').toLowerCase();
+            const currentAccent = (config.accentColor || '').toLowerCase();
             const isSelected =
-              config.primaryColor.toLowerCase() === preset.primary.toLowerCase() &&
-              config.accentColor.toLowerCase() === preset.accent.toLowerCase();
+              currentPrimary === preset.primary.toLowerCase() &&
+              currentAccent === preset.accent.toLowerCase();
 
             return (
               <button

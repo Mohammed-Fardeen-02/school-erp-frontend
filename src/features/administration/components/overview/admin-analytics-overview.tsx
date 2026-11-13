@@ -64,9 +64,10 @@ export const AdminAnalyticsOverview: React.FC<AdminAnalyticsProps> = ({
   const totalUsersCount = users.length || (activeUsersCount + pendingInvitesCount + inactiveUsersCount);
 
   // Sessions breakdown
-  const mobileCount = sessions.filter((s) =>
-    s.deviceInfo.toLowerCase().includes('ios') || s.deviceInfo.toLowerCase().includes('android')
-  ).length;
+  const mobileCount = sessions.filter((s) => {
+    const dev = (s.deviceInfo || '').toLowerCase();
+    return dev.includes('ios') || dev.includes('android');
+  }).length;
   const desktopCount = Math.max(0, sessions.length - mobileCount);
 
   // Recent logs
@@ -198,7 +199,7 @@ export const AdminAnalyticsOverview: React.FC<AdminAnalyticsProps> = ({
               <span className="text-xs text-muted-foreground font-medium">MFA Policy</span>
               <div className="text-sm font-bold text-foreground mt-1 flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5 text-primary" />
-                <span className="capitalize">{mfaPolicy.toLowerCase()}</span>
+                <span className="capitalize">{(mfaPolicy || 'OPTIONAL').toLowerCase()}</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">Institutional 2FA access</p>
             </div>

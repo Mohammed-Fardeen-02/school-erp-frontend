@@ -29,6 +29,21 @@ function createWrapper(initialEntry = '/admin') {
 describe('AdminRoutes Feature Router', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: [],
+          items: [],
+          meta: { total: 0, page: 1, limit: 10, totalPages: 1 },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
     useAuthStore.setState({
       user: {
         id: 'super-admin-1',

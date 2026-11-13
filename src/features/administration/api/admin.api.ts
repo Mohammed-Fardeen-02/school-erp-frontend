@@ -705,7 +705,7 @@ export class AdminApi {
   static async getTenantConfiguration(_organizationId?: string): Promise<TenantConfigurationDto> {
     try {
       const res = await apiClient.get<ApiResponse<TenantConfigurationDto>>('/settings/tenant-config');
-      return res.data || mockTenantConfigStore;
+      return res.data && res.data.smtp ? res.data : mockTenantConfigStore;
     } catch {
       return mockTenantConfigStore;
     }

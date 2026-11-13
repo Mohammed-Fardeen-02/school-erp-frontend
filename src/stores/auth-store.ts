@@ -69,12 +69,12 @@ if (initialSession?.user?.role === 'SUPER_ADMIN') {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  isAuthenticated: !!initialSession?.user,
+  isAuthenticated: Boolean(initialSession?.user && initialSession?.token),
   accessToken: initialSession?.token ?? null,
-  user: initialSession?.user ?? null,
-  workspaces: initialSession?.workspaces ?? [],
-  activeWorkspaceId: initialActiveId,
-  activeLocationId: initialLocationId,
+  user: initialSession?.token ? (initialSession?.user ?? null) : null,
+  workspaces: initialSession?.token ? (initialSession?.workspaces ?? []) : [],
+  activeWorkspaceId: initialSession?.token ? initialActiveId : null,
+  activeLocationId: initialSession?.token ? initialLocationId : null,
   isInitialized: true,
 
   login: async (credentials: LoginCredentials) => {

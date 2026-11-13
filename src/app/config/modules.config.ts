@@ -6,12 +6,12 @@ import {
   Receipt,
   Users,
   FileSpreadsheet,
-  Settings,
   Bell,
   Clock,
   Bus,
   Library,
   Building,
+  ShieldCheck,
 } from 'lucide-react';
 
 export interface ModuleShortcut {
@@ -208,20 +208,24 @@ export const ERP_MODULES: ModuleConfig[] = [
       { label: 'Mess Schedule', href: '/app/hostel' },
     ],
   },
-  // 12. Settings
+  // 12. Administration
   {
     id: 'settings',
-    name: 'Institutional Settings',
-    shortName: 'Settings',
-    description: 'School profile, academic calendar terms, role permissions, and system audit logs.',
-    icon: Settings,
-    route: '/app/settings',
+    name: 'Administration',
+    shortName: 'Administration',
+    description: 'Centralized institutional management: organization profiles, campuses, user directory, RBAC permissions, security policies, cloud billing, and audit logs.',
+    icon: ShieldCheck,
+    route: '/admin',
     category: 'system',
     requiredPermission: 'settings',
     shortcuts: [
-      { label: 'School Profile', href: '/app/settings' },
-      { label: 'Academic Terms', href: '/app/settings' },
-      { label: 'Roles & Security', href: '/app/settings' },
+      { label: 'Organizations', href: '/admin/organizations' },
+      { label: 'User Directory', href: '/admin/users' },
+      { label: 'Roles & Permissions', href: '/admin/roles' },
+      { label: 'Authentication & Security', href: '/admin/security' },
+      { label: 'Subscriptions & Billing', href: '/admin/billing' },
+      { label: 'Plans & Entitlements', href: '/admin/plans' },
+      { label: 'Audit & Activity Logs', href: '/admin/audit-logs' },
     ],
   },
 ];

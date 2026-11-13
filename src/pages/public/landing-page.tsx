@@ -25,7 +25,7 @@ import { useAuthStore } from '@/stores/auth-store';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, activeWorkspaceId } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   const handlePrimaryAction = () => {
     if (isAuthenticated) {

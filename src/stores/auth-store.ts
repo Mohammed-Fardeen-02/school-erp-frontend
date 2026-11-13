@@ -27,6 +27,7 @@ interface StoredSession {
   workspaces: SchoolWorkspace[];
   activeWorkspaceId: string | null;
   activeLocationId?: string | null;
+  token?: string | null;
 }
 
 const loadSession = (): StoredSession | null => {
@@ -56,14 +57,17 @@ const initialActiveId =
   initialSession?.activeWorkspaceId ?? (initialSession?.workspaces?.[0]?.id ?? null);
 const initialLocationId = initialSession?.activeLocationId ?? null;
 
-// Initialize apiClient tenant headers if saved session exists
+// Initialize apiClient with token and tenant headers if saved session exists
+if (initialSession?.token) {
+  apiClient.setToken(initialSession.token);
+}
 if (initialActiveId) {
   apiClient.setTenantContext(initialActiveId, initialLocationId);
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: !!initialSession?.user,
-  accessToken: null, // Initialized to null in memory; populated during login or silent refresh
+  accessToken: initialSession?.token ?? null,
   user: initialSession?.user ?? null,
   workspaces: initialSession?.workspaces ?? [],
   activeWorkspaceId: initialActiveId,
@@ -96,6 +100,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       workspaces,
       activeWorkspaceId: autoActiveId,
       activeLocationId: null,
+      token: token || null,
     });
 
     return { workspaceCount: workspaces.length };
@@ -145,6 +150,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         workspaces,
         activeWorkspaceId: workspaceId,
         activeLocationId: chosenLocId,
+        token: get().accessToken,
       });
     }
   },

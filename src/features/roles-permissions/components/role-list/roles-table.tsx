@@ -133,7 +133,7 @@ export const RolesTable: React.FC<RolesTableProps> = ({
         label: 'Delete / Archive Role',
         icon: <Trash2 className="h-3.5 w-3.5 text-danger" />,
         onClick: () => onDeleteRole(row),
-        variant: 'danger',
+        className: 'text-danger hover:bg-danger/10',
       });
     }
 
@@ -143,7 +143,7 @@ export const RolesTable: React.FC<RolesTableProps> = ({
   return (
     <div className="w-full" data-testid="roles-table-container">
       <DataTable
-        columns={columns as DataTableColumn<Record<string, unknown>>[]}
+        columns={columns as unknown as DataTableColumn<Record<string, unknown>>[]}
         data={roles as unknown as Record<string, unknown>[]}
         loading={loading}
         searchPlaceholder="Search roles by code or name..."

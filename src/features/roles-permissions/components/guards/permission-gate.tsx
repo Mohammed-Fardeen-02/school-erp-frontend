@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { usePermission } from '../../hooks/use-permission';
+import { useAuthStore } from '@/stores/auth-store';
 
 export interface PermissionGateProps {
   /**
@@ -37,7 +38,12 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   fallback = null,
   loadingFallback = null,
 }) => {
+  const isSuperAdmin = useAuthStore(state => state.user?.role === 'SUPER_ADMIN');
   const { hasPermission, isLoading } = usePermission(permission);
+
+  if (isSuperAdmin) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return <>{loadingFallback}</>;

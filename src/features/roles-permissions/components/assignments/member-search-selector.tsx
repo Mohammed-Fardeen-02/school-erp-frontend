@@ -251,7 +251,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                           </div>
                         </div>
 
-                        {selectedMember?.id === member.id && (
+                        {(selectedMember as WorkspaceMemberSummary | null)?.id === member.id && (
                           <Check className="w-4 h-4 text-primary shrink-0 ml-2" />
                         )}
                       </div>

@@ -1,5 +1,4 @@
-import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { screen, render } from '@testing-library/react';
 import { RolesTable } from './roles-table';
 import type { RoleSummary } from '../../types/roles.types';

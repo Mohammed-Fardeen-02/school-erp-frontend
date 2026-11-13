@@ -166,3 +166,15 @@ export const SettingsIcon: React.FC<{ className?: string }> = ({ className = '' 
     </svg>
   </div>
 );
+
+// 13. Administration Workspace Icon (Enterprise Shield)
+export const AdministrationIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div
+    className={`relative flex items-center justify-center w-full h-full bg-gradient-to-br from-indigo-700 via-slate-800 to-zinc-950 rounded-[22px] shadow-md shadow-indigo-700/20 p-4 text-white transition-all ${className}`}
+  >
+    <svg viewBox="0 0 24 24" fill="none" className="w-9 h-9 stroke-white" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" strokeWidth="2.2" />
+    </svg>
+  </div>
+);

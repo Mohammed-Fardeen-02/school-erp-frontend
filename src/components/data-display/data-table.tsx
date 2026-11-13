@@ -10,23 +10,22 @@ import {
   ChevronRight,
   Settings2,
   Check,
+  Filter,
 } from 'lucide-react';
 import { ActionMenu, type CustomAction } from '@/components/ui/action-menu';
-import { Checkbox } from '@/components/forms/checkbox';
-import { cn } from '@/lib/utils';
 
-export interface DataTableColumn<T = Record<string, unknown>> {
+export interface DataTableColumn<T = any> {
   id?: string;
   key: string;
   label: string;
   sortable?: boolean;
   width?: string;
-  render?: (value: unknown, row: T) => ReactNode;
+  render?: (value: any, row: T) => ReactNode;
   align?: 'left' | 'center' | 'right';
   visible?: boolean;
 }
 
-export interface DataTableProps<T = Record<string, unknown>> {
+export interface DataTableProps<T = any> {
   columns: DataTableColumn<T>[];
   data: T[];
   loading?: boolean;
@@ -40,7 +39,10 @@ export interface DataTableProps<T = Record<string, unknown>> {
   maxHeight?: string;
   toolbarRight?: ReactNode;
   toolbarLeft?: ReactNode;
+  draggable?: boolean;
+  onReorder?: (newData: T[]) => void;
   searchPlaceholder?: string;
+  statusKey?: string;
   actionConfig?: {
     onView?: (row: T) => void;
     onEdit?: (row: T) => void;
@@ -50,20 +52,22 @@ export interface DataTableProps<T = Record<string, unknown>> {
   };
 }
 
-export function DataTable<T extends Record<string, unknown> = Record<string, unknown>>({
+export function DataTable<T extends Record<string, any> = any>({
   columns: initialColumns,
   data,
-  selectable = true,
+  selectable: _selectable = true,
   selectedIds: externalSelectedIds,
   onSelectionChange,
   onRowClick,
   rowIdKey = 'id' as keyof T,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [5, 10, 25, 50],
   resultLabel = 'results',
   maxHeight = '560px',
   toolbarLeft,
   toolbarRight,
+  draggable = false,
   searchPlaceholder = 'Search...',
+  statusKey = 'status',
   actionConfig,
   loading = false,
 }: DataTableProps<T>) {
@@ -71,381 +75,568 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
   const selectedIds = externalSelectedIds ?? internalSelectedIds;
 
   const handleSelectionChange = (ids: Set<string>) => {
-    if (onSelectionChange) {
-      onSelectionChange(ids);
-    } else {
-      setInternalSelectedIds(ids);
-    }
+    setInternalSelectedIds(ids);
+    onSelectionChange?.(ids);
   };
 
-  const [columns, setColumns] = useState<DataTableColumn<T>[]>(initialColumns);
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(pageSizeOptions[0] || 10);
-  const [showColSettings, setShowColSettings] = useState(false);
-  const colSettingsRef = useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState(pageSizeOptions[0] ?? 10);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() =>
+    initialColumns.reduce(
+      (acc, col) => ({ ...acc, [col.key]: col.visible !== false }),
+      {} as Record<string, boolean>
+    )
+  );
+
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+  const statusRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setColumns(initialColumns);
-  }, [initialColumns]);
-
-  // Click outside listener for column visibility settings
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (colSettingsRef.current && !colSettingsRef.current.contains(event.target as Node)) {
-        setShowColSettings(false);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
+        setShowStatusMenu(false);
       }
-    }
+      if (columnRef.current && !columnRef.current.contains(event.target as Node)) {
+        setShowColumnMenu(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const visibleColumns = useMemo(() => columns.filter(col => col.visible !== false), [columns]);
+  useEffect(() => {
+    if (showStatusMenu) setShowColumnMenu(false);
+  }, [showStatusMenu]);
 
-  // Search filtering
-  const filteredData = useMemo(() => {
-    if (!search.trim()) return data;
-    const lower = search.toLowerCase();
-    return data.filter(row =>
-      columns.some(col => {
-        const val = row[col.key];
-        return val != null && String(val).toLowerCase().includes(lower);
-      })
-    );
-  }, [data, search, columns]);
+  useEffect(() => {
+    if (showColumnMenu) setShowStatusMenu(false);
+  }, [showColumnMenu]);
 
-  // Sorting
-  const sortedData = useMemo(() => {
-    if (!sortKey) return filteredData;
-    return [...filteredData].sort((a, b) => {
-      const aVal = a[sortKey];
-      const bVal = b[sortKey];
-      if (aVal === bVal) return 0;
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-      const cmp = aVal < bVal ? -1 : 1;
-      return sortDir === 'asc' ? cmp : -cmp;
+  const columns = useMemo(
+    () => initialColumns.filter(col => visibleColumns[col.key] !== false),
+    [initialColumns, visibleColumns]
+  );
+
+  const statusOptions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    data.forEach(row => {
+      const val = row[statusKey];
+      const status = String(val !== undefined && val !== null ? val : 'Unknown').trim();
+      counts[status] = (counts[status] || 0) + 1;
     });
-  }, [filteredData, sortKey, sortDir]);
+    return Object.entries(counts)
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => a.status.localeCompare(b.status));
+  }, [data, statusKey]);
 
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / pageSize) || 1;
-  const pagedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return sortedData.slice(start, start + pageSize);
-  }, [sortedData, page, pageSize]);
+  const toggleColumn = (key: string) => {
+    setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const filteredData = useMemo(() => {
+    let result = [...data];
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter(row =>
+        columns.some(col => String(row[col.key] ?? '').toLowerCase().includes(q))
+      );
+    }
+    if (selectedStatuses.length > 0) {
+      result = result.filter(row => selectedStatuses.includes(String(row[statusKey])));
+    }
+    return result;
+  }, [data, search, columns, selectedStatuses, statusKey]);
+
+  const sorted = useMemo(() => {
+    if (!sortCol) return filteredData;
+    return [...filteredData].sort((a, b) => {
+      const av = a[sortCol];
+      const bv = b[sortCol];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === 'number' && typeof bv === 'number') {
+        return sortDir === 'asc' ? av - bv : bv - av;
+      }
+      return sortDir === 'asc'
+        ? String(av).localeCompare(String(bv))
+        : String(bv).localeCompare(String(av));
+    });
+  }, [filteredData, sortCol, sortDir]);
+
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
+
+  const resetPage = () => setPage(1);
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    resetPage();
+  };
+  const handlePageSize = (s: number) => {
+    setPageSize(s);
+    resetPage();
+  };
 
   const handleSort = (key: string) => {
-    if (sortKey === key) {
-      if (sortDir === 'asc') setSortDir('desc');
-      else {
-        setSortKey(null);
-        setSortDir('asc');
-      }
+    if (sortCol === key) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
     } else {
-      setSortKey(key);
+      setSortCol(key);
       setSortDir('asc');
     }
+    resetPage();
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allIds = new Set(pagedData.map(r => String(r[rowIdKey])));
-      handleSelectionChange(allIds);
-    } else {
-      handleSelectionChange(new Set());
-    }
-  };
+  const colSpan = columns.length + 1 + (actionConfig ? 1 : 0) + (draggable ? 1 : 0);
 
-  const handleSelectRow = (id: string, checked: boolean) => {
+  const pagedIds = paged.map(row => String(row[rowIdKey]));
+  const allPageSelected = pagedIds.length > 0 && pagedIds.every(id => selectedIds.has(id));
+  const somePageSelected = pagedIds.some(id => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
     const next = new Set(selectedIds);
-    if (checked) next.add(id);
-    else next.delete(id);
+    if (allPageSelected) {
+      pagedIds.forEach(id => next.delete(id));
+    } else {
+      pagedIds.forEach(id => next.add(id));
+    }
     handleSelectionChange(next);
   };
 
-  const isAllSelected =
-    pagedData.length > 0 && pagedData.every(r => selectedIds.has(String(r[rowIdKey])));
-  const isSomeSelected =
-    pagedData.some(r => selectedIds.has(String(r[rowIdKey]))) && !isAllSelected;
-
-  const toggleColumnVisibility = (key: string) => {
-    setColumns(prev =>
-      prev.map(col => (col.key === key ? { ...col, visible: col.visible === false } : col))
-    );
+  const toggleRow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    handleSelectionChange(next);
   };
 
-  const hasActions = !!actionConfig;
+  // Generate page numbers for pagination
+  const paginationRange = useMemo(() => {
+    const maxButtons = 7;
+    if (totalPages <= maxButtons) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    let startPage = Math.max(1, page - 3);
+    const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    if (endPage - startPage < maxButtons - 1) {
+      startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  }, [totalPages, page]);
 
   return (
-    <div className="flex flex-col bg-surface border border-border rounded-xl shadow-sm overflow-hidden w-full">
-      {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-border bg-surface">
-        <div className="flex items-center gap-3 flex-1 min-w-[240px]">
-          {/* Search bar */}
-          <div className="relative w-full max-w-xs">
+    <div className="bg-surface rounded-xl border border-border shadow-xs overflow-hidden w-full">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between px-6 py-3 border-b border-border bg-surface">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
+          {toolbarLeft}
+          <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
-              onChange={e => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={e => handleSearch(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-8 h-9 text-sm bg-surface border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full pl-10 pr-9 h-9 text-sm bg-surface border border-border text-foreground placeholder:text-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
             {search && (
               <button
                 type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={() => handleSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
-          {toolbarLeft}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-start md:justify-end w-full md:w-auto py-1">
           {toolbarRight}
 
-          {/* Column Visibility Settings */}
-          <div className="relative" ref={colSettingsRef}>
+          {/* Status Filter Dropdown */}
+          <div className="relative" ref={statusRef}>
             <button
               type="button"
-              onClick={() => setShowColSettings(prev => !prev)}
-              className="p-2 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-muted transition-colors cursor-pointer"
-              title="Column Display Settings"
+              onClick={() => setShowStatusMenu(!showStatusMenu)}
+              className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border border-border text-foreground rounded-lg hover:bg-surface-muted hover:border-primary/30 transition-colors cursor-pointer"
             >
-              <Settings2 className="w-4 h-4" />
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Status</span>
+              {selectedStatuses.length > 0 && (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.2 text-[10px] font-bold text-primary">
+                  {selectedStatuses.length}
+                </span>
+              )}
             </button>
-            {showColSettings && (
-              <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-xl z-50 p-2 text-xs">
-                <div className="font-semibold text-foreground px-2 py-1 mb-1 border-b border-border">
-                  Toggle Columns
+
+            {showStatusMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-surface rounded-xl border border-border shadow-xl z-50 py-2 max-h-[320px] overflow-auto text-xs animate-in fade-in-0 zoom-in-95">
+                <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                  STATUS FILTER
                 </div>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {columns.map(col => (
-                    <button
-                      key={col.key}
-                      type="button"
-                      onClick={() => toggleColumnVisibility(col.key)}
-                      className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-left text-foreground hover:bg-surface-muted transition-colors cursor-pointer"
-                    >
-                      <span className="truncate">{col.label}</span>
-                      {col.visible !== false && <Check className="w-3.5 h-3.5 text-primary" />}
-                    </button>
-                  ))}
+                <label className="flex items-center gap-3 px-4 py-2 hover:bg-primary/5 cursor-pointer text-foreground font-medium">
+                  <input
+                    type="checkbox"
+                    checked={selectedStatuses.length === 0}
+                    onChange={() => {
+                      setSelectedStatuses([]);
+                      resetPage();
+                    }}
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                  />
+                  <span>All Statuses</span>
+                  <span className="ml-auto text-muted-foreground text-xs">({data.length})</span>
+                </label>
+                {statusOptions.map(({ status, count }) => (
+                  <label
+                    key={status}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-primary/5 cursor-pointer text-foreground"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStatuses.includes(status)}
+                      onChange={() => {
+                        const next = selectedStatuses.includes(status)
+                          ? selectedStatuses.filter(s => s !== status)
+                          : [...selectedStatuses, status];
+                        setSelectedStatuses(next);
+                        resetPage();
+                      }}
+                      className="w-4 h-4 accent-primary cursor-pointer"
+                    />
+                    <span className="capitalize">{status.replace(/_/g, ' ').toLowerCase()}</span>
+                    <span className="ml-auto text-muted-foreground text-xs">({count})</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Columns Visibility Menu */}
+          <div className="relative" ref={columnRef}>
+            <button
+              type="button"
+              onClick={() => setShowColumnMenu(!showColumnMenu)}
+              className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border border-border text-foreground rounded-lg hover:bg-surface-muted hover:border-primary/30 transition-colors cursor-pointer"
+            >
+              <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Columns</span>
+            </button>
+            {showColumnMenu && (
+              <div className="absolute right-0 mt-2 w-52 bg-surface rounded-xl border border-border shadow-xl z-50 py-2 max-h-[300px] overflow-auto text-xs animate-in fade-in-0 zoom-in-95">
+                <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                  SHOW COLUMNS
                 </div>
+                {initialColumns.map(col => (
+                  <label
+                    key={col.key}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-primary/5 cursor-pointer text-foreground"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns[col.key] !== false}
+                      onChange={() => toggleColumn(col.key)}
+                      className="w-4 h-4 accent-primary cursor-pointer"
+                    />
+                    <span className="truncate">{col.label}</span>
+                    {visibleColumns[col.key] !== false && (
+                      <Check className="w-4 h-4 text-primary ml-auto shrink-0" />
+                    )}
+                  </label>
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Table Container */}
-      <div className="relative overflow-x-auto" style={{ maxHeight }}>
-        {loading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface/70 backdrop-blur-[1px]">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface border border-border shadow-md text-sm font-medium text-foreground">
-              <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              Loading records...
-            </div>
-          </div>
-        )}
-
-        <table className="w-full text-left text-sm text-foreground border-collapse">
-          <thead className="bg-surface-muted text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 z-10 border-b border-border">
-            <tr>
-              {selectable && (
-                <th className="w-10 px-4 py-3">
-                  <Checkbox
-                    checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
-                    onCheckedChange={checked => handleSelectAll(checked === true)}
+      {/* Sticky Table Body */}
+      <div className="overflow-x-auto">
+        <div className="overflow-auto" style={{ maxHeight }}>
+          <table className="w-full border-collapse border border-border">
+            <thead className="sticky top-0 z-20">
+              <tr style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}>
+                {draggable && (
+                  <th
+                    className="w-10 px-4 py-3"
+                    style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderRight: '1px solid var(--color-table-header-border, #c4b5fd)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}
+                  />
+                )}
+                <th
+                  className="w-12 px-4 py-3 text-center"
+                  style={{ backgroundColor: 'var(--color-table-header-bg, #ede9fe)', borderRight: '1px solid var(--color-table-header-border, #c4b5fd)', borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    ref={el => {
+                      if (el) el.indeterminate = somePageSelected && !allPageSelected;
+                    }}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                    title="Select all on this page"
                   />
                 </th>
-              )}
-
-              {visibleColumns.map(col => (
-                <th
-                  key={col.key}
-                  style={{ width: col.width }}
-                  onClick={() => col.sortable !== false && handleSort(col.key)}
-                  className={cn(
-                    'px-4 py-3 whitespace-nowrap select-none',
-                    col.sortable !== false ? 'cursor-pointer hover:text-foreground' : '',
-                    col.align === 'center'
-                      ? 'text-center'
-                      : col.align === 'right'
-                        ? 'text-right'
-                        : 'text-left'
-                  )}
-                >
-                  <div className="inline-flex items-center gap-1.5">
-                    <span>{col.label}</span>
-                    {col.sortable !== false && (
-                      <span className="text-muted-foreground">
-                        {sortKey === col.key ? (
-                          sortDir === 'asc' ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-primary" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-primary" />
-                          )
-                        ) : (
-                          <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 hover:opacity-100" />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-              ))}
-
-              {hasActions && (
-                <th className="w-14 px-4 py-3 text-center whitespace-nowrap">Actions</th>
-              )}
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-border bg-surface">
-            {pagedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={visibleColumns.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0)}
-                  className="py-12 text-center"
-                >
-                  <EmptyStateIllustration className="w-48 h-auto mx-auto mb-3 opacity-80" />
-                  <p className="text-sm font-medium text-foreground">No records found</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {search
-                      ? 'Try modifying your search query'
-                      : 'No entries available at this time'}
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              pagedData.map(row => {
-                const id = String(row[rowIdKey]);
-                const isSelected = selectedIds.has(id);
-
-                return (
-                  <tr
-                    key={id}
-                    onClick={() => onRowClick && onRowClick(row)}
-                    className={cn(
-                      'transition-colors hover:bg-surface-muted/50',
-                      isSelected ? 'bg-primary/5' : '',
-                      onRowClick ? 'cursor-pointer' : ''
-                    )}
-                  >
-                    {selectable && (
-                      <td className="w-10 px-4 py-3" onClick={e => e.stopPropagation()}>
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={checked => handleSelectRow(id, checked === true)}
-                        />
-                      </td>
-                    )}
-
-                    {visibleColumns.map(col => (
-                      <td
-                        key={col.key}
-                        className={cn(
-                          'px-4 py-3 text-sm text-foreground whitespace-nowrap',
-                          col.align === 'center'
-                            ? 'text-center'
-                            : col.align === 'right'
-                              ? 'text-right'
-                              : 'text-left'
-                        )}
+                {columns.map(col => {
+                  const align = col.align || 'center';
+                  const colKey = col.id || col.key;
+                  return (
+                    <th
+                      key={colKey}
+                      onClick={() => col.sortable && handleSort(col.key)}
+                      className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${
+                        col.sortable ? 'cursor-pointer select-none hover:opacity-85' : ''
+                      }`}
+                      style={{
+                        backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                        color: 'var(--color-table-header-text, #4c1d95)',
+                        borderRight: '1px solid var(--color-table-header-border, #c4b5fd)',
+                        borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                      }}
+                    >
+                      <div
+                        className={`flex items-center gap-1.5 ${
+                          align === 'center'
+                            ? 'justify-center'
+                            : align === 'right'
+                              ? 'justify-end'
+                              : 'justify-start'
+                        }`}
                       >
-                        {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
-                      </td>
-                    ))}
+                        <span>{col.label}</span>
+                        {col.sortable &&
+                          (sortCol === col.key ? (
+                            sortDir === 'asc' ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-primary" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-primary" />
+                            )
+                          ) : (
+                            <ChevronsUpDown className="w-3.5 h-3.5 text-primary/70" />
+                          ))}
+                      </div>
+                    </th>
+                  );
+                })}
+                {actionConfig && (
+                  <th
+                    className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider w-36"
+                    style={{
+                      backgroundColor: 'var(--color-table-header-bg, #ede9fe)',
+                      color: 'var(--color-table-header-text, #4c1d95)',
+                      borderBottom: '2px solid var(--color-table-header-border, #c4b5fd)',
+                    }}
+                  >
+                    ACTION
+                  </th>
+                )}
+              </tr>
+            </thead>
 
-                    {hasActions && (
-                      <td className="w-14 px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
-                        <ActionMenu
-                          onView={actionConfig.onView ? () => actionConfig.onView!(row) : undefined}
-                          onEdit={actionConfig.onEdit ? () => actionConfig.onEdit!(row) : undefined}
-                          onDelete={
-                            actionConfig.onDelete &&
-                            (actionConfig.canDelete ? actionConfig.canDelete(row) : true)
-                              ? () => actionConfig.onDelete!(row)
-                              : undefined
-                          }
-                          customActions={
-                            actionConfig.customActions ? actionConfig.customActions(row) : undefined
-                          }
+            <tbody className="bg-surface">
+              {loading ? (
+                <tr>
+                  <td colSpan={colSpan} className="px-6 py-14 text-center">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+                      <svg
+                        className="animate-spin h-5 w-5 text-primary"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      <span>Loading records...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paged.length === 0 ? (
+                <tr>
+                  <td colSpan={colSpan} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <EmptyStateIllustration className="w-full max-w-xs h-auto opacity-80 mb-2" />
+                      <p className="text-sm font-semibold text-foreground">No records found</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {search || selectedStatuses.length > 0
+                          ? 'Try adjusting your search query or status filters'
+                          : 'No data entries available at this time'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paged.map(row => {
+                  const id = String(row[rowIdKey]);
+                  return (
+                    <tr
+                      key={id}
+                      onClick={() => onRowClick?.(row)}
+                      className={`transition-colors hover:bg-primary/5 ${
+                        onRowClick ? 'cursor-pointer' : ''
+                      }`}
+                      style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                    >
+                      {draggable && (
+                        <td
+                          className="px-4 py-3 text-center text-muted-foreground"
+                          style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                        >
+                          ⋮⋮
+                        </td>
+                      )}
+                      <td
+                        className="px-4 py-3 text-center"
+                        style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                        onClick={e => toggleRow(id, e)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(id)}
+                          onChange={() => {}}
+                          className="w-4 h-4 accent-primary cursor-pointer"
                         />
                       </td>
-                    )}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                      {columns.map(col => {
+                        const align = col.align || 'center';
+                        const colKey = col.id || col.key;
+                        return (
+                          <td
+                            key={colKey}
+                            className={`px-4 py-3 text-xs text-foreground ${
+                              align === 'center'
+                                ? 'text-center'
+                                : align === 'right'
+                                  ? 'text-right'
+                                  : 'text-left'
+                            }`}
+                            style={{ borderRight: '1px solid var(--color-table-grid, #e5e7eb)', borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                          >
+                            {col.render
+                              ? col.render(row[col.key], row)
+                              : String(row[col.key] ?? '—')}
+                          </td>
+                        );
+                      })}
+                      {actionConfig && (
+                        <td
+                          className="px-4 py-3 text-center w-36"
+                          style={{ borderBottom: '1px solid var(--color-table-grid, #e5e7eb)' }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <ActionMenu
+                            onView={
+                              actionConfig.onView ? () => actionConfig.onView!(row) : undefined
+                            }
+                            onEdit={
+                              actionConfig.onEdit ? () => actionConfig.onEdit!(row) : undefined
+                            }
+                            onDelete={
+                              actionConfig.onDelete &&
+                              (actionConfig.canDelete ? actionConfig.canDelete(row) : true)
+                                ? () => actionConfig.onDelete!(row)
+                                : undefined
+                            }
+                            customActions={
+                              actionConfig.customActions
+                                ? actionConfig.customActions(row)
+                                : undefined
+                            }
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Bottom Pagination Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 border-t border-border bg-surface text-xs text-muted-foreground">
-        <div>
-          Showing{' '}
-          <span className="font-semibold text-foreground">
-            {sortedData.length > 0 ? (page - 1) * pageSize + 1 : 0}
-          </span>{' '}
-          to{' '}
-          <span className="font-semibold text-foreground">
-            {Math.min(page * pageSize, sortedData.length)}
-          </span>{' '}
-          of <span className="font-semibold text-foreground">{sortedData.length}</span>{' '}
-          {resultLabel}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+      {/* Pagination Footer */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-6 py-3.5 border-t border-border bg-surface text-xs text-muted-foreground">
+        <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between sm:justify-start gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <span>Rows per page</span>
             <select
               value={pageSize}
-              onChange={e => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="h-7 rounded border border-border bg-surface px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              onChange={e => handlePageSize(Number(e.target.value))}
+              className="border border-border bg-surface text-foreground rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
             >
-              {pageSizeOptions.map(opt => (
-                <option key={opt} value={opt}>
-                  {opt}
+              {pageSizeOptions.map(s => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
           </div>
+          <span>
+            Showing <strong className="font-semibold text-foreground">{start}</strong> -{' '}
+            <strong className="font-semibold text-foreground">{end}</strong> of{' '}
+            <strong className="font-semibold text-foreground">{total}</strong> {resultLabel}
+          </span>
+        </div>
 
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-1 w-full sm:w-auto overflow-x-auto py-1">
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 transition-colors"
+            title="Previous Page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          {paginationRange.map(p => (
             <button
               type="button"
-              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              disabled={page <= 1}
-              className="p-1.5 rounded border border-border bg-surface text-foreground hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 rounded-lg border text-xs font-semibold flex-shrink-0 transition-all ${
+                p === page
+                  ? 'bg-primary text-white border-primary shadow-xs'
+                  : 'border-border text-foreground hover:bg-primary/5'
+              }`}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              {p}
             </button>
-            <span className="px-2 font-medium text-foreground">
-              {page} / {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={page >= totalPages}
-              className="p-1.5 rounded border border-border bg-surface text-foreground hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 transition-colors"
+            title="Next Page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

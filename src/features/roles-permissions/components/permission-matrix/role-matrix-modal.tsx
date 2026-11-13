@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { X, Sliders, Shield } from 'lucide-react';
+import { X, Sliders } from 'lucide-react';
 import { PermissionMatrixBuilder } from './permission-matrix-builder';
 import type { RoleSummary } from '../../types/roles.types';
 

@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { sidebarConfig, type SidebarItem } from './sidebar.config';
+import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
+import { getSidebarConfigForPath, type SidebarItem } from './sidebar.config';
 
 export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,11 @@ export const Sidebar: React.FC = () => {
   const { sidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useUiStore();
   const { hasModuleAccess, getActiveWorkspace } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
+
+  // Dynamically resolve active module-scoped configuration
+  const activeConfig = getSidebarConfigForPath(location.pathname);
+  const { moduleKey, moduleName, moduleIcon: ModuleIcon, moduleDescription, items } = activeConfig;
+  const isScopedModule = moduleKey !== 'workspace-overview';
 
   const [expandedSections, setExpandedSections] = React.useState<string[]>([
     '/app/students',
@@ -56,6 +62,7 @@ export const Sidebar: React.FC = () => {
 
   const isItemActive = (href: string): boolean => {
     if (href === '/workspace') return location.pathname === '/workspace';
+    if (href === '/admin') return location.pathname === '/admin';
     return location.pathname.startsWith(href);
   };
 
@@ -64,16 +71,38 @@ export const Sidebar: React.FC = () => {
     return item.children.some(child => isItemActive(child.href));
   };
 
-  // Permission-aware sidebar navigation: filter modules by active school permissions
-  const visibleNavItems = sidebarConfig.filter(
-    item => !item.moduleId || hasModuleAccess(item.moduleId)
-  );
+  // Permission and capability-aware sidebar navigation: filter by permissions & active modules
+  const { checkPermission } = usePermission();
+  const user = useAuthStore(state => state.user);
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  const visibleNavItems = items
+    .filter(item => {
+      if (item.permission) {
+        if (!isSuperAdmin && !checkPermission(item.permission)) return false;
+      }
+      if (item.moduleId) {
+        if (!hasModuleAccess(item.moduleId)) return false;
+      }
+      return true;
+    })
+    .map(item => {
+      if (!item.children) return item;
+      const filteredChildren = item.children.filter(child => {
+        if (child.permission) {
+          if (!isSuperAdmin && !checkPermission(child.permission)) return false;
+        }
+        return true;
+      });
+      return { ...item, children: filteredChildren };
+    });
 
   const schoolName = activeWorkspace?.name || 'School Workspace';
   const schoolYear = activeWorkspace?.academicYear
     ? `Academic Year ${activeWorkspace.academicYear}`
     : 'Active Session';
   const schoolInitials = (activeWorkspace?.code || 'SE').slice(0, 2).toUpperCase();
+  const isCollapsedDesktop = sidebarCollapsed && !mobileSidebarOpen;
 
   return (
     <>
@@ -92,27 +121,49 @@ export const Sidebar: React.FC = () => {
           mobileSidebarOpen ? 'translate-x-0 w-72 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         } ${sidebarCollapsed ? 'lg:w-[64px]' : 'lg:w-60'}`}
       >
-        {/* Brand Header */}
-        <div className="flex h-16 items-center border-b border-border px-3">
-          <button
-            type="button"
-            onClick={() => handleNav('/workspace')}
-            className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
-              sidebarCollapsed ? 'lg:w-full lg:justify-center' : ''
-            }`}
-          >
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-            {(!sidebarCollapsed || mobileSidebarOpen) && (
-              <div className="min-w-0 overflow-hidden">
-                <div className="truncate text-sm font-bold text-foreground">School ERP</div>
-                <div className="truncate text-xs font-medium text-muted-foreground">
-                  Enterprise Academic
-                </div>
+        {/* Module / Brand Header */}
+        <div className="flex flex-col border-b border-border px-3 py-3 justify-center min-h-[64px]">
+          {isScopedModule ? (
+            /* Active Module Workspace Banner */
+            <div
+              className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
+                isCollapsedDesktop ? 'w-full justify-center' : ''
+              }`}
+            >
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
+                <ModuleIcon className="h-4 w-4" />
               </div>
-            )}
-          </button>
+              {!isCollapsedDesktop && (
+                <div className="min-w-0 overflow-hidden">
+                  <div className="truncate text-sm font-bold text-foreground">{moduleName}</div>
+                  <div className="truncate text-[11px] font-medium text-muted-foreground">
+                    {moduleDescription}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* General Workspace Header */
+            <button
+              type="button"
+              onClick={() => handleNav('/workspace')}
+              className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
+                isCollapsedDesktop ? 'w-full justify-center' : ''
+              }`}
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              {!isCollapsedDesktop && (
+                <div className="min-w-0 overflow-hidden">
+                  <div className="truncate text-sm font-bold text-foreground">School ERP</div>
+                  <div className="truncate text-xs font-medium text-muted-foreground">
+                    Enterprise Academic
+                  </div>
+                </div>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Navigation List */}
@@ -120,14 +171,13 @@ export const Sidebar: React.FC = () => {
           className="flex-1 overflow-y-auto overflow-x-hidden py-3"
           style={{ scrollbarWidth: 'none' }}
         >
-          <nav className={`space-y-1 ${sidebarCollapsed ? 'lg:px-1.5' : 'px-3'}`}>
+          <nav className={`space-y-1 ${isCollapsedDesktop ? 'px-1.5' : 'px-3'}`}>
             {visibleNavItems.map(item => {
               const Icon = item.icon;
               const hasChildren = !!item.children?.length;
               const hasActiveChild = isChildActive(item);
               const isActive = isItemActive(item.href) || hasActiveChild;
               const isExpanded = expandedSections.includes(item.href) || hasActiveChild;
-              const isCollapsedDesktop = sidebarCollapsed && !mobileSidebarOpen;
 
               return (
                 <div key={item.href}>
@@ -150,7 +200,7 @@ export const Sidebar: React.FC = () => {
                       isCollapsedDesktop ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
                     } ${
                       isActive
-                        ? 'bg-primary/10 text-primary shadow-xs'
+                        ? 'bg-primary/10 text-primary shadow-xs font-semibold'
                         : 'text-foreground/70 hover:bg-surface-muted hover:text-foreground'
                     }`}
                   >
@@ -180,7 +230,7 @@ export const Sidebar: React.FC = () => {
                     )}
                   </button>
 
-                  {/* Sub Items (expanded state) */}
+                  {/* Sub Items (if any expanded state) */}
                   {hasChildren && isExpanded && !isCollapsedDesktop && (
                     <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-2">
                       {item.children!.map(child => {
@@ -220,7 +270,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Sidebar Footer */}
-        {!sidebarCollapsed || mobileSidebarOpen ? (
+        {!isCollapsedDesktop ? (
           <div className="mt-auto border-t border-border p-3">
             <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-muted p-2">
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">

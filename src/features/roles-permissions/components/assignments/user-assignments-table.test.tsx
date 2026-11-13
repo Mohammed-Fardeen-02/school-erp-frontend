@@ -1,4 +1,3 @@
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, render, fireEvent } from '@testing-library/react';
 import { UserAssignmentsTable } from './user-assignments-table';
@@ -128,7 +127,7 @@ describe('UserAssignmentsTable Component', () => {
   it('disables Revoke button when assignment belongs to current logged-in user', () => {
     const selfAssignments: AssignmentRecord[] = [
       {
-        ...mockAssignments[0],
+        ...mockAssignments[0]!,
         userId: 'admin-caller', // Same as currentUser.id
       },
     ];

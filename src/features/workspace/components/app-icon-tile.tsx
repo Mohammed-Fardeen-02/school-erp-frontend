@@ -15,6 +15,7 @@ import {
   LibraryIcon,
   HostelIcon,
   SettingsIcon,
+  AdministrationIcon,
 } from './module-icons';
 
 export interface AppIconTileProps {
@@ -67,6 +68,8 @@ export const AppIconTile: React.FC<AppIconTileProps> = ({
       case 'organization':
         return <HostelIcon />;
       case 'settings':
+      case 'admin':
+        return <AdministrationIcon />;
       case 'erpnext-settings':
       case 'framework':
         return <SettingsIcon />;

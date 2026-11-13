@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicLayout } from '@/app/layouts/public-layout';
 import { MainLayout } from '@/app/layouts/main-layout';
@@ -12,6 +12,7 @@ import { LandingPage } from '@/pages/public/landing-page';
 import { ModuleContainerPage } from '@/pages/module/module-container-page';
 import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@/features/auth';
 import { WorkspaceLauncherPage, SelectWorkspacePage } from '@/features/workspace';
+import { AdminRoutes } from '@/features/administration';
 import { Button } from '@/components/ui/button';
 
 const NotFoundPage: React.FC = () => {
@@ -96,7 +97,7 @@ export const AppRouter: React.FC = () => {
         }
       />
 
-      {/* 5. Authenticated Business Module Workspace (MainLayout with Sidebar & Navigation) */}
+      {/* 5. Authenticated Feature Workspace (MainLayout with Sidebar & Navigation) */}
       <Route
         element={
           <AuthGuard>
@@ -106,6 +107,15 @@ export const AppRouter: React.FC = () => {
           </AuthGuard>
         }
       >
+        {/* Modular Feature Sub-Routers */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/tenants/*" element={<Navigate to="/admin/organizations" replace />} />
+        <Route path="/roles/*" element={<Navigate to="/admin/roles" replace />} />
+        <Route path="/users/*" element={<Navigate to="/admin/users" replace />} />
+        <Route path="/settings" element={<Navigate to="/admin" replace />} />
+        <Route path="/settings/*" element={<Navigate to="/admin" replace />} />
+
+        {/* Catch-All Business Module Container */}
         <Route
           path={ROUTES.APP_MODULE}
           element={

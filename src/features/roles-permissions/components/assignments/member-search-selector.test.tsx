@@ -134,7 +134,7 @@ describe('MemberSearchSelector Component', () => {
     const handleSelect = vi.fn();
     render(
       <MemberSearchSelector
-        selectedMember={mockMembers[0]}
+        selectedMember={mockMembers[0]!}
         onSelectMember={handleSelect}
       />,
       { wrapper: createWrapper() }
@@ -206,7 +206,7 @@ describe('MemberSearchSelector Component', () => {
 
   it('handles server-side pagination controls', async () => {
     vi.mocked(AssignmentsApi.listMembers).mockResolvedValueOnce({
-      members: [mockMembers[0]],
+      members: [mockMembers[0]!],
       meta: { total: 20, page: 1, limit: 10, totalPages: 2 },
     });
 
@@ -227,7 +227,7 @@ describe('MemberSearchSelector Component', () => {
     });
 
     vi.mocked(AssignmentsApi.listMembers).mockResolvedValueOnce({
-      members: [mockMembers[1]],
+      members: [mockMembers[1]!],
       meta: { total: 20, page: 2, limit: 10, totalPages: 2 },
     });
 

@@ -107,7 +107,7 @@ export function useAssignRole() {
     mutationFn: async (payload) => {
       return AssignmentsApi.assignRole(payload);
     },
-    onSuccess: (assignedRecord, variables) => {
+    onSuccess: (_assignedRecord, variables) => {
       // Invalidate target user's assignments
       queryClient.invalidateQueries({
         queryKey: rbacQueryKeys.userAssignments(

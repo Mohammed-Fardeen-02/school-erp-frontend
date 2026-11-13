@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
 import { Select } from '@/components/forms/select';
 import { AddressLocationPicker } from '@/components/forms/address-location-picker';
+import { useToast } from '@/components/feedback/toast';
 import type { TenantDto } from '@/features/tenants/types/tenants.types';
 import type { SaveOrganizationPayload } from '../../types/admin.types';
 
@@ -54,6 +55,7 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
   isLoading,
 }) => {
   const isEdit = Boolean(initialData);
+  const toast = useToast();
 
   const {
     register,
@@ -122,14 +124,32 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
     }
   }, [initialData, reset, isOpen]);
 
+  const handleValidationErrors = (formErrors: Record<string, any>) => {
+    const firstError = Object.values(formErrors)[0];
+    if (firstError?.message) {
+      toast.error(String(firstError.message), 'Validation Error');
+    }
+  };
+
   const onFormSubmit = async (data: OrgFormData, isDraft = false) => {
+    let website = data.website?.trim() || '';
+    if (website && !/^https?:\/\//i.test(website)) {
+      website = `https://${website}`;
+    }
+
     const payload: SaveOrganizationPayload = {
       ...data,
+      website,
       status: isDraft ? 'PROVISIONING' : 'ACTIVE',
       isDraft,
     };
-    await onSubmit(payload, initialData?.id);
-    onClose();
+
+    try {
+      await onSubmit(payload, initialData?.id);
+      onClose();
+    } catch {
+      // Error handled by parent onSubmit handler
+    }
   };
 
   if (!isOpen) return null;
@@ -166,7 +186,7 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
         {/* Form Body */}
         <form
           id="org-form"
-          onSubmit={handleSubmit((data) => onFormSubmit(data, false))}
+          onSubmit={handleSubmit((data) => onFormSubmit(data, false), handleValidationErrors)}
           className="flex-1 overflow-y-auto p-6 space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -269,7 +289,8 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSubmit((data) => onFormSubmit(data, true))}
+                type="button"
+                onClick={handleSubmit((data) => onFormSubmit(data, true), handleValidationErrors)}
                 disabled={isSubmitting || isLoading}
                 icon={<FileText className="h-4 w-4" />}
               >
@@ -279,8 +300,8 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
             <Button
               variant="primary"
               size="sm"
-              type="submit"
-              form="org-form"
+              type="button"
+              onClick={handleSubmit((data) => onFormSubmit(data, false), handleValidationErrors)}
               disabled={isSubmitting || isLoading}
               icon={<Save className="h-4 w-4" />}
             >

@@ -57,8 +57,9 @@ export class TenantsApi {
    * POST /api/v1/organizations
    */
   static async createTenant(payload: CreateTenantDto): Promise<TenantDto> {
-    const response = await apiClient.post<ApiResponse<TenantDto>>('/organizations', payload);
-    return response.data;
+    const response = await apiClient.post<ApiResponse<any>>('/organizations', payload);
+    const data = response.data;
+    return data?.organization || data;
   }
 
   /**

@@ -390,11 +390,13 @@ export class AdminApi {
 
   static async saveOrganization(payload: SaveOrganizationPayload, id?: string): Promise<TenantDto> {
     if (id) {
-      const res = await apiClient.put<ApiResponse<TenantDto>>(`/organizations/${id}`, payload);
-      return res.data;
+      const res = await apiClient.put<ApiResponse<any>>(`/organizations/${id}`, payload);
+      const data = res.data;
+      return data?.organization || data;
     }
-    const res = await apiClient.post<ApiResponse<TenantDto>>('/organizations', payload);
-    return res.data;
+    const res = await apiClient.post<ApiResponse<any>>('/organizations', payload);
+    const data = res.data;
+    return data?.organization || data;
   }
 
   static async updateOrganizationStatus(id: string, status: string, reason?: string): Promise<TenantDto> {

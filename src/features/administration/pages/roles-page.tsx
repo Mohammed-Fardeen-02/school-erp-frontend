@@ -20,6 +20,7 @@ import { RoleTypeBadge } from '@/features/roles-permissions/components/role-list
 import { CloneRoleModal } from '@/features/roles-permissions/components/role-list/clone-role-modal';
 import { DeleteRoleModal } from '@/features/roles-permissions/components/role-list/delete-role-modal';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/feedback/toast';
 import {
   useRolesList,
   useCloneTemplate,
@@ -32,6 +33,7 @@ export const RolesPage: React.FC = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cloneTarget, setCloneTarget] = useState<RoleSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleSummary | null>(null);
+  const toast = useToast();
 
   const { data: rolesData, isLoading } = useRolesList();
   const cloneMutation = useCloneTemplate();
@@ -49,14 +51,32 @@ export const RolesPage: React.FC = () => {
   }, [allRoles]);
 
   const handleCloneSubmit = async (templateId: string, payload: CloneTemplatePayload) => {
-    await cloneMutation.mutateAsync({ templateId, payload });
-    setCloneTarget(null);
+    try {
+      await cloneMutation.mutateAsync({ templateId, payload });
+      setCloneTarget(null);
+      toast.success(
+        `Role "${payload.roleName}" created from template successfully`,
+        'Role Cloned'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to clone role template';
+      toast.error(msg, 'Clone Error');
+    }
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    await deleteMutation.mutateAsync(deleteTarget.id);
-    setDeleteTarget(null);
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      toast.success(
+        `Role "${deleteTarget.roleName}" was deleted successfully`,
+        'Role Deleted'
+      );
+      setDeleteTarget(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete role';
+      toast.error(msg, 'Delete Error');
+    }
   };
 
   // Table Columns
@@ -130,7 +150,7 @@ export const RolesPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Download className="w-4 h-4" />}
-              onClick={() => alert('Exporting roles and capabilities...')}
+              onClick={() => toast.info('Exporting roles and capabilities matrix...', 'Export')}
             >
               Export
             </Button>
@@ -138,7 +158,7 @@ export const RolesPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Upload className="w-4 h-4" />}
-              onClick={() => alert('Import role templates...')}
+              onClick={() => toast.info('Role templates import wizard is opening...', 'Import')}
             >
               Import
             </Button>

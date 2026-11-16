@@ -64,14 +64,17 @@ if (initialSession?.token) {
 if (initialActiveId) {
   apiClient.setTenantContext(initialActiveId, initialLocationId);
 }
+if (initialSession?.user?.role === 'SUPER_ADMIN') {
+  apiClient.setPlatformSuperAdmin(true);
+}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  isAuthenticated: !!initialSession?.user,
+  isAuthenticated: Boolean(initialSession?.user && initialSession?.token),
   accessToken: initialSession?.token ?? null,
-  user: initialSession?.user ?? null,
-  workspaces: initialSession?.workspaces ?? [],
-  activeWorkspaceId: initialActiveId,
-  activeLocationId: initialLocationId,
+  user: initialSession?.token ? (initialSession?.user ?? null) : null,
+  workspaces: initialSession?.token ? (initialSession?.workspaces ?? []) : [],
+  activeWorkspaceId: initialSession?.token ? initialActiveId : null,
+  activeLocationId: initialSession?.token ? initialLocationId : null,
   isInitialized: true,
 
   login: async (credentials: LoginCredentials) => {
@@ -85,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       apiClient.setToken(token);
     }
     apiClient.setTenantContext(autoActiveId, null);
+    apiClient.setPlatformSuperAdmin(user.role === 'SUPER_ADMIN');
 
     set({
       isAuthenticated: true,
@@ -115,6 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     saveSession(null);
     apiClient.setToken(null);
     apiClient.setTenantContext(null, null);
+    apiClient.setPlatformSuperAdmin(false);
     queryClient.clear();
 
     set({

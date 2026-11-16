@@ -22,23 +22,29 @@ export interface SelectProps {
   label?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({
-  id,
-  name,
-  value,
-  onChange,
-  onBlur,
-  className,
-  error,
-  placeholder = 'Select...',
-  children,
-  disabled,
-  label,
-}) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [rect, setRect] = React.useState<DOMRect | null>(null);
-  const buttonRef = React.useRef<HTMLButtonElement>(null);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
+export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
+  (
+    {
+      id,
+      name,
+      value,
+      onChange,
+      onBlur,
+      className,
+      error,
+      placeholder = 'Select...',
+      children,
+      disabled,
+      label,
+    },
+    ref
+  ) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [rect, setRect] = React.useState<DOMRect | null>(null);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    React.useImperativeHandle(ref, () => buttonRef.current as HTMLButtonElement);
 
   const options = React.useMemo(() => {
     const opts: SelectOption[] = [];
@@ -165,4 +171,6 @@ export const Select: React.FC<SelectProps> = ({
         )}
     </div>
   );
-};
+});
+
+Select.displayName = 'Select';

@@ -100,6 +100,13 @@ export const UserViewDrawer: React.FC<UserViewDrawerProps> = ({
           <div className="flex items-center justify-between p-3">
             <dt className="flex items-center gap-2 text-muted-foreground">
               <Shield className="h-4 w-4 text-primary" />
+              User Identifier Code
+            </dt>
+            <dd className="font-mono font-bold text-foreground">{user.userCode || `USR-${user.id.slice(0, 6).toUpperCase()}`}</dd>
+          </div>
+          <div className="flex items-center justify-between p-3">
+            <dt className="flex items-center gap-2 text-muted-foreground">
+              <Shield className="h-4 w-4 text-primary" />
               Primary Role
             </dt>
             <dd className="font-semibold text-primary">{user.primaryRole || 'Staff Member'}</dd>

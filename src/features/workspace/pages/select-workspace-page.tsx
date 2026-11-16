@@ -155,7 +155,7 @@ export const SelectWorkspacePage: React.FC = () => {
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                             <span>Code: {org.code}</span>
                             <span>•</span>
-                            <span className="capitalize">{org.organizationType.replace('_', ' ').toLowerCase()}</span>
+                            <span className="capitalize">{(org.organizationType || 'INDEPENDENT_SCHOOL').replace(/_/g, ' ').toLowerCase()}</span>
                             <span>•</span>
                             <span className="inline-flex items-center gap-1 font-medium text-foreground">
                               <Shield className="h-3 w-3 text-primary" />

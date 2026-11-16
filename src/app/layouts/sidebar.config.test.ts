@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { getSidebarConfigForPath } from './sidebar.config';
 
 describe('Modular Workspace-Scoped Sidebar Configuration', () => {
-  it('resolves Administration config with exactly 7 sub-features + overview for /admin routes', () => {
+  it('resolves Administration config with core administrative features for /admin routes', () => {
     const config = getSidebarConfigForPath('/admin/organizations');
     expect(config.moduleKey).toBe('admin');
     expect(config.moduleName).toBe('Administration');
-    expect(config.items.length).toBe(8); // Hub Overview + 7 Core Features
+    expect(config.items.length).toBe(9); // Hub Overview + 8 Core Features
 
     const itemLabels = config.items.map((i) => i.label);
     expect(itemLabels).toContain('Admin Hub Overview');
@@ -17,6 +17,7 @@ describe('Modular Workspace-Scoped Sidebar Configuration', () => {
     expect(itemLabels).toContain('Subscriptions & Billing');
     expect(itemLabels).toContain('Plans & Entitlements');
     expect(itemLabels).toContain('Audit & Activity Logs');
+    expect(itemLabels).toContain('Tenant Configuration');
   });
 
   it('resolves Academics config with academic-specific features for /app/academics routes', () => {

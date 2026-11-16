@@ -5,6 +5,7 @@ import { AdminPageHeader } from '../components/common/admin-page-header';
 import { AdminStatsRow } from '../components/common/admin-stats-row';
 import { CurrentPlanCard } from '../components/billing/current-plan-card';
 import { InvoicesTable } from '../components/billing/invoices-table';
+import { useToast } from '@/components/feedback/toast';
 import { useSubscriptionOverview, useBillingInvoices } from '../hooks/use-admin';
 import type { SubscriptionOverview } from '../types/admin.types';
 
@@ -41,6 +42,7 @@ const DEFAULT_BILLING: SubscriptionOverview = {
 };
 
 export const BillingPage: React.FC = () => {
+  const toast = useToast();
   const { data: overview } = useSubscriptionOverview();
   const { data: invoices = [] } = useBillingInvoices();
 
@@ -72,7 +74,7 @@ export const BillingPage: React.FC = () => {
       {/* Current Plan Card */}
       <CurrentPlanCard
         overview={currentOverview}
-        onUpgradeClick={() => alert('Plan upgrade flow requested.')}
+        onUpgradeClick={() => toast.info('Connecting to billing portal to adjust institutional tier...', 'Plan Upgrade')}
       />
 
       {/* Invoices History Table */}

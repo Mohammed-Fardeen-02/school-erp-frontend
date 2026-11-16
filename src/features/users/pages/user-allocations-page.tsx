@@ -1,8 +1,11 @@
 import * as React from 'react';
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { UserPlus, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageWrapper } from '@/app/layouts/page-wrapper';
+import { Breadcrumb } from '@/app/layouts/breadcrumb';
+import { useUiStore } from '@/stores/ui-store';
 import { UserAssignmentsTable } from '@/features/roles-permissions/components/assignments/user-assignments-table';
 import { AssignRoleModal } from '@/features/roles-permissions/components/assignments/assign-role-modal';
 import { RevokeAssignmentModal } from '@/features/roles-permissions/components/assignments/revoke-assignment-modal';
@@ -12,7 +15,7 @@ import type { AssignmentRecord } from '@/features/roles-permissions/types/assign
 
 export const UserAllocationsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const setHeaderTitle = useUiStore((s) => s.setHeaderTitle);
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedRevokeAssignment, setSelectedRevokeAssignment] = useState<AssignmentRecord | null>(null);
@@ -27,34 +30,27 @@ export const UserAllocationsPage: React.FC = () => {
     ? `${firstUser.firstName} ${firstUser.lastName}`
     : `User Allocations`;
 
-  return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/users')}
-            icon={<ArrowLeft className="h-4 w-4" />}
-          >
-            Back to Users
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-foreground">{userName}</h1>
-            </div>
-            {firstUser && (
-              <p className="text-xs text-muted-foreground flex items-center gap-2">
-                <span>{firstUser.email}</span>
-                <span>•</span>
-                <span className="font-mono">User ID: {id}</span>
-              </p>
-            )}
-          </div>
-        </div>
+  useEffect(() => {
+    setHeaderTitle(
+      userName,
+      firstUser?.email ? `${firstUser.email} • ID: ${id}` : 'Manage assigned roles & campus boundaries'
+    );
+  }, [setHeaderTitle, userName, firstUser?.email, id]);
 
-        <div className="flex items-center gap-3">
+  return (
+    <PageWrapper className="space-y-6">
+      <h1 className="sr-only">{userName}</h1>
+
+      {/* Unified division: Breadcrumb on the left, action buttons on the right */}
+      <Breadcrumb
+        backTo="/admin/users"
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Administration', href: '/admin' },
+          { label: 'Users', href: '/admin/users' },
+          { label: userName },
+        ]}
+        actions={
           <PermissionGate permission="settings.user_assignments.allocations.assign">
             <Button
               variant="primary"
@@ -65,8 +61,8 @@ export const UserAllocationsPage: React.FC = () => {
               Assign Role
             </Button>
           </PermissionGate>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -140,7 +136,6 @@ export const UserAllocationsPage: React.FC = () => {
           refetch();
         }}
       />
-    </div>
+    </PageWrapper>
   );
 };
-

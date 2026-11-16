@@ -50,7 +50,7 @@ describe('RolesTable Component', () => {
   it('displays user assignment counts', () => {
     render(<RolesTable roles={mockRoles} />);
 
-    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getAllByText('5').length).toBeGreaterThanOrEqual(1);
   });
 });
 

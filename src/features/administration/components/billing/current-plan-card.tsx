@@ -40,7 +40,7 @@ export const CurrentPlanCard: React.FC<CurrentPlanCardProps> = ({ overview, onUp
           <p className="text-xs text-muted-foreground">Renewal Amount & Term</p>
           <p className="text-lg font-bold text-foreground">
             ${overview.nextRenewalAmount}
-            <span className="text-xs text-muted-foreground font-normal"> / {overview.billingCycle.toLowerCase()}</span>
+            <span className="text-xs text-muted-foreground font-normal"> / {(overview.billingCycle || 'monthly').toLowerCase()}</span>
           </p>
         </div>
 

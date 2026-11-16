@@ -29,6 +29,21 @@ function createWrapper(initialEntry = '/admin') {
 describe('AdminRoutes Feature Router', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: [],
+          items: [],
+          meta: { total: 0, page: 1, limit: 10, totalPages: 1 },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
     useAuthStore.setState({
       user: {
         id: 'super-admin-1',
@@ -106,6 +121,18 @@ describe('AdminRoutes Feature Router', () => {
     render(<AdminRoutes />, { wrapper: createWrapper('/admin/audit-logs') });
     expect(screen.getByRole('heading', { level: 1, name: 'Audit & Activity Logs' })).toBeInTheDocument();
     expect(screen.getByText('Total Audit Trails')).toBeInTheDocument();
+  });
+
+  it('renders TenantConfigurationPage on /admin/configuration', async () => {
+    render(<AdminRoutes />, { wrapper: createWrapper('/admin/configuration') });
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Tenant System Configuration & Integrations' })
+    ).toBeInTheDocument();
+    expect(await screen.findByText('SMTP Mail Server')).toBeInTheDocument();
+    expect(screen.getByText('File Storage')).toBeInTheDocument();
+    expect(screen.getByText('Razorpay Gateway')).toBeInTheDocument();
+    expect(screen.getByText('Theme & Branding')).toBeInTheDocument();
+    expect(screen.getByText('Email Templates')).toBeInTheDocument();
   });
 });
 

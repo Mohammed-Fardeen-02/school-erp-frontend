@@ -120,6 +120,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                 {userDisplayName}
               </div>
               <div className="text-[10px] font-medium text-muted-foreground capitalize">
+                {user?.role ? String(user.role).toLowerCase().replace(/_/g, ' ') : 'Admin'}
                 {userRole}
               </div>
             </div>

@@ -19,6 +19,7 @@ import { UserFormModal } from '../components/users/user-form-modal';
 import { UserViewDrawer } from '../components/users/user-view-drawer';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/feedback/toast';
 import {
   useAdminUsers,
   useInviteUser,
@@ -36,6 +37,7 @@ export const UsersPage: React.FC = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AdminUserRecord | null>(null);
   const [viewTarget, setViewTarget] = useState<AdminUserRecord | null>(null);
+  const toast = useToast();
 
   // Queries & Mutations
   const { data: usersData, isLoading } = useAdminUsers();
@@ -58,19 +60,46 @@ export const UsersPage: React.FC = () => {
   }, [allUsers]);
 
   const handleInviteSubmit = async (payload: InviteUserPayload) => {
-    await inviteMutation.mutateAsync(payload);
-    setIsInviteOpen(false);
+    try {
+      await inviteMutation.mutateAsync(payload);
+      setIsInviteOpen(false);
+      toast.success(
+        `Onboarding invitation sent successfully to ${payload.email}`,
+        'User Invited'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send invitation';
+      toast.error(msg, 'Invite Error');
+    }
   };
 
   const handleSaveUserSubmit = async (payload: SaveUserPayload, id?: string) => {
-    await saveUserMutation.mutateAsync({ payload, id });
-    setIsAddOpen(false);
-    setEditTarget(null);
+    try {
+      await saveUserMutation.mutateAsync({ payload, id });
+      setIsAddOpen(false);
+      setEditTarget(null);
+      toast.success(
+        id ? 'User profile updated successfully' : 'New user account provisioned successfully',
+        'User Saved'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save user account';
+      toast.error(msg, 'Save Error');
+    }
   };
 
   const handleToggleStatus = async (user: AdminUserRecord) => {
     const nextStatus = user.status !== 'ACTIVE';
-    await toggleStatusMutation.mutateAsync({ userId: user.id, active: nextStatus });
+    try {
+      await toggleStatusMutation.mutateAsync({ userId: user.id, active: nextStatus });
+      toast.success(
+        `User ${user.firstName} ${user.lastName} is now ${nextStatus ? 'ACTIVE' : 'INACTIVE'}`,
+        'Status Changed'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to toggle user status';
+      toast.error(msg, 'Status Error');
+    }
   };
 
   // Table Columns
@@ -87,8 +116,13 @@ export const UsersPage: React.FC = () => {
             {row.lastName?.[0] || ''}
           </div>
           <div>
-            <div className="font-semibold text-foreground text-xs sm:text-sm">
-              {row.firstName} {row.lastName}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground text-xs sm:text-sm">
+                {row.firstName} {row.lastName}
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-muted text-muted-foreground border border-border">
+                {row.userCode || `USR-${row.id.slice(0, 6).toUpperCase()}`}
+              </span>
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">{row.email}</div>
           </div>
@@ -156,7 +190,7 @@ export const UsersPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Download className="w-4 h-4" />}
-              onClick={() => alert('Exporting users directory...')}
+              onClick={() => toast.info('Exporting users roster to CSV...', 'Export')}
             >
               Export
             </Button>
@@ -164,7 +198,7 @@ export const UsersPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Upload className="w-4 h-4" />}
-              onClick={() => alert('Import users flow...')}
+              onClick={() => toast.info('User batch provisioning wizard is opening...', 'Import')}
             >
               Import
             </Button>

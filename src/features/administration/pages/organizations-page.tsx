@@ -19,6 +19,7 @@ import { OrganizationFormModal } from '../components/organizations/organization-
 import { OrganizationViewDrawer } from '../components/organizations/organization-view-drawer';
 import { CampusManagerModal } from '../components/organizations/campus-manager-modal';
 import { TenantStatusModal } from '@/features/tenants/components/tenant-status-modal';
+import { useToast } from '@/components/feedback/toast';
 import {
   useAdminOrganizations,
   useSaveOrganization,
@@ -38,6 +39,7 @@ export const OrganizationsPage: React.FC = () => {
   const [viewTarget, setViewTarget] = useState<TenantDto | null>(null);
   const [campusTarget, setCampusTarget] = useState<TenantDto | null>(null);
   const [statusTarget, setStatusTarget] = useState<TenantDto | null>(null);
+  const toast = useToast();
 
   // Queries & Mutations
   const { data: orgsData, isLoading } = useAdminOrganizations();
@@ -60,19 +62,43 @@ export const OrganizationsPage: React.FC = () => {
   }, [organizations, campusesData]);
 
   const handleSaveOrganization = async (payload: SaveOrganizationPayload, id?: string) => {
-    await saveOrgMutation.mutateAsync({ payload, id });
-    setIsAddOpen(false);
-    setEditTarget(null);
+    try {
+      await saveOrgMutation.mutateAsync({ payload, id });
+      setIsAddOpen(false);
+      setEditTarget(null);
+      toast.success(
+        id ? 'Organization details updated successfully' : 'New organization provisioned successfully',
+        'Organization Saved'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save organization';
+      toast.error(msg, 'Save Error');
+    }
   };
 
   const handleSaveCampus = async (campus: Partial<OrganizationCampus>) => {
-    await saveCampusMutation.mutateAsync({ campus });
+    try {
+      await saveCampusMutation.mutateAsync({ campus });
+      toast.success('Campus location saved successfully', 'Campus Saved');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save campus';
+      toast.error(msg, 'Save Error');
+    }
   };
 
   const handleStatusChange = async (newStatus: TenantStatus, reason?: string) => {
     if (!statusTarget) return;
-    await updateStatusMutation.mutateAsync({ id: statusTarget.id, status: newStatus, reason });
-    setStatusTarget(null);
+    try {
+      await updateStatusMutation.mutateAsync({ id: statusTarget.id, status: newStatus, reason });
+      toast.success(
+        `Organization status changed to ${newStatus}`,
+        'Status Updated'
+      );
+      setStatusTarget(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update organization status';
+      toast.error(msg, 'Status Update Error');
+    }
   };
 
   // Table Columns
@@ -184,7 +210,7 @@ export const OrganizationsPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Download className="w-4 h-4" />}
-              onClick={() => alert('Exporting organizations directory...')}
+              onClick={() => toast.info('Exporting organizations directory to CSV/PDF...', 'Export')}
             >
               Export
             </Button>
@@ -192,7 +218,7 @@ export const OrganizationsPage: React.FC = () => {
               variant="outline"
               size="sm"
               icon={<Upload className="w-4 h-4" />}
-              onClick={() => alert('Import organizations flow...')}
+              onClick={() => toast.info('Organization bulk import wizard is opening...', 'Import')}
             >
               Import
             </Button>

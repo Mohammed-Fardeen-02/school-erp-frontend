@@ -12,9 +12,8 @@ import type { SaveRoleWithCapabilitiesPayload } from '../../types/admin.types';
 const roleSchema = z.object({
   roleCode: z
     .string()
-    .min(3, 'Role code must be at least 3 characters')
-    .regex(/^[A-Z0-9_]+$/, 'Must be uppercase alphanumeric with underscores')
-    .transform((v) => v.toUpperCase()),
+    .optional()
+    .or(z.literal('')),
   roleName: z.string().min(3, 'Role name must be at least 3 characters'),
   description: z.string().optional(),
   baseTemplateCode: z.string().optional(),
@@ -122,10 +121,10 @@ export const RoleCapabilityForm: React.FC<RoleCapabilityFormProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Role Code (Uppercase Identifier)"
-            placeholder="e.g. EXAM_COORDINATOR"
-            disabled={isEdit}
-            error={errors.roleCode?.message}
+            label="Role Code (Auto-Generated)"
+            placeholder="Auto-generated from Role Name"
+            disabled={true}
+            helperText="Unique role code will be generated automatically by the backend."
             {...register('roleCode')}
           />
           <Input

@@ -24,7 +24,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, actions, backTo, 
       item.onClick();
     } else if (item.href) {
       navigate(item.href);
-    } else if (item.label.toLowerCase() === 'home' || item.label.toLowerCase() === 'dashboard') {
+    } else if (item.label && (item.label.toLowerCase() === 'home' || item.label.toLowerCase() === 'dashboard')) {
       navigate('/');
     }
   };

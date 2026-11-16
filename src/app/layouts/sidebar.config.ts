@@ -14,6 +14,7 @@ import {
   Sliders,
   History,
   KeyRound,
+  Settings,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -100,6 +101,12 @@ export const adminSidebarConfig: WorkspaceModuleSidebarConfig = {
       href: '/admin/audit-logs',
       icon: History,
       permission: 'settings.roles_permissions.rbac.view',
+    },
+    {
+      label: 'Tenant Configuration',
+      href: '/admin/configuration',
+      icon: Settings,
+      permission: 'organizations.manage',
     },
   ],
 };

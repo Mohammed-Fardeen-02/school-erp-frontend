@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/feedback/alert';
+import { useToast } from '@/components/feedback/toast';
 import { MemberSearchSelector } from './member-search-selector';
 import { useRolesList } from '../../hooks/use-roles';
 import { useOrganizationCampuses, useAssignRole } from '../../hooks/use-assignments';
@@ -39,6 +40,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
   initialMember = null,
   initialRoleId = null,
 }) => {
+  const toast = useToast();
   // Authorization check
   const { hasPermission: canAssign, isLoading: checkingPermission } = usePermission(
     'settings.user_assignments.allocations.assign'
@@ -128,6 +130,11 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
         locationId: scopeType === 'CAMPUS' ? selectedLocationId : null,
       });
 
+      toast.success(
+        `Role "${assignment.role?.roleName || 'selected role'}" allocated to ${selectedMember.firstName} ${selectedMember.lastName}`,
+        'Role Assigned'
+      );
+
       onSuccess?.(assignment);
       onClose();
     } catch (err: unknown) {
@@ -135,6 +142,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
       if (err instanceof Error) {
         message = err.message;
       }
+      toast.error(message, 'Assignment Error');
       setSubmitError(message);
     }
   };

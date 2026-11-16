@@ -105,8 +105,8 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
         >
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-sm">
-              {selectedMember.firstName[0]?.toUpperCase()}
-              {selectedMember.lastName[0]?.toUpperCase()}
+              {selectedMember.firstName?.[0]?.toUpperCase() || ''}
+              {selectedMember.lastName?.[0]?.toUpperCase() || ''}
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
@@ -233,8 +233,8 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
-                            {member.firstName[0]?.toUpperCase()}
-                            {member.lastName[0]?.toUpperCase()}
+                            {member.firstName?.[0]?.toUpperCase() || ''}
+                            {member.lastName?.[0]?.toUpperCase() || ''}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className="text-xs font-semibold text-foreground truncate">

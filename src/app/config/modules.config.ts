@@ -43,6 +43,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     category: 'academic',
     requiredPermission: 'academics',
     shortcuts: [
+      { label: 'Branches Master', href: '/app/academics/branches' },
       { label: 'Classes & Sections', href: '/app/academics' },
       { label: 'Curriculum Syllabi', href: '/app/academics' },
       { label: 'Lesson Plans', href: '/app/academics' },

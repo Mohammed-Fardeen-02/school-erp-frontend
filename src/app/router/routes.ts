@@ -7,6 +7,7 @@ export const ROUTES = {
   WORKSPACE: '/workspace',
   ADMIN: '/admin',
   ADMIN_ORGANIZATIONS: '/admin/organizations',
+  ADMIN_BRANCHES: '/admin/branches',
   ADMIN_USERS: '/admin/users',
   ADMIN_ROLES: '/admin/roles',
   ADMIN_ROLES_NEW: '/admin/roles/new',

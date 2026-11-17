@@ -6,11 +6,12 @@ describe('Modular Workspace-Scoped Sidebar Configuration', () => {
     const config = getSidebarConfigForPath('/admin/organizations');
     expect(config.moduleKey).toBe('admin');
     expect(config.moduleName).toBe('Administration');
-    expect(config.items.length).toBe(9); // Hub Overview + 8 Core Features
+    expect(config.items.length).toBe(10); // Hub Overview + 9 Core Features
 
     const itemLabels = config.items.map((i) => i.label);
     expect(itemLabels).toContain('Admin Hub Overview');
     expect(itemLabels).toContain('Organization Management');
+    expect(itemLabels).toContain('Branches & Campuses');
     expect(itemLabels).toContain('User Management');
     expect(itemLabels).toContain('Roles & Permissions');
     expect(itemLabels).toContain('Authentication & Security');

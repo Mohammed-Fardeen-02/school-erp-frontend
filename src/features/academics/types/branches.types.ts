@@ -60,3 +60,4 @@ export interface BranchQueryFilters {
   page?: number;
   limit?: number;
 }
+

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   CheckCircle2,
@@ -8,6 +9,7 @@ import {
   Upload,
   MapPin,
   Power,
+  GitBranch,
 } from 'lucide-react';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AdminPageHeader } from '../components/common/admin-page-header';
@@ -31,6 +33,7 @@ import type { TenantDto, TenantStatus } from '@/features/tenants/types/tenants.t
 import type { SaveOrganizationPayload, OrganizationCampus } from '../types/admin.types';
 
 export const OrganizationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // Modals & Drawers state
@@ -206,6 +209,14 @@ export const OrganizationsPage: React.FC = () => {
         onActionClick={() => setIsAddOpen(true)}
         extraActions={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<GitBranch className="w-4 h-4 text-primary" />}
+              onClick={() => navigate('/admin/branches')}
+            >
+              Branches Master
+            </Button>
             <Button
               variant="outline"
               size="sm"

@@ -174,3 +174,4 @@ export const BranchViewDrawer: React.FC<BranchViewDrawerProps> = ({
     </div>
   );
 };
+

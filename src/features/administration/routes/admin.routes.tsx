@@ -15,6 +15,7 @@ import {
 } from '../pages';
 import { RoleMatrixPage } from '@/features/roles/pages/role-matrix-page';
 import { NewTenantPage, TenantDetailPage } from '@/features/tenants/pages';
+import { BranchesPage } from '@/features/academics/pages/branches-page';
 
 export const AdminRoutes: React.FC = () => {
   return (
@@ -35,6 +36,15 @@ export const AdminRoutes: React.FC = () => {
         element={
           <PermissionGuard permission="organizations.manage">
             <OrganizationsPage />
+          </PermissionGuard>
+        }
+      />
+      {/* 2.1 Branches & Campuses Master */}
+      <Route
+        path="branches"
+        element={
+          <PermissionGuard permission="organizations.manage">
+            <BranchesPage />
           </PermissionGuard>
         }
       />

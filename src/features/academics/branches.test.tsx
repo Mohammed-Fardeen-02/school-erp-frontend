@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { BranchesPage } from './pages/branches-page';
 import { BranchFormModal } from './components/branches/branch-form-modal';
 import { BranchesApi } from './api/branches.api';
+import { useAuthStore } from '@/stores/auth-store';
 import type { BranchDto } from './types/branches.types';
 
 // Mock Branches API
@@ -18,6 +19,18 @@ vi.mock('./api/branches.api', () => ({
     toggleStatus: vi.fn(),
     delete: vi.fn(),
   },
+}));
+
+// Mock Administration Hooks
+vi.mock('@/features/administration/hooks/use-admin', () => ({
+  useAdminOrganizations: () => ({
+    data: {
+      items: [
+        { id: 'org-123', code: 'GREENWOOD', displayName: 'Greenwood High School' },
+      ],
+    },
+    isLoading: false,
+  }),
 }));
 
 // Mock Toast provider
@@ -93,6 +106,20 @@ describe('Branches Master Feature Suite (Academics Module)', () => {
       defaultOptions: {
         queries: { retry: false },
       },
+    });
+    useAuthStore.setState({
+      user: {
+        id: 'super-admin-1',
+        email: 'admin@erp.com',
+        firstName: 'Eleanor',
+        lastName: 'Vance',
+        role: 'SUPER_ADMIN',
+      },
+      workspaces: [
+        { id: 'org-123', code: 'GREENWOOD', name: 'Greenwood High School', role: 'OWNER' } as any,
+      ],
+      activeWorkspaceId: 'org-123',
+      isAuthenticated: true,
     });
     vi.mocked(BranchesApi.list).mockResolvedValue(mockBranches);
   });
@@ -205,6 +232,45 @@ describe('Branches Master Feature Suite (Academics Module)', () => {
         expect.objectContaining({
           name: 'New Science Faculty Branch',
           locationType: 'BRANCH_CAMPUS',
+        }),
+        undefined
+      );
+    });
+  });
+
+  it('allows selecting target organization in BranchFormModal', async () => {
+    const handleSubmit = vi.fn().mockResolvedValue(undefined);
+    const handleClose = vi.fn();
+    const mockOrgs = [
+      { id: 'org-1', displayName: 'Greenwood Trust', code: 'GREENWOOD' },
+      { id: 'org-2', displayName: 'St. Mary High', code: 'STMARY' },
+    ];
+
+    render(
+      <BranchFormModal
+        isOpen={true}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        organizations={mockOrgs}
+        defaultOrganizationId="org-1"
+      />
+    );
+
+    expect(screen.getByText(/Target Organization \*/i)).toBeInTheDocument();
+    const orgSelect = screen.getByRole('combobox');
+    fireEvent.change(orgSelect, { target: { value: 'org-2' } });
+
+    const nameInput = screen.getByLabelText(/Branch Name \*/i);
+    fireEvent.change(nameInput, { target: { value: 'St Mary South Branch' } });
+
+    const submitBtn = screen.getByRole('button', { name: /Create Branch/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: 'org-2',
+          name: 'St Mary South Branch',
         }),
         undefined
       );

@@ -36,6 +36,7 @@ export interface BranchDto {
 }
 
 export interface SaveBranchPayload {
+  organizationId?: string;
   code?: string;
   name: string;
   locationType?: BranchLocationType;
@@ -54,6 +55,7 @@ export interface SaveBranchPayload {
 }
 
 export interface BranchQueryFilters {
+  organizationId?: string;
   search?: string;
   isActive?: boolean;
   locationType?: BranchLocationType;

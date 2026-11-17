@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, GitBranch, Save } from 'lucide-react';
+import { X, GitBranch, Save, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
 import { Select } from '@/components/forms/select';
@@ -10,7 +10,15 @@ import { AddressLocationPicker } from '@/components/forms/address-location-picke
 import { useToast } from '@/components/feedback/toast';
 import type { BranchDto, SaveBranchPayload, BranchLocationType } from '../types/branches.types';
 
+export interface OrganizationOption {
+  id: string;
+  name?: string;
+  displayName?: string;
+  code: string;
+}
+
 const branchSchema = z.object({
+  organizationId: z.string().optional(),
   name: z.string().trim().min(2, 'Branch name must be at least 2 characters'),
   code: z
     .string()
@@ -46,6 +54,8 @@ export interface BranchFormModalProps {
   onSubmit: (payload: SaveBranchPayload, id?: string) => Promise<void>;
   initialData?: BranchDto | null;
   isLoading?: boolean;
+  organizations?: OrganizationOption[];
+  defaultOrganizationId?: string;
 }
 
 export const BranchFormModal: React.FC<BranchFormModalProps> = ({
@@ -54,9 +64,17 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
   onSubmit,
   initialData,
   isLoading,
+  organizations = [],
+  defaultOrganizationId,
 }) => {
   const isEdit = Boolean(initialData);
   const toast = useToast();
+
+  const activeOrgId =
+    initialData?.organizationId ||
+    defaultOrganizationId ||
+    organizations[0]?.id ||
+    '';
 
   const {
     register,
@@ -68,6 +86,7 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
   } = useForm<BranchFormData>({
     resolver: zodResolver(branchSchema),
     defaultValues: {
+      organizationId: activeOrgId,
       name: '',
       code: '',
       locationType: 'BRANCH_CAMPUS',
@@ -88,10 +107,13 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
   const watchState = watch('state');
   const watchCity = watch('city');
   const watchPostalCode = watch('postalCode');
+  const watchOrgId = watch('organizationId') || activeOrgId;
 
   useEffect(() => {
+    if (!isOpen) return;
     if (initialData) {
       reset({
+        organizationId: initialData.organizationId || activeOrgId,
         name: initialData.name,
         code: initialData.code,
         locationType: initialData.locationType,
@@ -108,6 +130,7 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
       });
     } else {
       reset({
+        organizationId: defaultOrganizationId || organizations[0]?.id || '',
         name: '',
         code: '',
         locationType: 'BRANCH_CAMPUS',
@@ -133,7 +156,9 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
   };
 
   const onFormSubmit = async (data: BranchFormData) => {
+    const chosenOrgId = data.organizationId || defaultOrganizationId || organizations[0]?.id;
     const payload: SaveBranchPayload = {
+      organizationId: chosenOrgId,
       name: data.name.trim(),
       code: data.code?.trim() || undefined,
       locationType: data.locationType as BranchLocationType,
@@ -195,6 +220,40 @@ export const BranchFormModal: React.FC<BranchFormModalProps> = ({
           className="flex-1 overflow-y-auto p-6 space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Target Organization Selection */}
+            <div className="w-full space-y-1.5 sm:col-span-2">
+              <label className="block text-sm font-medium text-foreground">
+                Target Organization *
+              </label>
+              {organizations.length > 1 ? (
+                <div className="relative flex items-center">
+                  <select
+                    value={watchOrgId}
+                    onChange={(e) => setValue('organizationId', e.target.value)}
+                    disabled={isEdit}
+                    className="flex h-9 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  >
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.displayName || org.name} ({org.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-surface-muted/50 px-3 py-2 text-xs text-foreground font-semibold">
+                  <Building2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>
+                    {organizations[0]?.displayName || organizations[0]?.name || 'Active Tenant Organization'}
+                    {organizations[0]?.code ? ` (${organizations[0].code})` : ''}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                This branch will be provisioned under and isolated within this organization.
+              </p>
+            </div>
+
             <Input
               label="Branch Name *"
               placeholder="e.g. North Academic Campus"

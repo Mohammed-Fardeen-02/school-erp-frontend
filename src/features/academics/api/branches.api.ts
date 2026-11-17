@@ -8,6 +8,9 @@ export class BranchesApi {
    */
   static async list(filters: BranchQueryFilters = {}): Promise<BranchDto[]> {
     const params = new URLSearchParams();
+    if (filters.organizationId && filters.organizationId !== 'ALL') {
+      params.append('organizationId', filters.organizationId);
+    }
     if (filters.search) params.append('search', filters.search);
     if (filters.isActive !== undefined) params.append('isActive', String(filters.isActive));
     if (filters.locationType) params.append('locationType', filters.locationType);
@@ -15,13 +18,17 @@ export class BranchesApi {
     if (filters.limit) params.append('limit', String(filters.limit));
 
     const queryStr = params.toString() ? `?${params.toString()}` : '';
+    const headers =
+      filters.organizationId && filters.organizationId !== 'ALL'
+        ? { 'X-Organization-Id': filters.organizationId }
+        : undefined;
 
     try {
-      const res = await apiClient.get<ApiResponse<BranchDto[]>>(`/academics/branches${queryStr}`);
+      const res = await apiClient.get<ApiResponse<BranchDto[]>>(`/academics/branches${queryStr}`, { headers });
       return res.data || [];
     } catch {
       // Fallback to /branches
-      const res = await apiClient.get<ApiResponse<BranchDto[]>>(`/branches${queryStr}`);
+      const res = await apiClient.get<ApiResponse<BranchDto[]>>(`/branches${queryStr}`, { headers });
       return res.data || [];
     }
   }
@@ -43,21 +50,25 @@ export class BranchesApi {
    * Creates or updates a branch.
    */
   static async save(payload: SaveBranchPayload, id?: string): Promise<BranchDto> {
+    const headers = payload.organizationId
+      ? { 'X-Organization-Id': payload.organizationId }
+      : undefined;
+
     if (id) {
       try {
-        const res = await apiClient.put<ApiResponse<BranchDto>>(`/academics/branches/${id}`, payload);
+        const res = await apiClient.put<ApiResponse<BranchDto>>(`/academics/branches/${id}`, payload, { headers });
         return res.data;
       } catch {
-        const res = await apiClient.put<ApiResponse<BranchDto>>(`/branches/${id}`, payload);
+        const res = await apiClient.put<ApiResponse<BranchDto>>(`/branches/${id}`, payload, { headers });
         return res.data;
       }
     }
 
     try {
-      const res = await apiClient.post<ApiResponse<BranchDto>>('/academics/branches', payload);
+      const res = await apiClient.post<ApiResponse<BranchDto>>('/academics/branches', payload, { headers });
       return res.data;
     } catch {
-      const res = await apiClient.post<ApiResponse<BranchDto>>('/branches', payload);
+      const res = await apiClient.post<ApiResponse<BranchDto>>('/branches', payload, { headers });
       return res.data;
     }
   }

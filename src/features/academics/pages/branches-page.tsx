@@ -31,10 +31,25 @@ import {
   useSetMainBranch,
   useDeleteBranch,
 } from '../hooks/use-branches';
+import { useAuthStore } from '@/stores/auth-store';
+import { useAdminOrganizations } from '@/features/administration/hooks/use-admin';
 import type { BranchDto, SaveBranchPayload, BranchLocationType } from '../types/branches.types';
 
 export const BranchesPage: React.FC = () => {
   const toast = useToast();
+  const { user, workspaces, activeWorkspaceId, setActiveWorkspace } = useAuthStore();
+  const { data: orgsData } = useAdminOrganizations();
+
+  // Unified available organizations
+  const organizations = useMemo(() => {
+    if (orgsData?.items?.length) return orgsData.items;
+    return workspaces || [];
+  }, [orgsData, workspaces]);
+
+  // Selected Organization state
+  const [selectedOrgId, setSelectedOrgId] = useState<string>(
+    activeWorkspaceId || organizations[0]?.id || 'ALL'
+  );
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -47,7 +62,9 @@ export const BranchesPage: React.FC = () => {
   const [viewTarget, setViewTarget] = useState<BranchDto | null>(null);
 
   // Queries & Mutations
-  const { data: branches = [], isLoading, refetch } = useBranches();
+  const { data: branches = [], isLoading, refetch } = useBranches({
+    organizationId: selectedOrgId !== 'ALL' ? selectedOrgId : undefined,
+  });
   const saveMutation = useSaveBranch();
   const toggleStatusMutation = useToggleBranchStatus();
   const setMainMutation = useSetMainBranch();
@@ -56,6 +73,11 @@ export const BranchesPage: React.FC = () => {
   // Filtered branches
   const filteredBranches = useMemo(() => {
     return branches.filter((branch) => {
+      // Organization filter
+      if (selectedOrgId && selectedOrgId !== 'ALL' && branch.organizationId !== selectedOrgId) {
+        return false;
+      }
+
       // Search filter
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -63,7 +85,12 @@ export const BranchesPage: React.FC = () => {
         const matchesCode = (branch.code || '').toLowerCase().includes(q);
         const matchesCity = (branch.city || '').toLowerCase().includes(q);
         const matchesPrincipal = (branch.principalName || '').toLowerCase().includes(q);
-        if (!matchesName && !matchesCode && !matchesCity && !matchesPrincipal) return false;
+        const matchesOrg =
+          (branch.organization?.displayName || '').toLowerCase().includes(q) ||
+          (branch.organization?.code || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesCode && !matchesCity && !matchesPrincipal && !matchesOrg) {
+          return false;
+        }
       }
 
       // Status filter
@@ -75,7 +102,7 @@ export const BranchesPage: React.FC = () => {
 
       return true;
     });
-  }, [branches, search, statusFilter, typeFilter]);
+  }, [branches, selectedOrgId, search, statusFilter, typeFilter]);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -179,6 +206,31 @@ export const BranchesPage: React.FC = () => {
           </div>
         </div>
       ),
+    },
+    {
+      key: 'organization',
+      label: 'ORGANIZATION',
+      sortable: true,
+      align: 'left',
+      render: (_, row) =>
+        row.organization ? (
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <span
+                className="text-xs font-semibold text-foreground block truncate max-w-[130px]"
+                title={row.organization.displayName}
+              >
+                {row.organization.displayName}
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground block">
+                {row.organization.code}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
     },
     {
       key: 'locationType',
@@ -362,15 +414,44 @@ export const BranchesPage: React.FC = () => {
 
       {/* Search & Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface border border-border p-3.5 rounded-2xl">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search branches by name, code, city, or principal..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          />
+        <div className="flex items-center gap-3 flex-1 flex-wrap">
+          {/* Organization Switcher Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+              <Building2 className="w-3.5 h-3.5 text-primary" />
+              Organization:
+            </span>
+            <select
+              value={selectedOrgId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedOrgId(newId);
+                if (newId !== 'ALL') {
+                  setActiveWorkspace(newId);
+                }
+              }}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-primary/30 bg-primary/5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer max-w-[220px] truncate"
+            >
+              <option value="ALL">All Organizations</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.displayName || org.name} ({org.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search branches by name, code, city, or principal..."
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -421,6 +502,8 @@ export const BranchesPage: React.FC = () => {
         onSubmit={handleSave}
         initialData={editTarget}
         isLoading={saveMutation.isPending}
+        organizations={organizations}
+        defaultOrganizationId={selectedOrgId !== 'ALL' ? selectedOrgId : activeWorkspaceId || organizations[0]?.id}
       />
 
       {/* View Drawer */}

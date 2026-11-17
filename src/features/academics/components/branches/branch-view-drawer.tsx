@@ -80,6 +80,18 @@ export const BranchViewDrawer: React.FC<BranchViewDrawerProps> = ({
                 </div>
               </div>
             </div>
+
+            {branch.organization && (
+              <div className="flex items-center gap-2.5 rounded-xl border border-primary/20 bg-primary/5 p-2.5 mt-2">
+                <Building2 className="h-4 w-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-muted-foreground block text-[10px]">Parent Organization</span>
+                  <span className="font-semibold text-foreground text-xs truncate block">
+                    {branch.organization.displayName} ({branch.organization.code})
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Key Attributes */}

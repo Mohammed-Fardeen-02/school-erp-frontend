@@ -407,12 +407,14 @@ export class AdminApi {
     return res.data;
   }
 
-  static async listCampuses(_organizationId?: string): Promise<OrganizationCampus[]> {
+  static async listCampuses(organizationId?: string): Promise<OrganizationCampus[]> {
     try {
-      const res = await apiClient.get<ApiResponse<OrganizationCampus[]>>('/locations');
-      return res.data || MOCK_CAMPUSES;
+      const queryStr = organizationId ? `?organizationId=${organizationId}` : '';
+      const headers = organizationId ? { 'X-Organization-Id': organizationId } : undefined;
+      const res = await apiClient.get<ApiResponse<OrganizationCampus[]>>(`/locations${queryStr}`, { headers });
+      return res.data || [];
     } catch {
-      return MOCK_CAMPUSES;
+      return [];
     }
   }
 

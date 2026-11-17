@@ -15,6 +15,7 @@ import {
   History,
   KeyRound,
   Settings,
+  GitBranch,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -120,6 +121,12 @@ export const academicsSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleIcon: BookOpen,
   moduleDescription: 'Curriculum & Classes',
   items: [
+    {
+      label: 'Branches Master',
+      href: '/app/academics/branches',
+      icon: GitBranch,
+      moduleId: 'academics',
+    },
     {
       label: 'Classes & Sections',
       href: '/app/academics/classes',

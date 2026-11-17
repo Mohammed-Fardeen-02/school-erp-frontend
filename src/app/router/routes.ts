@@ -19,6 +19,7 @@ export const ROUTES = {
   USERS: '/users',
   ROLES: '/roles',
   SETTINGS: '/settings',
+  ACADEMICS_BRANCHES: '/app/academics/branches',
   APP_MODULE: '/app/:moduleId/*',
   NOT_FOUND: '*',
 } as const;

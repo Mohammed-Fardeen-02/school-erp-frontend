@@ -26,6 +26,7 @@ describe('Modular Workspace-Scoped Sidebar Configuration', () => {
     expect(config.moduleName).toBe('Academics');
 
     const itemLabels = config.items.map((i) => i.label);
+    expect(itemLabels).toContain('Branches Master');
     expect(itemLabels).toContain('Classes & Sections');
     expect(itemLabels).toContain('Curriculum & Subjects');
     expect(itemLabels).toContain('Class Timetable');

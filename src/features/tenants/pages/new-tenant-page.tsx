@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, School, User, MapPin, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
+import { useToast } from '@/components/feedback/toast';
 import { useCreateTenant } from '../hooks/use-tenants';
 import type { CreateTenantDto, OrganizationType } from '../types/tenants.types';
 
 export const NewTenantPage: React.FC = () => {
   const navigate = useNavigate();
   const createMutation = useCreateTenant();
+  const toast = useToast();
 
   const [formData, setFormData] = useState<CreateTenantDto>({
     code: '',
@@ -71,22 +73,35 @@ export const NewTenantPage: React.FC = () => {
     if (!validate()) return;
 
     try {
+      let website = formData.website?.trim() || undefined;
+      if (website && !/^https?:\/\//i.test(website)) {
+        website = `https://${website}`;
+      }
+
       const payload: CreateTenantDto = {
         ...formData,
-        code: formData.code.trim().toUpperCase(),
+        code: formData.code.trim().toUpperCase() || undefined as any,
         displayName: formData.displayName.trim(),
         legalName: formData.legalName.trim(),
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
+        website,
+        addressLine1: formData.addressLine1?.trim() || undefined,
+        city: formData.city?.trim() || undefined,
+        state: formData.state?.trim() || undefined,
+        country: formData.country?.trim() || undefined,
+        postalCode: formData.postalCode?.trim() || undefined,
         ownerEmail: formData.ownerEmail?.trim().toLowerCase() || undefined,
         ownerFirstName: formData.ownerFirstName?.trim() || undefined,
         ownerLastName: formData.ownerLastName?.trim() || undefined,
       };
 
-      const result = await createMutation.mutateAsync(payload);
-      navigate(`/tenants/${result.id}`);
-    } catch {
-      // Handled by createMutation.error
+      await createMutation.mutateAsync(payload);
+      toast.success('Organization provisioned successfully', 'Provisioning Complete');
+      navigate('/admin/organizations');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to provision organization';
+      toast.error(msg, 'Provisioning Error');
     }
   };
 

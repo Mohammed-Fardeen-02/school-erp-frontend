@@ -480,19 +480,22 @@ export class AdminApi {
   // ----------------------------------------
   static async saveRoleWithCapabilities(payload: SaveRoleWithCapabilitiesPayload, id?: string): Promise<RoleDetail> {
     if (id) {
-      // Update role metadata
-      await apiClient.put(`/roles/${id}`, {
+      // Update role metadata via PATCH
+      await apiClient.patch(`/roles/${id}`, {
         roleName: payload.roleName,
         description: payload.description,
-        isActive: !payload.isDraft,
       });
 
-      // Update explicit permissions if supplied
+      if (!payload.isDraft) {
+        await apiClient.patch(`/roles/${id}/status`, { isActive: true }).catch(() => {});
+      }
+
+      // Update explicit permissions if supplied via PUT with permissions array
       if (payload.permissionCodes && payload.permissionCodes.length > 0) {
         await apiClient.put(`/roles/${id}/permissions`, {
-          overrides: payload.permissionCodes.map((code) => ({
+          permissions: payload.permissionCodes.map((code) => ({
             nodeCode: code,
-            state: 'EXPLICIT_GRANT',
+            isGranted: true,
           })),
         });
       }
@@ -501,26 +504,23 @@ export class AdminApi {
       return updated.data;
     }
 
-    // Create role
-    const created = await apiClient.post<ApiResponse<RoleSummary>>('/roles', {
+    // Create role with atomic permissions
+    const permissions =
+      payload.permissionCodes && payload.permissionCodes.length > 0
+        ? payload.permissionCodes.map((code) => ({
+            nodeCode: code,
+            isGranted: true,
+          }))
+        : undefined;
+
+    const created = await apiClient.post<ApiResponse<RoleDetail>>('/roles', {
       roleCode: payload.roleCode,
       roleName: payload.roleName,
       description: payload.description,
-      baseTemplateCode: payload.baseTemplateCode,
+      permissions,
     });
 
-    // If permissions selected on create, persist
-    if (payload.permissionCodes && payload.permissionCodes.length > 0) {
-      await apiClient.put(`/roles/${created.data.id}/permissions`, {
-        overrides: payload.permissionCodes.map((code) => ({
-          nodeCode: code,
-          state: 'EXPLICIT_GRANT',
-        })),
-      });
-    }
-
-    const detail = await apiClient.get<ApiResponse<RoleDetail>>(`/roles/${created.data.id}`);
-    return detail.data;
+    return created.data;
   }
 
   // ----------------------------------------

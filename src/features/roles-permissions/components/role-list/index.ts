@@ -4,4 +4,5 @@ export * from './roles-table';
 export * from './create-role-modal';
 export * from './clone-role-modal';
 export * from './delete-role-modal';
+export * from './edit-role-modal';
 

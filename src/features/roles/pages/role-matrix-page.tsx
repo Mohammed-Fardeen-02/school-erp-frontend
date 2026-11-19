@@ -31,7 +31,7 @@ export const RoleMatrixPage: React.FC = () => {
         <p className="text-xs text-muted-foreground">
           {error?.message || 'The requested role could not be located in this organization context.'}
         </p>
-        <Button variant="outline" onClick={() => navigate('/roles')}>
+        <Button variant="outline" onClick={() => navigate('/admin/roles')}>
           Return to Roles
         </Button>
       </div>
@@ -46,7 +46,7 @@ export const RoleMatrixPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/roles')}
+            onClick={() => navigate('/admin/roles')}
             icon={<ArrowLeft className="h-4 w-4" />}
           >
             Back to Roles
@@ -72,7 +72,7 @@ export const RoleMatrixPage: React.FC = () => {
           roleName={role.roleName}
           roleCode={role.roleCode}
           isReadOnly={role.roleType === 'SYSTEM_TEMPLATE'}
-          onClose={() => navigate('/roles')}
+          onClose={() => navigate('/admin/roles')}
         />
       </div>
     </div>

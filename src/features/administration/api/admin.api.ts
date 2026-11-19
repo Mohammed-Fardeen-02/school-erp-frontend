@@ -1,8 +1,7 @@
 import { apiClient } from '@/lib/api-client';
 import type { ApiResponse } from '@/types/api.types';
 import type { TenantDto, TenantQueryFilters, PaginatedTenantsResult } from '@/features/tenants/types/tenants.types';
-import type { RoleSummary, RoleDetail } from '@/features/roles-permissions/types/roles.types';
-import type { WorkspaceMemberSummary } from '@/features/roles-permissions/types/assignments.types';
+import type { RoleDetail } from '@/features/roles-permissions/types/roles.types';
 import type {
   OrganizationCampus,
   OrganizationDetail,
@@ -91,142 +90,7 @@ let mockTenantConfigStore: TenantConfigurationDto = {
   updatedAt: '2026-11-12T10:30:00Z',
 };
 
-const MOCK_CAMPUSES: OrganizationCampus[] = [
-  {
-    id: 'loc_main_001',
-    organizationId: 'org_main',
-    name: 'Main Campus',
-    code: 'MAIN',
-    isMainCampus: true,
-    addressLine1: '123 Academic Way',
-    city: 'Springfield',
-    state: 'OR',
-    country: 'USA',
-    postalCode: '97477',
-    phone: '+1-555-0100',
-    email: 'main@springfield.edu',
-    isActive: true,
-    createdAt: '2026-01-15T08:00:00Z',
-  },
-  {
-    id: 'loc_north_002',
-    organizationId: 'org_main',
-    name: 'North Branch',
-    code: 'NORTH',
-    isMainCampus: false,
-    addressLine1: '450 North Blvd',
-    city: 'Springfield',
-    state: 'OR',
-    country: 'USA',
-    postalCode: '97478',
-    phone: '+1-555-0102',
-    email: 'north@springfield.edu',
-    isActive: true,
-    createdAt: '2026-03-20T10:00:00Z',
-  },
-];
 
-const MOCK_ADMIN_USERS: AdminUserRecord[] = [
-  {
-    id: 'usr_admin_001',
-    userCode: 'USR-2026-001',
-    email: 'admin@erp.com',
-    firstName: 'Eleanor',
-    lastName: 'Vance',
-    phone: '+1-555-0199',
-    status: 'ACTIVE',
-    userType: 'PLATFORM',
-    primaryRole: 'SUPER_ADMIN',
-    assignedCampus: 'Main Campus',
-    twoFactorEnabled: true,
-    lastLoginAt: '2026-11-12T10:30:00Z',
-    createdAt: '2026-01-01T00:00:00Z',
-  },
-  {
-    id: 'usr_orgadmin_002',
-    userCode: 'USR-2026-002',
-    email: 'orgadmin@greenwood.edu',
-    firstName: 'Arthur',
-    lastName: 'Pendelton',
-    phone: '+1-555-0188',
-    status: 'ACTIVE',
-    userType: 'TENANT',
-    primaryRole: 'SCHOOL_ADMIN',
-    assignedCampus: 'Main Campus',
-    twoFactorEnabled: true,
-    lastLoginAt: '2026-11-12T09:15:00Z',
-    createdAt: '2026-01-10T00:00:00Z',
-  },
-  {
-    id: 'usr_teacher_003',
-    userCode: 'USR-2026-003',
-    email: 'teacher@schoolerp.io',
-    firstName: 'Marcus',
-    lastName: 'Chen',
-    phone: '+1-555-0177',
-    status: 'ACTIVE',
-    userType: 'TENANT',
-    primaryRole: 'TEACHER',
-    assignedCampus: 'North Branch',
-    twoFactorEnabled: false,
-    lastLoginAt: '2026-11-11T14:45:00Z',
-    createdAt: '2026-02-01T00:00:00Z',
-  },
-  {
-    id: 'usr_pending_004',
-    email: 'clerk@greenwood.edu',
-    firstName: 'Diana',
-    lastName: 'Prince',
-    phone: '+1-555-0166',
-    status: 'INVITED',
-    userType: 'TENANT',
-    primaryRole: 'BURSAR',
-    assignedCampus: 'Main Campus',
-    twoFactorEnabled: false,
-    lastLoginAt: null,
-    createdAt: '2026-11-10T12:00:00Z',
-  },
-];
-
-const MOCK_SESSIONS: DeviceSession[] = [
-  {
-    id: 'sess_001',
-    userId: 'usr_admin_001',
-    userName: 'Eleanor Vance',
-    userEmail: 'admin@erp.com',
-    deviceInfo: 'Chrome 131 on Windows 11',
-    ipAddress: '192.168.1.45',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0',
-    isCurrentSession: true,
-    createdAt: '2026-11-12T08:00:00Z',
-    expiresAt: '2026-11-19T08:00:00Z',
-  },
-  {
-    id: 'sess_002',
-    userId: 'usr_admin_001',
-    userName: 'Eleanor Vance',
-    userEmail: 'admin@erp.com',
-    deviceInfo: 'Safari 18 on macOS Sequoia',
-    ipAddress: '10.0.0.12',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) Safari/605.1.15',
-    isCurrentSession: false,
-    createdAt: '2026-11-10T14:20:00Z',
-    expiresAt: '2026-11-17T14:20:00Z',
-  },
-];
-
-const DEFAULT_SECURITY_POLICY: SecurityPolicyConfig = {
-  minPasswordLength: 10,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSpecialChars: true,
-  passwordExpiryDays: 90,
-  sessionTimeoutMinutes: 30,
-  maxFailedLoginsBeforeLockout: 5,
-  lockoutDurationMinutes: 15,
-  twoFactorPolicy: 'OPTIONAL',
-};
 
 const MOCK_SUBSCRIPTION: SubscriptionOverview = {
   currentPlan: {
@@ -407,12 +271,19 @@ export class AdminApi {
     return res.data;
   }
 
-  static async listCampuses(_organizationId?: string): Promise<OrganizationCampus[]> {
+  static async getOrganizationActivity(id: string): Promise<any[]> {
+    const res = await apiClient.get<ApiResponse<any[]>>(`/organizations/${id}/activity`);
+    return res.data || [];
+  }
+
+  static async listCampuses(organizationId?: string): Promise<OrganizationCampus[]> {
     try {
-      const res = await apiClient.get<ApiResponse<OrganizationCampus[]>>('/locations');
-      return res.data || MOCK_CAMPUSES;
+      const queryStr = organizationId ? `?organizationId=${organizationId}` : '';
+      const headers = organizationId ? { 'X-Organization-Id': organizationId } : undefined;
+      const res = await apiClient.get<ApiResponse<OrganizationCampus[]>>(`/locations${queryStr}`, { headers });
+      return res.data || [];
     } catch {
-      return MOCK_CAMPUSES;
+      return [];
     }
   }
 
@@ -428,78 +299,104 @@ export class AdminApi {
   // ----------------------------------------
   // 2. User Management
   // ----------------------------------------
-  static async listUsers(search = '', page = 1, limit = 10): Promise<{
+  static async listUsers(params: {
+    search?: string;
+    status?: string;
+    roleId?: string;
+    locationId?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<{
     users: AdminUserRecord[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
-    try {
-      const res = await apiClient.get<PaginatedApiResponse<WorkspaceMemberSummary>>(
-        `/workspace/members?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`
-      );
-      const members = res.data || [];
-      const mapped: AdminUserRecord[] = members.map((m, idx) => ({
-        id: m.id,
-        userCode: (m as any).userCode || `USR-${(m.id || '').slice(0, 6).toUpperCase() || (idx + 101)}`,
-        email: m.email,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        phone: m.phone,
-        status: m.isActive ? 'ACTIVE' : 'INACTIVE',
-        userType: 'TENANT',
-        primaryRole: idx % 2 === 0 ? 'TEACHER' : 'STAFF',
-        assignedCampus: 'Main Campus',
-        twoFactorEnabled: false,
-        lastLoginAt: '2026-11-11T12:00:00Z',
-        createdAt: '2026-02-01T00:00:00Z',
-      }));
+    const q = new URLSearchParams();
+    if (params.search && params.search.trim()) q.append('search', params.search.trim());
+    if (params.status && params.status !== 'ALL') q.append('status', params.status);
+    if (params.roleId && params.roleId !== 'ALL') q.append('roleId', params.roleId);
+    if (params.locationId && params.locationId !== 'ALL') q.append('locationId', params.locationId);
+    if (params.page) q.append('page', String(params.page));
+    if (params.limit) q.append('limit', String(params.limit));
+
+    const queryStr = q.toString() ? `?${q.toString()}` : '';
+    const res = await apiClient.get<PaginatedApiResponse<any>>(`/users${queryStr}`);
+    const items = res.data || [];
+    const mapped: AdminUserRecord[] = items.map((u: any) => {
+      let status: 'ACTIVE' | 'INACTIVE' | 'INVITED' | 'SUSPENDED' = 'ACTIVE';
+      if (u.membershipStatus === 'INVITED') {
+        status = 'INVITED';
+      } else if (u.accountStatus === 'SUSPENDED' || u.membershipStatus === 'SUSPENDED') {
+        status = 'SUSPENDED';
+      } else if (u.accountStatus === 'INACTIVE') {
+        status = 'INACTIVE';
+      }
 
       return {
-        users: mapped.length > 0 ? mapped : MOCK_ADMIN_USERS,
-        total: res.meta?.total ?? mapped.length,
-        page: res.meta?.page ?? page,
-        limit: res.meta?.limit ?? limit,
-        totalPages: res.meta?.totalPages ?? 1,
+        id: u.id,
+        userCode: u.userCode || `USR-${u.id.slice(0, 8).toUpperCase()}`,
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        phone: u.phone,
+        status,
+        userType: 'TENANT',
+        primaryRole: u.primaryRole || (u.roles?.[0]?.name ?? 'Member'),
+        assignedCampus: u.assignedCampus || (u.campuses?.[0]?.name ?? 'All-Campus Scope'),
+        twoFactorEnabled: false,
+        lastLoginAt: u.lastLoginAt,
+        createdAt: u.createdAt,
       };
-    } catch {
-      return {
-        users: MOCK_ADMIN_USERS,
-        total: MOCK_ADMIN_USERS.length,
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-      };
-    }
+    });
+
+    return {
+      users: mapped,
+      total: res.meta?.total ?? mapped.length,
+      page: res.meta?.page ?? params.page ?? 1,
+      limit: res.meta?.limit ?? params.limit ?? 10,
+      totalPages: res.meta?.totalPages ?? 1,
+    };
   }
 
-  static async inviteUser(payload: InviteUserPayload): Promise<{ success: boolean; message: string }> {
-    try {
-      await apiClient.post('/users/invite', payload);
-      return { success: true, message: `Invitation sent to ${payload.email}` };
-    } catch {
-      // Mock success for development
-      return { success: true, message: `Invitation sent to ${payload.email}` };
-    }
+  static async getUserById(userId: string): Promise<any> {
+    const res = await apiClient.get<ApiResponse<any>>(`/users/${userId}`);
+    return res.data;
+  }
+
+  static async inviteUser(payload: InviteUserPayload): Promise<{ success: boolean; message: string; invitationId?: string }> {
+    const res = await apiClient.post<ApiResponse<any>>('/users/invite', payload);
+    return res.data;
   }
 
   static async saveUser(payload: SaveUserPayload, id?: string): Promise<AdminUserRecord> {
     if (id) {
-      const res = await apiClient.put<ApiResponse<AdminUserRecord>>(`/users/${id}`, payload);
+      const res = await apiClient.put<ApiResponse<any>>(`/users/${id}`, payload);
       return res.data;
     }
-    const res = await apiClient.post<ApiResponse<AdminUserRecord>>('/users', payload);
+    const res = await apiClient.post<ApiResponse<any>>('/users/invite', payload);
     return res.data;
   }
 
-  static async toggleUserStatus(userId: string, active: boolean, reason?: string): Promise<boolean> {
-    try {
-      await apiClient.patch(`/users/${userId}/status`, { isActive: active, reason });
-      return true;
-    } catch {
-      return true;
-    }
+  static async toggleUserStatus(userId: string, active: boolean, reason?: string): Promise<any> {
+    const res = await apiClient.patch<ApiResponse<any>>(`/users/${userId}/status`, { isActive: active, reason });
+    return res.data;
+  }
+
+  static async listInvitations(): Promise<any[]> {
+    const res = await apiClient.get<ApiResponse<any[]>>('/users/invitations');
+    return res.data || [];
+  }
+
+  static async resendInvitation(invitationId: string): Promise<{ success: boolean; message: string }> {
+    const res = await apiClient.post<ApiResponse<any>>(`/users/invitations/${invitationId}/resend`, {});
+    return res.data;
+  }
+
+  static async revokeInvitation(invitationId: string): Promise<{ success: boolean; message: string }> {
+    const res = await apiClient.post<ApiResponse<any>>(`/users/invitations/${invitationId}/revoke`, {});
+    return res.data;
   }
 
   // ----------------------------------------
@@ -507,19 +404,22 @@ export class AdminApi {
   // ----------------------------------------
   static async saveRoleWithCapabilities(payload: SaveRoleWithCapabilitiesPayload, id?: string): Promise<RoleDetail> {
     if (id) {
-      // Update role metadata
-      await apiClient.put(`/roles/${id}`, {
+      // Update role metadata via PATCH
+      await apiClient.patch(`/roles/${id}`, {
         roleName: payload.roleName,
         description: payload.description,
-        isActive: !payload.isDraft,
       });
 
-      // Update explicit permissions if supplied
+      if (!payload.isDraft) {
+        await apiClient.patch(`/roles/${id}/status`, { isActive: true }).catch(() => {});
+      }
+
+      // Update explicit permissions if supplied via PUT with permissions array
       if (payload.permissionCodes && payload.permissionCodes.length > 0) {
         await apiClient.put(`/roles/${id}/permissions`, {
-          overrides: payload.permissionCodes.map((code) => ({
+          permissions: payload.permissionCodes.map((code) => ({
             nodeCode: code,
-            state: 'EXPLICIT_GRANT',
+            isGranted: true,
           })),
         });
       }
@@ -528,72 +428,98 @@ export class AdminApi {
       return updated.data;
     }
 
-    // Create role
-    const created = await apiClient.post<ApiResponse<RoleSummary>>('/roles', {
+    // Create role with atomic permissions
+    const permissions =
+      payload.permissionCodes && payload.permissionCodes.length > 0
+        ? payload.permissionCodes.map((code) => ({
+            nodeCode: code,
+            isGranted: true,
+          }))
+        : undefined;
+
+    const created = await apiClient.post<ApiResponse<RoleDetail>>('/roles', {
       roleCode: payload.roleCode,
       roleName: payload.roleName,
       description: payload.description,
-      baseTemplateCode: payload.baseTemplateCode,
+      permissions,
     });
 
-    // If permissions selected on create, persist
-    if (payload.permissionCodes && payload.permissionCodes.length > 0) {
-      await apiClient.put(`/roles/${created.data.id}/permissions`, {
-        overrides: payload.permissionCodes.map((code) => ({
-          nodeCode: code,
-          state: 'EXPLICIT_GRANT',
-        })),
-      });
-    }
-
-    const detail = await apiClient.get<ApiResponse<RoleDetail>>(`/roles/${created.data.id}`);
-    return detail.data;
+    return created.data;
   }
 
   // ----------------------------------------
   // 4. Authentication & Security
   // ----------------------------------------
-  static async listActiveSessions(): Promise<DeviceSession[]> {
+  static async listActiveSessions(params?: { search?: string; userId?: string }): Promise<DeviceSession[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.userId) searchParams.append('userId', params.userId);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+
     try {
-      const res = await apiClient.get<ApiResponse<DeviceSession[]>>('/auth/sessions');
-      return res.data || MOCK_SESSIONS;
+      const res = await apiClient.get<ApiResponse<DeviceSession[]>>(`/auth/organization-sessions${query}`);
+      return res.data || [];
     } catch {
-      return MOCK_SESSIONS;
+      // Direct fallback to /auth/sessions if scoped route unavailable
+      const res = await apiClient.get<ApiResponse<DeviceSession[]>>(`/auth/sessions${query}`);
+      return res.data || [];
     }
   }
 
   static async revokeSession(sessionId: string): Promise<void> {
     try {
-      await apiClient.delete(`/auth/sessions/${sessionId}`);
+      await apiClient.delete(`/auth/organization-sessions/${sessionId}`);
     } catch {
-      // Silent fallback
+      await apiClient.delete(`/auth/sessions/${sessionId}`);
     }
   }
 
   static async revokeAllOtherSessions(): Promise<void> {
     try {
-      await apiClient.post('/auth/sessions/revoke-others');
+      await apiClient.delete('/auth/sessions');
     } catch {
-      // Silent fallback
+      await apiClient.post('/auth/sessions/revoke-others');
     }
+  }
+
+  static async revokeUserSessions(userId: string): Promise<{ revokedCount: number }> {
+    const res = await apiClient.delete<ApiResponse<{ revokedCount: number }>>(`/auth/organization-users/${userId}/sessions`);
+    return res.data;
   }
 
   static async getSecurityPolicies(): Promise<SecurityPolicyConfig> {
-    try {
-      const res = await apiClient.get<ApiResponse<SecurityPolicyConfig>>('/auth/policies');
-      return res.data || DEFAULT_SECURITY_POLICY;
-    } catch {
-      return DEFAULT_SECURITY_POLICY;
-    }
+    const res = await apiClient.get<ApiResponse<SecurityPolicyConfig>>('/auth/policies');
+    return res.data;
   }
 
-  static async updateSecurityPolicies(policies: SecurityPolicyConfig): Promise<SecurityPolicyConfig> {
-    try {
-      const res = await apiClient.put<ApiResponse<SecurityPolicyConfig>>('/auth/policies', policies);
-      return res.data || policies;
-    } catch {
-      return policies;
-    }
+  static async updateSecurityPolicies(policies: Partial<SecurityPolicyConfig>): Promise<SecurityPolicyConfig> {
+    const res = await apiClient.put<ApiResponse<SecurityPolicyConfig>>('/auth/policies', policies);
+    return res.data;
+  }
+
+  static async listAuthenticationActivity(filters: { search?: string; action?: string; page?: number; limit?: number } = {}): Promise<{
+    logs: AuditLogRecord[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.action && filters.action !== 'ALL') params.append('action', filters.action);
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.limit) params.append('limit', String(filters.limit));
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+
+    const res = await apiClient.get<ApiResponse<{
+      logs: AuditLogRecord[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>>(`/auth/activity${queryStr}`);
+
+    return res.data;
   }
 
   // ----------------------------------------

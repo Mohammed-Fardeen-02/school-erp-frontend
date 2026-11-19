@@ -14,6 +14,7 @@ import {
   Download,
   Layers,
   Settings,
+  GitBranch,
 } from 'lucide-react';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AdminPageHeader } from '../components/common/admin-page-header';
@@ -100,6 +101,14 @@ export const AdminOverviewPage: React.FC = () => {
       icon: Building2,
       badge: `${organizations.length || 1} Org • ${campusesData.length || 2} Campuses`,
       tag: 'Multi-Tenant',
+    },
+    {
+      title: 'Branches & Campuses',
+      description: 'Create and configure physical branch campuses, satellite centers, and designate main campuses.',
+      href: '/admin/branches',
+      icon: GitBranch,
+      badge: `${campusesData.length || 2} Campuses • Master`,
+      tag: 'Academic Master',
     },
     {
       title: 'User Management',

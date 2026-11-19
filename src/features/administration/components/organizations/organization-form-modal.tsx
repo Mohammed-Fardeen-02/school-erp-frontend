@@ -132,14 +132,21 @@ export const OrganizationFormModal: React.FC<OrganizationFormModalProps> = ({
   };
 
   const onFormSubmit = async (data: OrgFormData, isDraft = false) => {
-    let website = data.website?.trim() || '';
+    let website = data.website?.trim() || undefined;
     if (website && !/^https?:\/\//i.test(website)) {
       website = `https://${website}`;
     }
 
     const payload: SaveOrganizationPayload = {
       ...data,
-      website,
+      code: data.code?.trim() || undefined,
+      website: website || undefined,
+      taxId: data.taxId?.trim() || undefined,
+      addressLine1: data.addressLine1?.trim() || undefined,
+      city: data.city?.trim() || undefined,
+      state: data.state?.trim() || undefined,
+      country: data.country?.trim() || undefined,
+      postalCode: data.postalCode?.trim() || undefined,
       status: isDraft ? 'PROVISIONING' : 'ACTIVE',
       isDraft,
     };

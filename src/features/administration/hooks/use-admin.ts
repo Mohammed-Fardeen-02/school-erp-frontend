@@ -21,9 +21,12 @@ export const adminQueryKeys = {
   organizations: (filters?: TenantQueryFilters) => ['admin', 'organizations', filters] as const,
   organizationDetail: (id: string) => ['admin', 'organizations', id] as const,
   campuses: (orgId?: string) => ['admin', 'campuses', orgId] as const,
-  users: (search?: string, page?: number, limit?: number) => ['admin', 'users', { search, page, limit }] as const,
-  sessions: () => ['admin', 'security', 'sessions'] as const,
+  users: (params?: { search?: string; status?: string; roleId?: string; locationId?: string; page?: number; limit?: number }) =>
+    ['admin', 'users', params] as const,
+  sessions: (params?: { search?: string; userId?: string }) => ['admin', 'security', 'sessions', params] as const,
   policies: () => ['admin', 'security', 'policies'] as const,
+  activity: (filters?: { search?: string; action?: string; page?: number; limit?: number }) =>
+    ['admin', 'security', 'activity', filters] as const,
   subscription: () => ['admin', 'billing', 'subscription'] as const,
   invoices: () => ['admin', 'billing', 'invoices'] as const,
   plans: (orgId?: string) => ['admin', 'plans', orgId] as const,
@@ -74,6 +77,14 @@ export function useUpdateOrganizationStatus() {
   });
 }
 
+export function useOrganizationActivity(id: string) {
+  return useQuery({
+    queryKey: ['admin', 'organizations', id, 'activity'],
+    queryFn: () => AdminApi.getOrganizationActivity(id),
+    enabled: Boolean(id),
+  });
+}
+
 export function useAdminCampuses(organizationId?: string) {
   return useQuery({
     queryKey: adminQueryKeys.campuses(organizationId),
@@ -96,11 +107,26 @@ export function useSaveCampus() {
 // ------------------------------------------
 // 2. User Management Hooks
 // ------------------------------------------
-export function useAdminUsers(search = '', page = 1, limit = 10) {
+export function useAdminUsers(params: {
+  search?: string;
+  status?: string;
+  roleId?: string;
+  locationId?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
   return useQuery({
-    queryKey: adminQueryKeys.users(search, page, limit),
-    queryFn: () => AdminApi.listUsers(search, page, limit),
+    queryKey: adminQueryKeys.users(params),
+    queryFn: () => AdminApi.listUsers(params),
     staleTime: 30 * 1000,
+  });
+}
+
+export function useUserDetail(id: string) {
+  return useQuery({
+    queryKey: ['admin', 'users', id],
+    queryFn: () => AdminApi.getUserById(id),
+    enabled: Boolean(id),
   });
 }
 
@@ -111,6 +137,7 @@ export function useInviteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       queryClient.invalidateQueries({ queryKey: ['workspace', 'members'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
     },
   });
 }
@@ -137,6 +164,34 @@ export function useToggleUserStatus() {
   });
 }
 
+export function useInvitations() {
+  return useQuery({
+    queryKey: ['admin', 'invitations'],
+    queryFn: () => AdminApi.listInvitations(),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useResendInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => AdminApi.resendInvitation(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
+    },
+  });
+}
+
+export function useRevokeInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => AdminApi.revokeInvitation(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
+    },
+  });
+}
+
 // ------------------------------------------
 // 3. Roles & Permissions Hooks
 // ------------------------------------------
@@ -155,10 +210,10 @@ export function useSaveRoleWithCapabilities() {
 // ------------------------------------------
 // 4. Authentication & Security Hooks
 // ------------------------------------------
-export function useActiveSessions() {
+export function useActiveSessions(params?: { search?: string; userId?: string }) {
   return useQuery({
-    queryKey: adminQueryKeys.sessions(),
-    queryFn: () => AdminApi.listActiveSessions(),
+    queryKey: adminQueryKeys.sessions(params),
+    queryFn: () => AdminApi.listActiveSessions(params),
   });
 }
 
@@ -167,7 +222,8 @@ export function useRevokeSession() {
   return useMutation({
     mutationFn: (sessionId: string) => AdminApi.revokeSession(sessionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.sessions() });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'activity'] });
     },
   });
 }
@@ -177,7 +233,19 @@ export function useRevokeAllOtherSessions() {
   return useMutation({
     mutationFn: () => AdminApi.revokeAllOtherSessions(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.sessions() });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'activity'] });
+    },
+  });
+}
+
+export function useRevokeUserSessions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => AdminApi.revokeUserSessions(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'activity'] });
     },
   });
 }
@@ -192,10 +260,23 @@ export function useSecurityPolicies() {
 export function useUpdateSecurityPolicies() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (policies: SecurityPolicyConfig) => AdminApi.updateSecurityPolicies(policies),
+    mutationFn: (policies: Partial<SecurityPolicyConfig>) => AdminApi.updateSecurityPolicies(policies),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.policies() });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'security', 'activity'] });
     },
+  });
+}
+
+export function useAuthenticationActivity(filters?: {
+  search?: string;
+  action?: string;
+  page?: number;
+  limit?: number;
+}) {
+  return useQuery({
+    queryKey: adminQueryKeys.activity(filters),
+    queryFn: () => AdminApi.listAuthenticationActivity(filters),
   });
 }
 

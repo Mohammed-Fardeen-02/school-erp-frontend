@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Save, Check } from 'lucide-react';
+import { Lock, Save, Check, ShieldCheck, KeyRound, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
 import { Select } from '@/components/forms/select';
@@ -51,8 +51,8 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Password Complexity */}
         <div className="space-y-4 rounded-xl border border-border p-4 bg-surface-muted/20">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Password Complexity Rules
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <KeyRound className="h-3.5 w-3.5" /> Password Complexity Rules
           </h3>
 
           <Input
@@ -62,11 +62,26 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
             max={32}
             value={policies.minPasswordLength}
             onChange={(e) =>
-              setPolicies((p) => ({ ...p, minPasswordLength: Number(e.target.value) }))
+              setPolicies((p) => ({ ...p, minPasswordLength: Math.max(8, Number(e.target.value)) }))
             }
           />
 
-          <div className="space-y-2 pt-2">
+          <Select
+            label="Password Expiration Cycle"
+            value={String(policies.passwordExpiryDays ?? 90)}
+            onChange={(e) =>
+              setPolicies((p) => ({ ...p, passwordExpiryDays: Number(e.target.value) }))
+            }
+          >
+            <option value="0">Never Expires</option>
+            <option value="30">Every 30 Days</option>
+            <option value="60">Every 60 Days</option>
+            <option value="90">Every 90 Days (Quarterly Recommended)</option>
+            <option value="180">Every 180 Days (Half-Yearly)</option>
+            <option value="365">Every 365 Days (Annual)</option>
+          </Select>
+
+          <div className="space-y-2 pt-2 border-t border-border/50">
             <Checkbox
               label="Require at least one uppercase letter (A-Z)"
               checked={policies.requireUppercase}
@@ -75,14 +90,21 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
               }
             />
             <Checkbox
-              label="Require at least one number (0-9)"
+              label="Require at least one lowercase letter (a-z)"
+              checked={policies.requireLowercase ?? true}
+              onCheckedChange={(checked) =>
+                setPolicies((p) => ({ ...p, requireLowercase: !!checked }))
+              }
+            />
+            <Checkbox
+              label="Require at least one numeric digit (0-9)"
               checked={policies.requireNumbers}
               onCheckedChange={(checked) =>
                 setPolicies((p) => ({ ...p, requireNumbers: !!checked }))
               }
             />
             <Checkbox
-              label="Require special characters (!@#$%^&*)"
+              label="Require special characters (!@#$%^&*...)"
               checked={policies.requireSpecialChars}
               onCheckedChange={(checked) =>
                 setPolicies((p) => ({ ...p, requireSpecialChars: !!checked }))
@@ -93,8 +115,8 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
 
         {/* Session & Lockout */}
         <div className="space-y-4 rounded-xl border border-border p-4 bg-surface-muted/20">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Session & Lockout Thresholds
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" /> Session & Lockout Thresholds
           </h3>
 
           <Select
@@ -105,8 +127,9 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
             }
           >
             <option value="15">15 Minutes of Inactivity</option>
-            <option value="30">30 Minutes of Inactivity</option>
+            <option value="30">30 Minutes of Inactivity (Recommended)</option>
             <option value="60">1 Hour of Inactivity</option>
+            <option value="120">2 Hours of Inactivity</option>
             <option value="480">8 Hours (Full School Day)</option>
           </Select>
 
@@ -126,19 +149,58 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
           </Select>
 
           <Select
-            label="Two-Factor Authentication (MFA)"
-            value={policies.twoFactorPolicy}
+            label="Lockout Duration"
+            value={String(policies.lockoutDurationMinutes ?? 15)}
             onChange={(e) =>
               setPolicies((p) => ({
                 ...p,
-                twoFactorPolicy: e.target.value as SecurityPolicyConfig['twoFactorPolicy'],
+                lockoutDurationMinutes: Number(e.target.value),
               }))
             }
           >
-            <option value="OPTIONAL">Optional for all users</option>
-            <option value="ADMIN_ONLY">Enforced for Administrators</option>
-            <option value="MANDATORY">Mandatory for all institutional accounts</option>
+            <option value="5">5 Minutes</option>
+            <option value="15">15 Minutes (Recommended)</option>
+            <option value="30">30 Minutes</option>
+            <option value="60">1 Hour</option>
           </Select>
+
+          <div className="space-y-1.5">
+            <Select
+              label="Two-Factor Authentication (MFA)"
+              value={policies.twoFactorPolicy}
+              onChange={(e) =>
+                setPolicies((p) => ({
+                  ...p,
+                  twoFactorPolicy: e.target.value as SecurityPolicyConfig['twoFactorPolicy'],
+                }))
+              }
+            >
+              <option value="OPTIONAL">Optional for all users</option>
+              <option value="ADMIN_ONLY" disabled>
+                Enforced for Administrators [Planned — Requires TOTP Engine Setup]
+              </option>
+              <option value="MANDATORY" disabled>
+                Mandatory for all institutional accounts [Planned — Requires TOTP Engine Setup]
+              </option>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Institutional MFA enforcement (Admin-only and Mandatory) is restricted pending TOTP authenticator engine rollout.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Policy Preview Summary */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-foreground flex items-start gap-2.5">
+        <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <div>
+          <span className="font-bold">Active Enforcement Summary:</span> Passwords must be at least{' '}
+          <span className="font-semibold">{policies.minPasswordLength}</span> characters long, containing{' '}
+          {policies.requireUppercase ? 'uppercase, ' : ''}
+          {policies.requireNumbers ? 'numbers, ' : ''}
+          {policies.requireSpecialChars ? 'symbols, ' : ''}
+          and sessions will auto-lock after{' '}
+          <span className="font-semibold">{policies.sessionTimeoutMinutes} minutes</span> of inactivity.
         </div>
       </div>
 

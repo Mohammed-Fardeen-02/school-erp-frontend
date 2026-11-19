@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { ArrowLeft, Layers, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Layers, Info, GitBranch } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { ERP_MODULES } from '@/app/config/modules.config';
 import { ROUTES } from '@/app/router/routes';
@@ -76,6 +76,36 @@ export const ModuleContainerPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Featured Operational Feature: Branches Master for Academics */}
+      {moduleId === 'academics' && (
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-xs">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                <GitBranch className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-foreground">Branches Master</h2>
+                  <Badge variant="primary">Operational Feature</Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Manage physical campus branches, satellite faculties, main campus designation, and CRUD lifecycle operations.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/app/academics/branches')}
+              icon={<ArrowRight className="h-4 w-4" />}
+            >
+              Open Branches Master
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Module Foundation Architecture Status */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

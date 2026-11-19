@@ -13,6 +13,7 @@ import { ModuleContainerPage } from '@/pages/module/module-container-page';
 import { LoginPage, ForgotPasswordPage, ResetPasswordPage } from '@/features/auth';
 import { WorkspaceLauncherPage, SelectWorkspacePage } from '@/features/workspace';
 import { AdminRoutes } from '@/features/administration';
+import { BranchesPage } from '@/features/academics';
 import { Button } from '@/components/ui/button';
 
 const NotFoundPage: React.FC = () => {
@@ -114,6 +115,9 @@ export const AppRouter: React.FC = () => {
         <Route path="/users/*" element={<Navigate to="/admin/users" replace />} />
         <Route path="/settings" element={<Navigate to="/admin" replace />} />
         <Route path="/settings/*" element={<Navigate to="/admin" replace />} />
+
+        {/* Academics Feature Domain Routes */}
+        <Route path="/app/academics/branches" element={<BranchesPage />} />
 
         {/* Catch-All Business Module Container */}
         <Route

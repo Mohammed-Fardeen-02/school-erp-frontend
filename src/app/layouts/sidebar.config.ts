@@ -15,6 +15,7 @@ import {
   History,
   KeyRound,
   Settings,
+  GitBranch,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -64,6 +65,12 @@ export const adminSidebarConfig: WorkspaceModuleSidebarConfig = {
       label: 'Organization Management',
       href: '/admin/organizations',
       icon: Building2,
+      permission: 'organizations.manage',
+    },
+    {
+      label: 'Branches & Campuses',
+      href: '/admin/branches',
+      icon: GitBranch,
       permission: 'organizations.manage',
     },
     {
@@ -120,6 +127,11 @@ export const academicsSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleIcon: BookOpen,
   moduleDescription: 'Curriculum & Classes',
   items: [
+    {
+      label: 'Branches Master',
+      href: '/app/academics/branches',
+      icon: GitBranch,
+    },
     {
       label: 'Classes & Sections',
       href: '/app/academics/classes',
@@ -346,12 +358,41 @@ export const overviewSidebarConfig: WorkspaceModuleSidebarConfig = {
       href: '/admin',
       icon: ShieldCheck,
       permission: 'settings.roles_permissions.rbac.view',
+      children: [
+        {
+          label: 'Organizations',
+          href: '/admin/organizations',
+          icon: Building2,
+        },
+        {
+          label: 'Branches & Campuses',
+          href: '/admin/branches',
+          icon: GitBranch,
+        },
+        {
+          label: 'Users',
+          href: '/admin/users',
+          icon: Users,
+        },
+        {
+          label: 'Roles & Permissions',
+          href: '/admin/roles',
+          icon: KeyRound,
+        },
+      ],
     },
     {
       label: 'Academics',
       href: '/app/academics',
       icon: BookOpen,
       moduleId: 'academics',
+      children: [
+        {
+          label: 'Branches Master',
+          href: '/app/academics/branches',
+          icon: GitBranch,
+        },
+      ],
     },
     {
       label: 'Teachers & Staff',

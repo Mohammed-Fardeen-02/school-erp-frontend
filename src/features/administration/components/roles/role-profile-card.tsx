@@ -18,7 +18,7 @@ export interface RoleProfileCardProps {
 export const RoleProfileCard: React.FC<RoleProfileCardProps> = ({
   register,
   errors,
-  isEdit = false,
+  _isEdit = false,
   campusScope,
   onCampusScopeChange,
   specificCampusId,

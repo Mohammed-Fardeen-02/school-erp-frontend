@@ -24,12 +24,20 @@ import type {
 
 export interface UserAssignmentsPanelProps {
   className?: string;
+  initialMember?: WorkspaceMemberSummary | null;
 }
 
 export const UserAssignmentsPanel: React.FC<UserAssignmentsPanelProps> = ({
   className,
+  initialMember,
 }) => {
-  const [selectedMember, setSelectedMember] = useState<WorkspaceMemberSummary | null>(null);
+  const [selectedMember, setSelectedMember] = useState<WorkspaceMemberSummary | null>(initialMember ?? null);
+
+  React.useEffect(() => {
+    if (initialMember) {
+      setSelectedMember(initialMember);
+    }
+  }, [initialMember]);
 
   // Modals state
   const [isAssignOpen, setIsAssignOpen] = useState(false);

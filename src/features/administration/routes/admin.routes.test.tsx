@@ -81,6 +81,12 @@ describe('AdminRoutes Feature Router', () => {
     expect(screen.getByText('Add Organization')).toBeInTheDocument();
   });
 
+  it('renders BranchesPage on /admin/branches', async () => {
+    render(<AdminRoutes />, { wrapper: createWrapper('/admin/branches') });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Branches Master' })).toBeInTheDocument();
+    expect(screen.getByText('Add Branch')).toBeInTheDocument();
+  });
+
   it('renders UsersPage on /admin/users', () => {
     render(<AdminRoutes />, { wrapper: createWrapper('/admin/users') });
     expect(screen.getByRole('heading', { level: 1, name: 'User Management' })).toBeInTheDocument();

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Building2, Plus, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Building2, Plus, Check, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/forms/input';
 import type { OrganizationCampus } from '../../types/admin.types';
@@ -19,6 +20,7 @@ export const CampusManagerModal: React.FC<CampusManagerModalProps> = ({
   campuses,
   onAddCampus,
 }) => {
+  const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
@@ -190,7 +192,18 @@ export const CampusManagerModal: React.FC<CampusManagerModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border px-6 py-3 bg-surface-muted/30 flex justify-end">
+        <div className="border-t border-border px-6 py-3 bg-surface-muted/30 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              navigate('/admin/branches');
+            }}
+            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            <span>Open Full Branches Master Dashboard →</span>
+          </button>
           <Button variant="outline" size="sm" onClick={onClose}>
             Done
           </Button>

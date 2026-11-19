@@ -35,7 +35,7 @@ const mockAssignments: AssignmentRecord[] = [
   {
     id: 'assign-2',
     organizationId: 'org-1',
-    userId: 'user-teacher-1',
+    userId: 'user-teacher-1', 
     roleId: 'role-2',
     locationId: 'campus-north',
     assignedAt: '2026-11-01T00:00:00Z',

@@ -164,20 +164,29 @@ export const SecurityPoliciesCard: React.FC<SecurityPoliciesCardProps> = ({
             <option value="60">1 Hour</option>
           </Select>
 
-          <Select
-            label="Two-Factor Authentication (MFA)"
-            value={policies.twoFactorPolicy}
-            onChange={(e) =>
-              setPolicies((p) => ({
-                ...p,
-                twoFactorPolicy: e.target.value as SecurityPolicyConfig['twoFactorPolicy'],
-              }))
-            }
-          >
-            <option value="OPTIONAL">Optional for all users</option>
-            <option value="ADMIN_ONLY">Enforced for Administrators</option>
-            <option value="MANDATORY">Mandatory for all institutional accounts</option>
-          </Select>
+          <div className="space-y-1.5">
+            <Select
+              label="Two-Factor Authentication (MFA)"
+              value={policies.twoFactorPolicy}
+              onChange={(e) =>
+                setPolicies((p) => ({
+                  ...p,
+                  twoFactorPolicy: e.target.value as SecurityPolicyConfig['twoFactorPolicy'],
+                }))
+              }
+            >
+              <option value="OPTIONAL">Optional for all users</option>
+              <option value="ADMIN_ONLY" disabled>
+                Enforced for Administrators [Planned — Requires TOTP Engine Setup]
+              </option>
+              <option value="MANDATORY" disabled>
+                Mandatory for all institutional accounts [Planned — Requires TOTP Engine Setup]
+              </option>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Institutional MFA enforcement (Admin-only and Mandatory) is restricted pending TOTP authenticator engine rollout.
+            </p>
+          </div>
         </div>
       </div>
 

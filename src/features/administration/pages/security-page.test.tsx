@@ -231,4 +231,16 @@ describe('SecurityPage (Administration Workspace)', () => {
     expect(screen.getByText('Admin Revoked')).toBeInTheDocument();
     expect(screen.getAllByText('192.168.1.50').length).toBeGreaterThan(0);
   });
+
+  it('displays MFA configuration with restriction notice pending TOTP rollout', () => {
+    renderComponent();
+
+    const policiesTab = screen.getByRole('button', { name: /password & access policies/i });
+    fireEvent.click(policiesTab);
+
+    expect(screen.getByText('Two-Factor Authentication (MFA)')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Institutional MFA enforcement \(Admin-only and Mandatory\) is restricted/i)
+    ).toBeInTheDocument();
+  });
 });

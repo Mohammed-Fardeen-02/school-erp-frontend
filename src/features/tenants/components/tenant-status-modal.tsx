@@ -117,7 +117,7 @@ export const TenantStatusModal: React.FC<TenantStatusModalProps> = ({
           {selectedStatus === 'SUSPENDED' && (
             <div className="rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger space-y-1">
               <strong>Warning:</strong> Suspending this institution will immediately prevent all faculty,
-              staff, and students from accessing their school portal.
+              staff, and students from accessing their school portal, and will instantly invalidate all active user sessions across all devices.
             </div>
           )}
 

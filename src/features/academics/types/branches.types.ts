@@ -33,6 +33,24 @@ export interface BranchDto {
     displayName: string;
     status: string;
   };
+  _count?: {
+    userRoles: number;
+  };
+  userRoles?: Array<{
+    id: string;
+    user?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string | null;
+    };
+    role?: {
+      id: string;
+      roleName: string;
+      roleCode: string;
+    };
+  }>;
 }
 
 export interface SaveBranchPayload {

@@ -265,6 +265,27 @@ export const BranchesPage: React.FC = () => {
       ),
     },
     {
+      key: 'userRoles',
+      label: 'ACTIVE USERS',
+      align: 'center',
+      render: (_, row) => (
+        <span className="text-xs font-semibold text-primary">
+          {row._count?.userRoles ?? row.userRoles?.length ?? 0}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      label: 'CREATED',
+      sortable: true,
+      align: 'left',
+      render: (val) => (
+        <span className="text-xs text-muted-foreground">
+          {val ? new Date(val as string).toLocaleDateString() : '—'}
+        </span>
+      ),
+    },
+    {
       key: 'isActive',
       label: 'STATUS',
       sortable: true,

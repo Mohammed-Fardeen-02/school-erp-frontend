@@ -75,6 +75,14 @@ export function useUpdateOrganizationStatus() {
   });
 }
 
+export function useOrganizationActivity(id: string) {
+  return useQuery({
+    queryKey: ['admin', 'organizations', id, 'activity'],
+    queryFn: () => AdminApi.getOrganizationActivity(id),
+    enabled: Boolean(id),
+  });
+}
+
 export function useAdminCampuses(organizationId?: string) {
   return useQuery({
     queryKey: adminQueryKeys.campuses(organizationId),

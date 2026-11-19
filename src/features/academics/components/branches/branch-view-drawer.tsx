@@ -132,6 +132,35 @@ export const BranchViewDrawer: React.FC<BranchViewDrawerProps> = ({
             </div>
           </div>
 
+          {/* Campus Administrators & Assigned Roles */}
+          {branch.userRoles && branch.userRoles.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Campus Administrators & Roles ({branch.userRoles.length})
+              </h4>
+              <div className="space-y-2">
+                {branch.userRoles.map((ur) => (
+                  <div
+                    key={ur.id}
+                    className="flex items-center justify-between rounded-xl border border-border bg-surface p-2.5 text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        {ur.user?.firstName} {ur.user?.lastName}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block font-mono">
+                        {ur.user?.email}
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold">
+                      {ur.role?.roleName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Physical Address */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

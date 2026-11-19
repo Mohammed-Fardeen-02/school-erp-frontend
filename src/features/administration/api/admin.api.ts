@@ -347,6 +347,11 @@ export class AdminApi {
     return res.data;
   }
 
+  static async getOrganizationActivity(id: string): Promise<any[]> {
+    const res = await apiClient.get<ApiResponse<any[]>>(`/organizations/${id}/activity`);
+    return res.data || [];
+  }
+
   static async listCampuses(organizationId?: string): Promise<OrganizationCampus[]> {
     try {
       const queryStr = organizationId ? `?organizationId=${organizationId}` : '';

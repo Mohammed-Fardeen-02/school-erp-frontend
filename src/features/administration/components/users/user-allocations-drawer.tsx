@@ -54,3 +54,4 @@ export const UserAllocationsDrawer: React.FC<UserAllocationsDrawerProps> = ({
     </AdminDrawer>
   );
 };
+

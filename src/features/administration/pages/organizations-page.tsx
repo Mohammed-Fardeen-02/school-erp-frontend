@@ -108,7 +108,7 @@ export const OrganizationsPage: React.FC = () => {
   const columns: DataTableColumn<TenantDto>[] = [
     {
       key: 'displayName',
-      label: 'ORGANIZATION INFO',
+      label: 'ORGANIZATION NAME & CODE',
       sortable: true,
       align: 'left',
       render: (_, row) => (
@@ -124,33 +124,49 @@ export const OrganizationsPage: React.FC = () => {
       ),
     },
     {
-      key: 'organizationType',
-      label: 'CATEGORY',
-      sortable: true,
+      key: 'primaryCampus',
+      label: 'PRIMARY CAMPUS',
       align: 'left',
-      render: val => (
-        <span className="text-xs text-foreground font-medium">
-          {String(val || '—').replace(/_/g, ' ')}
-        </span>
-      ),
+      render: (_, row) => {
+        const primary = (row as any).locations?.find((l: any) => l.isMainCampus)?.name;
+        return (
+          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
+            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span>{primary || 'Main Campus'}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'campuses',
       label: 'CAMPUSES',
       align: 'center',
+      render: (_, row) => {
+        const count = row._count?.locations ?? (row as any).locations?.length ?? 1;
+        return (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              setCampusTarget(row);
+            }}
+            className="font-semibold text-xs text-primary hover:underline inline-flex items-center gap-1.5 cursor-pointer bg-primary/5 hover:bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-colors"
+            title="Manage Physical Campuses"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{count} Campuses</span>
+          </button>
+        );
+      },
+    },
+    {
+      key: 'activeUsers',
+      label: 'ACTIVE USERS',
+      align: 'center',
       render: (_, row) => (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            setCampusTarget(row);
-          }}
-          className="font-semibold text-xs text-primary hover:underline inline-flex items-center gap-1.5 cursor-pointer bg-primary/5 hover:bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-colors"
-          title="Manage Physical Campuses"
-        >
-          <MapPin className="h-3.5 w-3.5" />
-          <span>{campusesData.length} Campuses</span>
-        </button>
+        <span className="text-xs font-semibold text-foreground">
+          {row._count?.memberships ?? 1}
+        </span>
       ),
     },
     {
@@ -161,33 +177,13 @@ export const OrganizationsPage: React.FC = () => {
       render: val => <AdminStatusBadge status={val as TenantStatus} />,
     },
     {
-      key: 'email',
-      label: 'OFFICIAL CONTACT',
-      align: 'left',
-      render: (_, row) => (
-        <div>
-          <div className="text-xs text-foreground font-medium">{row.email || '—'}</div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">{row.phone || '—'}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'updatedAt',
-      label: 'UPDATED',
+      key: 'createdAt',
+      label: 'CREATED DATE',
       sortable: true,
       align: 'left',
       render: (val) => (
-        <div>
-          <div className="text-xs text-foreground">
-            {val
-              ? new Date(val as string).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
-              : '12 Nov 2026'}
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">by Admin</div>
+        <div className="text-xs text-muted-foreground">
+          {val ? new Date(val as string).toLocaleDateString() : '—'}
         </div>
       ),
     },
@@ -284,9 +280,14 @@ export const OrganizationsPage: React.FC = () => {
         statusKey="status"
         pageSizeOptions={[5, 10, 25, 50]}
         actionConfig={{
-          onView: org => setViewTarget(org),
+          onView: org => navigate(`/admin/organizations/${org.id}`),
           onEdit: org => setEditTarget(org),
           customActions: org => [
+            {
+              label: 'Organization Details',
+              icon: <Building2 className="w-4 h-4 text-primary" />,
+              onClick: () => navigate(`/admin/organizations/${org.id}`),
+            },
             {
               label: 'Manage Campuses',
               icon: <MapPin className="w-4 h-4 text-primary" />,
@@ -321,7 +322,7 @@ export const OrganizationsPage: React.FC = () => {
         isOpen={Boolean(viewTarget)}
         onClose={() => setViewTarget(null)}
         organization={viewTarget}
-        campuses={campusesData}
+        campuses={(viewTarget as any)?.locations || campusesData}
         onEdit={org => setEditTarget(org)}
       />
 
@@ -330,7 +331,7 @@ export const OrganizationsPage: React.FC = () => {
         isOpen={Boolean(campusTarget)}
         onClose={() => setCampusTarget(null)}
         organizationName={campusTarget?.displayName || ''}
-        campuses={campusesData}
+        campuses={(campusTarget as any)?.locations || campusesData}
         onAddCampus={handleSaveCampus}
       />
 

@@ -1,8 +1,7 @@
 import { apiClient } from '@/lib/api-client';
 import type { ApiResponse } from '@/types/api.types';
 import type { TenantDto, TenantQueryFilters, PaginatedTenantsResult } from '@/features/tenants/types/tenants.types';
-import type { RoleSummary, RoleDetail } from '@/features/roles-permissions/types/roles.types';
-import type { WorkspaceMemberSummary } from '@/features/roles-permissions/types/assignments.types';
+import type { RoleDetail } from '@/features/roles-permissions/types/roles.types';
 import type {
   OrganizationCampus,
   OrganizationDetail,
@@ -91,82 +90,7 @@ let mockTenantConfigStore: TenantConfigurationDto = {
   updatedAt: '2026-11-12T10:30:00Z',
 };
 
-const MOCK_CAMPUSES: OrganizationCampus[] = [
-  {
-    id: 'loc_main_001',
-    organizationId: 'org_main',
-    name: 'Main Campus',
-    code: 'MAIN',
-    isMainCampus: true,
-    addressLine1: '123 Academic Way',
-    city: 'Springfield',
-    state: 'OR',
-    country: 'USA',
-    postalCode: '97477',
-    phone: '+1-555-0100',
-    email: 'main@springfield.edu',
-    isActive: true,
-    createdAt: '2026-01-15T08:00:00Z',
-  },
-  {
-    id: 'loc_north_002',
-    organizationId: 'org_main',
-    name: 'North Branch',
-    code: 'NORTH',
-    isMainCampus: false,
-    addressLine1: '450 North Blvd',
-    city: 'Springfield',
-    state: 'OR',
-    country: 'USA',
-    postalCode: '97478',
-    phone: '+1-555-0102',
-    email: 'north@springfield.edu',
-    isActive: true,
-    createdAt: '2026-03-20T10:00:00Z',
-  },
-];
 
-
-
-const MOCK_SESSIONS: DeviceSession[] = [
-  {
-    id: 'sess_001',
-    userId: 'usr_admin_001',
-    userName: 'Eleanor Vance',
-    userEmail: 'admin@erp.com',
-    deviceInfo: 'Chrome 131 on Windows 11',
-    ipAddress: '192.168.1.45',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0',
-    isCurrentSession: true,
-    createdAt: '2026-11-12T08:00:00Z',
-    expiresAt: '2026-11-19T08:00:00Z',
-  },
-  {
-    id: 'sess_002',
-    userId: 'usr_admin_001',
-    userName: 'Eleanor Vance',
-    userEmail: 'admin@erp.com',
-    deviceInfo: 'Safari 18 on macOS Sequoia',
-    ipAddress: '10.0.0.12',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) Safari/605.1.15',
-    isCurrentSession: false,
-    createdAt: '2026-11-10T14:20:00Z',
-    expiresAt: '2026-11-17T14:20:00Z',
-  },
-];
-
-const DEFAULT_SECURITY_POLICY: SecurityPolicyConfig = {
-  minPasswordLength: 10,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSpecialChars: true,
-  passwordExpiryDays: 90,
-  sessionTimeoutMinutes: 30,
-  maxFailedLoginsBeforeLockout: 5,
-  lockoutDurationMinutes: 15,
-  twoFactorPolicy: 'OPTIONAL',
-};
 
 const MOCK_SUBSCRIPTION: SubscriptionOverview = {
   currentPlan: {
@@ -526,47 +450,76 @@ export class AdminApi {
   // ----------------------------------------
   // 4. Authentication & Security
   // ----------------------------------------
-  static async listActiveSessions(): Promise<DeviceSession[]> {
+  static async listActiveSessions(params?: { search?: string; userId?: string }): Promise<DeviceSession[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.userId) searchParams.append('userId', params.userId);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+
     try {
-      const res = await apiClient.get<ApiResponse<DeviceSession[]>>('/auth/sessions');
-      return res.data || MOCK_SESSIONS;
+      const res = await apiClient.get<ApiResponse<DeviceSession[]>>(`/auth/organization-sessions${query}`);
+      return res.data || [];
     } catch {
-      return MOCK_SESSIONS;
+      // Direct fallback to /auth/sessions if scoped route unavailable
+      const res = await apiClient.get<ApiResponse<DeviceSession[]>>(`/auth/sessions${query}`);
+      return res.data || [];
     }
   }
 
   static async revokeSession(sessionId: string): Promise<void> {
     try {
-      await apiClient.delete(`/auth/sessions/${sessionId}`);
+      await apiClient.delete(`/auth/organization-sessions/${sessionId}`);
     } catch {
-      // Silent fallback
+      await apiClient.delete(`/auth/sessions/${sessionId}`);
     }
   }
 
   static async revokeAllOtherSessions(): Promise<void> {
     try {
-      await apiClient.post('/auth/sessions/revoke-others');
+      await apiClient.delete('/auth/sessions');
     } catch {
-      // Silent fallback
+      await apiClient.post('/auth/sessions/revoke-others');
     }
+  }
+
+  static async revokeUserSessions(userId: string): Promise<{ revokedCount: number }> {
+    const res = await apiClient.delete<ApiResponse<{ revokedCount: number }>>(`/auth/organization-users/${userId}/sessions`);
+    return res.data;
   }
 
   static async getSecurityPolicies(): Promise<SecurityPolicyConfig> {
-    try {
-      const res = await apiClient.get<ApiResponse<SecurityPolicyConfig>>('/auth/policies');
-      return res.data || DEFAULT_SECURITY_POLICY;
-    } catch {
-      return DEFAULT_SECURITY_POLICY;
-    }
+    const res = await apiClient.get<ApiResponse<SecurityPolicyConfig>>('/auth/policies');
+    return res.data;
   }
 
-  static async updateSecurityPolicies(policies: SecurityPolicyConfig): Promise<SecurityPolicyConfig> {
-    try {
-      const res = await apiClient.put<ApiResponse<SecurityPolicyConfig>>('/auth/policies', policies);
-      return res.data || policies;
-    } catch {
-      return policies;
-    }
+  static async updateSecurityPolicies(policies: Partial<SecurityPolicyConfig>): Promise<SecurityPolicyConfig> {
+    const res = await apiClient.put<ApiResponse<SecurityPolicyConfig>>('/auth/policies', policies);
+    return res.data;
+  }
+
+  static async listAuthenticationActivity(filters: { search?: string; action?: string; page?: number; limit?: number } = {}): Promise<{
+    logs: AuditLogRecord[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.action && filters.action !== 'ALL') params.append('action', filters.action);
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.limit) params.append('limit', String(filters.limit));
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+
+    const res = await apiClient.get<ApiResponse<{
+      logs: AuditLogRecord[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>>(`/auth/activity${queryStr}`);
+
+    return res.data;
   }
 
   // ----------------------------------------

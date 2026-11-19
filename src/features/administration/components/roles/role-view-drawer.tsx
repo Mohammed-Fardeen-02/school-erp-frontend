@@ -1,13 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Shield,
   Sliders,
   Users,
   Copy,
   Edit2,
   Lock,
-  Calendar,
   Layers,
   ArrowRight,
 } from 'lucide-react';

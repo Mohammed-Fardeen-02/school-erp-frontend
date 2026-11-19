@@ -12,6 +12,7 @@ export interface UserViewDrawerProps {
   user: AdminUserRecord | null;
   onEdit?: (user: AdminUserRecord) => void;
   onToggleStatus?: (user: AdminUserRecord) => void;
+  onOpenAllocations?: (user: AdminUserRecord) => void;
 }
 
 export const UserViewDrawer: React.FC<UserViewDrawerProps> = ({
@@ -20,6 +21,7 @@ export const UserViewDrawer: React.FC<UserViewDrawerProps> = ({
   user,
   onEdit,
   onToggleStatus,
+  onOpenAllocations,
 }) => {
   const navigate = useNavigate();
 
@@ -52,7 +54,11 @@ export const UserViewDrawer: React.FC<UserViewDrawerProps> = ({
               size="sm"
               onClick={() => {
                 onClose();
-                navigate(`/users/${user.id}/allocations`);
+                if (onOpenAllocations) {
+                  onOpenAllocations(user);
+                } else {
+                  navigate(`/users/${user.id}/allocations`);
+                }
               }}
               icon={<KeyRound className="h-4 w-4" />}
             >

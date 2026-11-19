@@ -21,7 +21,8 @@ export const adminQueryKeys = {
   organizations: (filters?: TenantQueryFilters) => ['admin', 'organizations', filters] as const,
   organizationDetail: (id: string) => ['admin', 'organizations', id] as const,
   campuses: (orgId?: string) => ['admin', 'campuses', orgId] as const,
-  users: (search?: string, page?: number, limit?: number) => ['admin', 'users', { search, page, limit }] as const,
+  users: (params?: { search?: string; status?: string; roleId?: string; locationId?: string; page?: number; limit?: number }) =>
+    ['admin', 'users', params] as const,
   sessions: () => ['admin', 'security', 'sessions'] as const,
   policies: () => ['admin', 'security', 'policies'] as const,
   subscription: () => ['admin', 'billing', 'subscription'] as const,
@@ -96,11 +97,26 @@ export function useSaveCampus() {
 // ------------------------------------------
 // 2. User Management Hooks
 // ------------------------------------------
-export function useAdminUsers(search = '', page = 1, limit = 10) {
+export function useAdminUsers(params: {
+  search?: string;
+  status?: string;
+  roleId?: string;
+  locationId?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
   return useQuery({
-    queryKey: adminQueryKeys.users(search, page, limit),
-    queryFn: () => AdminApi.listUsers(search, page, limit),
+    queryKey: adminQueryKeys.users(params),
+    queryFn: () => AdminApi.listUsers(params),
     staleTime: 30 * 1000,
+  });
+}
+
+export function useUserDetail(id: string) {
+  return useQuery({
+    queryKey: ['admin', 'users', id],
+    queryFn: () => AdminApi.getUserById(id),
+    enabled: Boolean(id),
   });
 }
 
@@ -111,6 +127,7 @@ export function useInviteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       queryClient.invalidateQueries({ queryKey: ['workspace', 'members'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
     },
   });
 }
@@ -133,6 +150,34 @@ export function useToggleUserStatus() {
       AdminApi.toggleUserStatus(userId, active, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+}
+
+export function useInvitations() {
+  return useQuery({
+    queryKey: ['admin', 'invitations'],
+    queryFn: () => AdminApi.listInvitations(),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useResendInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => AdminApi.resendInvitation(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
+    },
+  });
+}
+
+export function useRevokeInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => AdminApi.revokeInvitation(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invitations'] });
     },
   });
 }

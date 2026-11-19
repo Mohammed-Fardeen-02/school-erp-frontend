@@ -22,6 +22,19 @@ const inviteSchema = z.object({
 
 type InviteFormData = z.infer<typeof inviteSchema>;
 
+const DEFAULT_ROLES = [
+  { id: 'role_admin', name: 'School Administrator' },
+  { id: 'role_principal', name: 'Principal / Head of School' },
+  { id: 'role_teacher', name: 'Teacher / Faculty' },
+  { id: 'role_bursar', name: 'Bursar / Finance Officer' },
+  { id: 'role_staff', name: 'Administrative Staff' },
+];
+
+const DEFAULT_CAMPUSES = [
+  { id: 'loc_main', name: 'Main Campus (All-Campus Scope)' },
+  { id: 'loc_north', name: 'North Branch' },
+];
+
 export interface InviteUserModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,19 +48,12 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  roles = [
-    { id: 'role_admin', name: 'School Administrator' },
-    { id: 'role_principal', name: 'Principal / Head of School' },
-    { id: 'role_teacher', name: 'Teacher / Faculty' },
-    { id: 'role_bursar', name: 'Bursar / Finance Officer' },
-    { id: 'role_staff', name: 'Administrative Staff' },
-  ],
-  campuses = [
-    { id: 'loc_main', name: 'Main Campus (All-Campus Scope)' },
-    { id: 'loc_north', name: 'North Branch' },
-  ],
+  roles = DEFAULT_ROLES,
+  campuses = DEFAULT_CAMPUSES,
   isLoading,
 }) => {
+  const defaultRoleId = roles.some((r) => r.id === 'role_teacher') ? 'role_teacher' : (roles[0]?.id || '');
+
   const {
     register,
     handleSubmit,
@@ -60,11 +66,25 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
       firstName: '',
       lastName: '',
       phone: '',
-      roleId: 'role_teacher',
+      roleId: defaultRoleId,
       locationId: '',
       sendEmailNotification: true,
     },
   });
+
+  React.useEffect(() => {
+    if (isOpen) {
+      reset({
+        email: '',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        roleId: defaultRoleId,
+        locationId: '',
+        sendEmailNotification: true,
+      });
+    }
+  }, [isOpen, defaultRoleId, reset]);
 
   const onFormSubmit = async (data: InviteFormData) => {
     await onSubmit({

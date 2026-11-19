@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   Download,
   Upload,
+  AlertCircle,
+  Filter,
 } from 'lucide-react';
 import { PageWrapper } from '@/app/layouts/page-wrapper';
 import { AdminPageHeader } from '../components/common/admin-page-header';
@@ -17,35 +19,70 @@ import { DataTable, type DataTableColumn } from '@/components/data-display/data-
 import { InviteUserModal } from '../components/users/invite-user-modal';
 import { UserFormModal } from '../components/users/user-form-modal';
 import { UserViewDrawer } from '../components/users/user-view-drawer';
+import { UserStatusConfirmModal } from '../components/users/user-status-confirm-modal';
+import { UserAllocationsDrawer } from '../components/users/user-allocations-drawer';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Select } from '@/components/forms/select';
+import { Alert } from '@/components/feedback/alert';
 import { useToast } from '@/components/feedback/toast';
 import {
   useAdminUsers,
   useInviteUser,
   useSaveUser,
   useToggleUserStatus,
+  useAdminCampuses,
 } from '../hooks/use-admin';
+import { useRolesList } from '@/features/roles-permissions/hooks/use-roles';
 import type { AdminUserRecord, InviteUserPayload, SaveUserPayload } from '../types/admin.types';
 
 export const UsersPage: React.FC = () => {
-  const navigate = useNavigate();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Filters State
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [campusFilter, setCampusFilter] = useState<string>('ALL');
 
   // Modals & Drawers state
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AdminUserRecord | null>(null);
   const [viewTarget, setViewTarget] = useState<AdminUserRecord | null>(null);
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<AdminUserRecord | null>(null);
+  const [allocationsTarget, setAllocationsTarget] = useState<AdminUserRecord | null>(null);
   const toast = useToast();
 
   // Queries & Mutations
-  const { data: usersData, isLoading } = useAdminUsers();
+  const { data: usersData, isLoading, error: queryError } = useAdminUsers({
+    roleId: roleFilter !== 'ALL' ? roleFilter : undefined,
+    locationId: campusFilter !== 'ALL' ? campusFilter : undefined,
+  });
+
+  const { data: rolesData } = useRolesList();
+  const { data: campuses = [] } = useAdminCampuses();
+
   const inviteMutation = useInviteUser();
   const saveUserMutation = useSaveUser();
   const toggleStatusMutation = useToggleUserStatus();
 
   const allUsers: AdminUserRecord[] = usersData?.users || [];
+
+  // Format real roles for Invite modal and filter dropdown
+  const formattedRoles = useMemo(() => {
+    return (rolesData?.roles || []).map((r) => ({
+      id: r.id,
+      name: r.roleName,
+      code: r.roleCode,
+    }));
+  }, [rolesData]);
+
+  // Format real campuses for Invite modal and filter dropdown
+  const formattedCampuses = useMemo(() => {
+    return campuses.map((c) => ({
+      id: c.id,
+      name: c.name,
+      code: c.code,
+    }));
+  }, [campuses]);
 
   // Metrics for KPI Cards
   const stats = useMemo(() => {
@@ -70,6 +107,7 @@ export const UsersPage: React.FC = () => {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send invitation';
       toast.error(msg, 'Invite Error');
+      throw err;
     }
   };
 
@@ -85,20 +123,21 @@ export const UsersPage: React.FC = () => {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to save user account';
       toast.error(msg, 'Save Error');
+      throw err;
     }
   };
 
-  const handleToggleStatus = async (user: AdminUserRecord) => {
-    const nextStatus = user.status !== 'ACTIVE';
+  const handleConfirmStatusToggle = async (userId: string, nextActive: boolean, reason?: string) => {
     try {
-      await toggleStatusMutation.mutateAsync({ userId: user.id, active: nextStatus });
+      await toggleStatusMutation.mutateAsync({ userId, active: nextActive, reason });
       toast.success(
-        `User ${user.firstName} ${user.lastName} is now ${nextStatus ? 'ACTIVE' : 'INACTIVE'}`,
+        `User account is now ${nextActive ? 'ACTIVE' : 'DEACTIVATED'}`,
         'Status Changed'
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to toggle user status';
       toast.error(msg, 'Status Error');
+      throw err;
     }
   };
 
@@ -136,7 +175,7 @@ export const UsersPage: React.FC = () => {
       align: 'left',
       render: (val) => (
         <span className="font-semibold text-xs text-primary">
-          {String(val || 'Staff Member')}
+          {String(val || 'Member')}
         </span>
       ),
     },
@@ -147,7 +186,7 @@ export const UsersPage: React.FC = () => {
       align: 'left',
       render: (val) => (
         <span className="text-xs text-muted-foreground">
-          {String(val || 'Main Campus')}
+          {String(val || 'All-Campus Scope')}
         </span>
       ),
     },
@@ -214,7 +253,19 @@ export const UsersPage: React.FC = () => {
         }
       />
 
-      {/* KPI Stats Row (Matching Reference Image) */}
+      {/* Query Error Display */}
+      {queryError && (
+        <Alert variant="error">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-danger" />
+            <span>
+              {queryError instanceof Error ? queryError.message : 'Failed to load user directory'}
+            </span>
+          </div>
+        </Alert>
+      )}
+
+      {/* KPI Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Active Accounts"
@@ -246,7 +297,7 @@ export const UsersPage: React.FC = () => {
         />
       </div>
 
-      {/* Reusable DataTable with Search, Dynamic Status Popover, Column Visibility, and Numbered Pagination */}
+      {/* Filter Toolbar & Reusable DataTable */}
       <DataTable<AdminUserRecord>
         columns={columns}
         data={allUsers}
@@ -257,6 +308,39 @@ export const UsersPage: React.FC = () => {
         onRowClick={(row) => setViewTarget(row)}
         rowIdKey="id"
         resultLabel="users"
+        statusKey="status"
+        toolbarLeft={
+          <div className="flex items-center gap-3">
+            <div className="w-44">
+              <Select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="text-xs h-9"
+              >
+                <option value="ALL">All Roles</option>
+                {formattedRoles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-48">
+              <Select
+                value={campusFilter}
+                onChange={(e) => setCampusFilter(e.target.value)}
+                className="text-xs h-9"
+              >
+                <option value="ALL">All Campus Scopes</option>
+                {formattedCampuses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        }
         actionConfig={{
           onView: (row) => setViewTarget(row),
           onEdit: (row) => setEditTarget(row),
@@ -264,7 +348,7 @@ export const UsersPage: React.FC = () => {
             {
               label: 'Role Allocations',
               icon: <KeyRound className="h-4 w-4 text-amber-600" />,
-              onClick: () => navigate(`/users/${row.id}/allocations`),
+              onClick: () => setAllocationsTarget(row),
             },
             {
               label: row.status === 'ACTIVE' ? 'Deactivate Account' : 'Activate Account',
@@ -275,7 +359,7 @@ export const UsersPage: React.FC = () => {
                   }`}
                 />
               ),
-              onClick: () => handleToggleStatus(row),
+              onClick: () => setStatusConfirmTarget(row),
             },
           ],
         }}
@@ -286,6 +370,8 @@ export const UsersPage: React.FC = () => {
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
         onSubmit={handleInviteSubmit}
+        roles={formattedRoles}
+        campuses={formattedCampuses}
         isLoading={inviteMutation.isPending}
       />
 
@@ -307,7 +393,22 @@ export const UsersPage: React.FC = () => {
         onClose={() => setViewTarget(null)}
         user={viewTarget}
         onEdit={(u) => setEditTarget(u)}
-        onToggleStatus={handleToggleStatus}
+        onToggleStatus={(u) => setStatusConfirmTarget(u)}
+        onOpenAllocations={(u) => setAllocationsTarget(u)}
+      />
+
+      <UserStatusConfirmModal
+        isOpen={Boolean(statusConfirmTarget)}
+        onClose={() => setStatusConfirmTarget(null)}
+        user={statusConfirmTarget}
+        onConfirm={handleConfirmStatusToggle}
+        isLoading={toggleStatusMutation.isPending}
+      />
+
+      <UserAllocationsDrawer
+        isOpen={Boolean(allocationsTarget)}
+        onClose={() => setAllocationsTarget(null)}
+        user={allocationsTarget}
       />
     </PageWrapper>
   );

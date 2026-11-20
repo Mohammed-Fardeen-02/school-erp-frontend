@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useContext } from 'react';
+import { useQuery, QueryClientContext } from '@tanstack/react-query';
+import { queryClient as defaultQueryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth-store';
 import { PermissionsApi } from '../api/permissions.api';
 import { rbacQueryKeys } from '../utils/query-keys';
@@ -31,17 +32,23 @@ export function useEffectivePermissions(): UseEffectivePermissionsResult {
   const activeLocationId = useAuthStore((state) => state.activeLocationId);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  const contextClient = useContext(QueryClientContext);
+  const clientToUse = contextClient ?? defaultQueryClient;
+
   const queryKey = rbacQueryKeys.effectivePermissions(activeWorkspaceId, activeLocationId);
 
-  const query = useQuery<EffectivePermissionsResponse, Error>({
-    queryKey,
-    queryFn: async () => {
-      return PermissionsApi.getMyPermissions();
+  const query = useQuery<EffectivePermissionsResponse, Error>(
+    {
+      queryKey,
+      queryFn: async () => {
+        return PermissionsApi.getMyPermissions();
+      },
+      enabled: isAuthenticated && Boolean(activeWorkspaceId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000,   // 10 minutes cache retention
     },
-    enabled: isAuthenticated && Boolean(activeWorkspaceId),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,   // 10 minutes cache retention
-  });
+    clientToUse
+  );
 
   const permissions = query.data?.permissions ?? EMPTY_PERMISSIONS;
 

@@ -73,22 +73,22 @@ export const Sidebar: React.FC = () => {
 
   // Permission and capability-aware sidebar navigation: filter by permissions & active modules
   const { checkPermission } = usePermission();
-  const user = useAuthStore(state => state.user);
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.userType === 'PLATFORM';
 
   const visibleNavItems = items
-    .filter(item => {
+    .filter((item) => {
       if (item.permission) {
         if (!isSuperAdmin && !checkPermission(item.permission)) return false;
       }
       if (item.moduleId) {
-        if (!hasModuleAccess(item.moduleId)) return false;
+        if (!isSuperAdmin && !hasModuleAccess(item.moduleId)) return false;
       }
       return true;
     })
-    .map(item => {
+    .map((item) => {
       if (!item.children) return item;
-      const filteredChildren = item.children.filter(child => {
+      const filteredChildren = item.children.filter((child) => {
         if (child.permission) {
           if (!isSuperAdmin && !checkPermission(child.permission)) return false;
         }
@@ -125,12 +125,16 @@ export const Sidebar: React.FC = () => {
         <div className="flex flex-col border-b border-border px-3 py-3 justify-center min-h-[64px]">
           {isScopedModule ? (
             /* Active Module Workspace Banner */
-            <div
-              className={`flex items-center gap-2.5 text-left transition-all duration-300 ${
+            <button
+              type="button"
+              onClick={() => handleNav('/workspace')}
+              className={`group flex items-center gap-2.5 text-left transition-all duration-300 hover:opacity-90 ${
                 isCollapsedDesktop ? 'w-full justify-center' : ''
               }`}
+              title={`Back to Workspace Launcher (${moduleName})`}
+              aria-label={`Back to Workspace Launcher (${moduleName})`}
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-sm transition-transform group-hover:scale-105">
                 <ModuleIcon className="h-4 w-4" />
               </div>
               {!isCollapsedDesktop && (
@@ -141,7 +145,7 @@ export const Sidebar: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </button>
           ) : (
             /* General Workspace Header */
             <button

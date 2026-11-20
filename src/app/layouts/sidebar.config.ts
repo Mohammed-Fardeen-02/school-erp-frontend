@@ -16,6 +16,11 @@ import {
   KeyRound,
   Settings,
   GitBranch,
+  Clock,
+  Bus,
+  Library as LibraryIcon,
+  Building,
+  Bell,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -47,7 +52,7 @@ export interface WorkspaceModuleSidebarConfig {
 
 // ==========================================
 // 1. Administration & Access Workspace
-// 7 core features as the primary items
+// 10 operational core features
 // ==========================================
 export const adminSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleKey: 'admin',
@@ -120,221 +125,239 @@ export const adminSidebarConfig: WorkspaceModuleSidebarConfig = {
 
 // ==========================================
 // 2. Academics Workspace
+// Operational: Branches Master
 // ==========================================
 export const academicsSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleKey: 'academics',
-  moduleName: 'Academics',
+  moduleName: 'Academics & Curriculum',
   moduleIcon: BookOpen,
-  moduleDescription: 'Curriculum & Classes',
+  moduleDescription: 'Curriculum & Classes (In Development)',
+  badge: 'Soon',
   items: [
     {
       label: 'Branches Master',
       href: '/app/academics/branches',
       icon: GitBranch,
-    },
-    {
-      label: 'Classes & Sections',
-      href: '/app/academics/classes',
-      icon: GraduationCap,
+      permission: 'academics',
       moduleId: 'academics',
     },
     {
-      label: 'Curriculum & Subjects',
-      href: '/app/academics/subjects',
+      label: 'Academics Overview',
+      href: '/app/academics',
       icon: BookOpen,
+      permission: 'academics',
       moduleId: 'academics',
-    },
-    {
-      label: 'Lesson Plans',
-      href: '/app/academics/lessons',
-      icon: FileSpreadsheet,
-      moduleId: 'academics',
-    },
-    {
-      label: 'Class Timetable',
-      href: '/app/academics/timetable',
-      icon: CalendarCheck,
-      moduleId: 'academics',
-    },
-    {
-      label: 'Academic Calendar',
-      href: '/app/academics/calendar',
-      icon: CalendarCheck,
-      moduleId: 'academics',
+      badge: 'Roadmap',
     },
   ],
 };
 
 // ==========================================
-// 3. Teachers & Staff Workspace
-// ==========================================
-export const staffSidebarConfig: WorkspaceModuleSidebarConfig = {
-  moduleKey: 'staff',
-  moduleName: 'Teachers & Staff',
-  moduleIcon: Users,
-  moduleDescription: 'Faculty & Human Resources',
-  items: [
-    {
-      label: 'Staff Directory',
-      href: '/app/staff',
-      icon: Users,
-      moduleId: 'staff',
-    },
-    {
-      label: 'Subject Allocations',
-      href: '/app/staff/allocations',
-      icon: BookOpen,
-      moduleId: 'staff',
-    },
-    {
-      label: 'Staff Leaves & Approvals',
-      href: '/app/staff/leaves',
-      icon: CalendarCheck,
-      moduleId: 'staff',
-    },
-    {
-      label: 'Attendance & Bio-logs',
-      href: '/app/staff/attendance',
-      icon: CalendarCheck,
-      moduleId: 'staff',
-    },
-    {
-      label: 'Department Rosters',
-      href: '/app/staff/departments',
-      icon: Building2,
-      moduleId: 'staff',
-    },
-  ],
-};
-
-// ==========================================
-// 4. Students Workspace
+// 3. Students Workspace
 // ==========================================
 export const studentsSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleKey: 'students',
-  moduleName: 'Students',
+  moduleName: 'Students & Admissions',
   moduleIcon: GraduationCap,
-  moduleDescription: 'Admissions & Student Roster',
+  moduleDescription: 'Student Directory & Admissions (In Development)',
+  badge: 'Soon',
   items: [
     {
-      label: 'Student Directory',
+      label: 'Students Overview',
       href: '/app/students',
       icon: GraduationCap,
+      permission: 'students',
       moduleId: 'students',
-    },
-    {
-      label: 'Admissions Pipeline',
-      href: '/app/students/admissions',
-      icon: FileSpreadsheet,
-      moduleId: 'students',
-    },
-    {
-      label: 'Guardians & Contacts',
-      href: '/app/students/guardians',
-      icon: Users,
-      moduleId: 'students',
-    },
-    {
-      label: 'Transfers & Records',
-      href: '/app/students/transfers',
-      icon: History,
-      moduleId: 'students',
+      badge: 'Roadmap',
     },
   ],
 };
 
 // ==========================================
-// 5. Fees & Finance Workspace
+// 4. Attendance Workspace
+// ==========================================
+export const attendanceSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'attendance',
+  moduleName: 'Attendance & Registers',
+  moduleIcon: CalendarCheck,
+  moduleDescription: 'Registers & Biometrics (In Development)',
+  badge: 'Soon',
+  items: [
+    {
+      label: 'Attendance Overview',
+      href: '/app/attendance',
+      icon: CalendarCheck,
+      permission: 'attendance',
+      moduleId: 'attendance',
+      badge: 'Roadmap',
+    },
+  ],
+};
+
+// ==========================================
+// 5. Timetable Workspace
+// ==========================================
+export const timetableSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'timetable',
+  moduleName: 'Timetable & Schedules',
+  moduleIcon: Clock,
+  moduleDescription: 'Weekly Schedules & Periods (In Development)',
+  badge: 'Soon',
+  items: [
+    {
+      label: 'Timetable Overview',
+      href: '/app/timetable',
+      icon: Clock,
+      permission: 'timetable',
+      moduleId: 'timetable',
+      badge: 'Roadmap',
+    },
+  ],
+};
+
+// ==========================================
+// 6. Examinations Workspace
+// ==========================================
+export const examsSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'exams',
+  moduleName: 'Examinations & Marks',
+  moduleIcon: FileSpreadsheet,
+  moduleDescription: 'Schedules & Gradebook (In Development)',
+  badge: 'Soon',
+  items: [
+    {
+      label: 'Examinations Overview',
+      href: '/app/exams',
+      icon: FileSpreadsheet,
+      permission: 'exams',
+      moduleId: 'exams',
+      badge: 'Roadmap',
+    },
+  ],
+};
+
+// ==========================================
+// 7. Teachers & Staff Workspace
+// ==========================================
+export const staffSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'staff',
+  moduleName: 'Staff & Faculty',
+  moduleIcon: Users,
+  moduleDescription: 'Faculty & Human Resources (In Development)',
+  badge: 'Soon',
+  items: [
+    {
+      label: 'Staff Overview',
+      href: '/app/staff',
+      icon: Users,
+      permission: 'staff',
+      moduleId: 'staff',
+      badge: 'Roadmap',
+    },
+  ],
+};
+
+// ==========================================
+// 8. Front Desk Workspace
+// ==========================================
+export const frontOfficeSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'front-office',
+  moduleName: 'Front Desk & Reception',
+  moduleIcon: Bell,
+  moduleDescription: 'Visitor Management & Inquiries (In Development)',
+  badge: 'Soon',
+  items: [
+    {
+      label: 'Front Desk Overview',
+      href: '/app/front-office',
+      icon: Bell,
+      permission: 'front_office',
+      moduleId: 'front-office',
+      badge: 'Roadmap',
+    },
+  ],
+};
+
+// ==========================================
+// 9. Fees & Finance Workspace
 // ==========================================
 export const feesSidebarConfig: WorkspaceModuleSidebarConfig = {
   moduleKey: 'fees',
   moduleName: 'Fees & Finance',
   moduleIcon: Receipt,
-  moduleDescription: 'Billing, Invoices & Collections',
+  moduleDescription: 'Billing, Invoices & Collections (In Development)',
+  badge: 'Soon',
   items: [
     {
-      label: 'Fee Invoices',
+      label: 'Fees Overview',
       href: '/app/fees',
       icon: Receipt,
+      permission: 'fees',
       moduleId: 'fees',
-    },
-    {
-      label: 'Fee Structures',
-      href: '/app/fees/structures',
-      icon: Sliders,
-      moduleId: 'fees',
-    },
-    {
-      label: 'Collection Receipts',
-      href: '/app/fees/payments',
-      icon: CreditCard,
-      moduleId: 'fees',
-    },
-    {
-      label: 'Defaulters & Dues',
-      href: '/app/fees/defaulters',
-      icon: History,
-      moduleId: 'fees',
+      badge: 'Roadmap',
     },
   ],
 };
 
 // ==========================================
-// 6. Attendance Workspace
+// 10. Transport Workspace
 // ==========================================
-export const attendanceSidebarConfig: WorkspaceModuleSidebarConfig = {
-  moduleKey: 'attendance',
-  moduleName: 'Attendance',
-  moduleIcon: CalendarCheck,
-  moduleDescription: 'Registers & Biometrics',
+export const transportSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'transport',
+  moduleName: 'Transport & Fleet',
+  moduleIcon: Bus,
+  moduleDescription: 'Routes, Fleet & Drivers (In Development)',
+  badge: 'Soon',
   items: [
     {
-      label: 'Daily Registers',
-      href: '/app/attendance',
-      icon: CalendarCheck,
-      moduleId: 'attendance',
-    },
-    {
-      label: 'Biometric & RFID Logs',
-      href: '/app/attendance/biometrics',
-      icon: History,
-      moduleId: 'attendance',
-    },
-    {
-      label: 'Monthly Reports',
-      href: '/app/attendance/reports',
-      icon: FileSpreadsheet,
-      moduleId: 'attendance',
+      label: 'Transport Overview',
+      href: '/app/transport',
+      icon: Bus,
+      permission: 'transport',
+      moduleId: 'transport',
+      badge: 'Roadmap',
     },
   ],
 };
 
 // ==========================================
-// 7. Examinations Workspace
+// 11. Library Workspace
 // ==========================================
-export const examsSidebarConfig: WorkspaceModuleSidebarConfig = {
-  moduleKey: 'exams',
-  moduleName: 'Examinations',
-  moduleIcon: FileSpreadsheet,
-  moduleDescription: 'Schedules & Gradebook',
+export const librarySidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'library',
+  moduleName: 'Library & Catalog',
+  moduleIcon: LibraryIcon,
+  moduleDescription: 'Book Catalog & Circulation (In Development)',
+  badge: 'Soon',
   items: [
     {
-      label: 'Exam Schedules',
-      href: '/app/exams',
-      icon: CalendarCheck,
-      moduleId: 'exams',
+      label: 'Library Overview',
+      href: '/app/library',
+      icon: LibraryIcon,
+      permission: 'library',
+      moduleId: 'library',
+      badge: 'Roadmap',
     },
+  ],
+};
+
+// ==========================================
+// 12. Hostel & Housing Workspace
+// ==========================================
+export const hostelSidebarConfig: WorkspaceModuleSidebarConfig = {
+  moduleKey: 'hostel',
+  moduleName: 'Hostel & Housing',
+  moduleIcon: Building,
+  moduleDescription: 'Residence Halls & Rooms (In Development)',
+  badge: 'Soon',
+  items: [
     {
-      label: 'Marks & Gradebook',
-      href: '/app/exams/grades',
-      icon: FileSpreadsheet,
-      moduleId: 'exams',
-    },
-    {
-      label: 'Report Cards & Results',
-      href: '/app/exams/reports',
-      icon: GraduationCap,
-      moduleId: 'exams',
+      label: 'Hostel Overview',
+      href: '/app/hostel',
+      icon: Building,
+      permission: 'hostel',
+      moduleId: 'hostel',
+      badge: 'Roadmap',
     },
   ],
 };
@@ -358,99 +381,162 @@ export const overviewSidebarConfig: WorkspaceModuleSidebarConfig = {
       href: '/admin',
       icon: ShieldCheck,
       permission: 'settings.roles_permissions.rbac.view',
+      moduleId: 'settings',
       children: [
         {
           label: 'Organizations',
           href: '/admin/organizations',
           icon: Building2,
+          permission: 'organizations.manage',
         },
         {
           label: 'Branches & Campuses',
           href: '/admin/branches',
           icon: GitBranch,
+          permission: 'organizations.manage',
         },
         {
           label: 'Users',
           href: '/admin/users',
           icon: Users,
+          permission: 'settings.user_assignments.allocations.view',
         },
         {
           label: 'Roles & Permissions',
           href: '/admin/roles',
           icon: KeyRound,
+          permission: 'settings.roles_permissions.rbac.view',
         },
       ],
     },
     {
       label: 'Academics',
-      href: '/app/academics',
+      href: '/app/academics/branches',
       icon: BookOpen,
       moduleId: 'academics',
+      permission: 'academics',
       children: [
         {
           label: 'Branches Master',
           href: '/app/academics/branches',
           icon: GitBranch,
+          permission: 'academics',
         },
       ],
     },
     {
-      label: 'Teachers & Staff',
+      label: 'Staff & HR',
       href: '/app/staff',
       icon: Users,
       moduleId: 'staff',
+      permission: 'staff',
     },
     {
       label: 'Students',
       href: '/app/students',
       icon: GraduationCap,
       moduleId: 'students',
+      permission: 'students',
     },
     {
       label: 'Fees & Finance',
       href: '/app/fees',
       icon: Receipt,
       moduleId: 'fees',
+      permission: 'fees',
     },
     {
       label: 'Attendance',
       href: '/app/attendance',
       icon: CalendarCheck,
       moduleId: 'attendance',
+      permission: 'attendance',
+    },
+    {
+      label: 'Timetable',
+      href: '/app/timetable',
+      icon: Clock,
+      moduleId: 'timetable',
+      permission: 'timetable',
     },
     {
       label: 'Examinations',
       href: '/app/exams',
       icon: FileSpreadsheet,
       moduleId: 'exams',
+      permission: 'exams',
+    },
+    {
+      label: 'Front Desk',
+      href: '/app/front-office',
+      icon: Bell,
+      moduleId: 'front-office',
+      permission: 'front_office',
+    },
+    {
+      label: 'Transport',
+      href: '/app/transport',
+      icon: Bus,
+      moduleId: 'transport',
+      permission: 'transport',
+    },
+    {
+      label: 'Library',
+      href: '/app/library',
+      icon: LibraryIcon,
+      moduleId: 'library',
+      permission: 'library',
+    },
+    {
+      label: 'Hostel',
+      href: '/app/hostel',
+      icon: Building,
+      moduleId: 'hostel',
+      permission: 'hostel',
     },
   ],
 };
 
 /**
  * Resolves the active modular sidebar configuration based on the current URL pathname.
+ * Covers all 12 canonical modules.
  */
 export function getSidebarConfigForPath(pathname: string): WorkspaceModuleSidebarConfig {
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') || pathname.startsWith('/settings')) {
     return adminSidebarConfig;
   }
   if (pathname.startsWith('/app/academics')) {
     return academicsSidebarConfig;
   }
-  if (pathname.startsWith('/app/staff')) {
-    return staffSidebarConfig;
-  }
   if (pathname.startsWith('/app/students')) {
     return studentsSidebarConfig;
-  }
-  if (pathname.startsWith('/app/fees')) {
-    return feesSidebarConfig;
   }
   if (pathname.startsWith('/app/attendance')) {
     return attendanceSidebarConfig;
   }
+  if (pathname.startsWith('/app/timetable')) {
+    return timetableSidebarConfig;
+  }
   if (pathname.startsWith('/app/exams')) {
     return examsSidebarConfig;
+  }
+  if (pathname.startsWith('/app/staff')) {
+    return staffSidebarConfig;
+  }
+  if (pathname.startsWith('/app/front-office')) {
+    return frontOfficeSidebarConfig;
+  }
+  if (pathname.startsWith('/app/fees')) {
+    return feesSidebarConfig;
+  }
+  if (pathname.startsWith('/app/transport')) {
+    return transportSidebarConfig;
+  }
+  if (pathname.startsWith('/app/library')) {
+    return librarySidebarConfig;
+  }
+  if (pathname.startsWith('/app/hostel')) {
+    return hostelSidebarConfig;
   }
   return overviewSidebarConfig;
 }

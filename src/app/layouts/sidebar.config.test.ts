@@ -1,84 +1,192 @@
 import { describe, it, expect } from 'vitest';
-import { getSidebarConfigForPath } from './sidebar.config';
+import {
+  getSidebarConfigForPath,
+  adminSidebarConfig,
+  academicsSidebarConfig,
+  studentsSidebarConfig,
+  attendanceSidebarConfig,
+  timetableSidebarConfig,
+  examsSidebarConfig,
+  staffSidebarConfig,
+  frontOfficeSidebarConfig,
+  feesSidebarConfig,
+  transportSidebarConfig,
+  librarySidebarConfig,
+  hostelSidebarConfig,
+  overviewSidebarConfig,
+} from './sidebar.config';
 
-describe('Modular Workspace-Scoped Sidebar Configuration', () => {
-  it('resolves Administration config with core administrative features for /admin routes', () => {
-    const config = getSidebarConfigForPath('/admin/organizations');
-    expect(config.moduleKey).toBe('admin');
-    expect(config.moduleName).toBe('Administration');
-    expect(config.items.length).toBe(10); // Hub Overview + 9 Core Features
+describe('Modular Workspace-Scoped Sidebar Configuration (Stage W1.2)', () => {
+  // 1. All 12 Canonical Modules Resolve Their Dedicated Configurations
+  describe('All 12 Canonical Modules Resolution', () => {
+    it('1. resolves Administration config for /admin routes with 10 operational items', () => {
+      const config = getSidebarConfigForPath('/admin/organizations');
+      expect(config.moduleKey).toBe('admin');
+      expect(config.moduleName).toBe('Administration');
+      expect(config.items.length).toBe(10);
 
-    const itemLabels = config.items.map((i) => i.label);
-    expect(itemLabels).toContain('Admin Hub Overview');
-    expect(itemLabels).toContain('Organization Management');
-    expect(itemLabels).toContain('Branches & Campuses');
-    expect(itemLabels).toContain('User Management');
-    expect(itemLabels).toContain('Roles & Permissions');
-    expect(itemLabels).toContain('Authentication & Security');
-    expect(itemLabels).toContain('Subscriptions & Billing');
-    expect(itemLabels).toContain('Plans & Entitlements');
-    expect(itemLabels).toContain('Audit & Compliance Logs');
-    expect(itemLabels).toContain('Tenant Configuration');
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Admin Hub Overview');
+      expect(labels).toContain('Organization Management');
+      expect(labels).toContain('Branches & Campuses');
+      expect(labels).toContain('User Management');
+      expect(labels).toContain('Roles & Permissions');
+      expect(labels).toContain('Authentication & Security');
+      expect(labels).toContain('Subscriptions & Billing');
+      expect(labels).toContain('Plans & Entitlements');
+      expect(labels).toContain('Audit & Compliance Logs');
+      expect(labels).toContain('Tenant Configuration');
+    });
+
+    it('2. resolves Academics config for /app/academics routes with Branches Master operational', () => {
+      const config = getSidebarConfigForPath('/app/academics/branches');
+      expect(config.moduleKey).toBe('academics');
+      expect(config.moduleName).toBe('Academics & Curriculum');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Branches Master');
+      expect(labels).toContain('Academics Overview');
+      // Dead links removed
+      expect(labels).not.toContain('Classes & Sections');
+      expect(labels).not.toContain('Curriculum & Subjects');
+      expect(labels).not.toContain('Class Timetable');
+    });
+
+    it('3. resolves Students config for /app/students routes without dead links', () => {
+      const config = getSidebarConfigForPath('/app/students');
+      expect(config.moduleKey).toBe('students');
+      expect(config.moduleName).toBe('Students & Admissions');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Students Overview');
+      expect(labels).not.toContain('Admissions Pipeline');
+      expect(labels).not.toContain('Guardians & Contacts');
+    });
+
+    it('4. resolves Attendance config for /app/attendance routes without dead links', () => {
+      const config = getSidebarConfigForPath('/app/attendance');
+      expect(config.moduleKey).toBe('attendance');
+      expect(config.moduleName).toBe('Attendance & Registers');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Attendance Overview');
+      expect(labels).not.toContain('Biometric & RFID Logs');
+    });
+
+    it('5. resolves Timetable config for /app/timetable routes', () => {
+      const config = getSidebarConfigForPath('/app/timetable');
+      expect(config.moduleKey).toBe('timetable');
+      expect(config.moduleName).toBe('Timetable & Schedules');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Timetable Overview');
+    });
+
+    it('6. resolves Examinations config for /app/exams routes without dead links', () => {
+      const config = getSidebarConfigForPath('/app/exams');
+      expect(config.moduleKey).toBe('exams');
+      expect(config.moduleName).toBe('Examinations & Marks');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Examinations Overview');
+      expect(labels).not.toContain('Marks & Gradebook');
+    });
+
+    it('7. resolves Staff & HR config for /app/staff routes without dead links', () => {
+      const config = getSidebarConfigForPath('/app/staff');
+      expect(config.moduleKey).toBe('staff');
+      expect(config.moduleName).toBe('Staff & Faculty');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Staff Overview');
+      expect(labels).not.toContain('Subject Allocations');
+    });
+
+    it('8. resolves Front Desk config for /app/front-office routes', () => {
+      const config = getSidebarConfigForPath('/app/front-office');
+      expect(config.moduleKey).toBe('front-office');
+      expect(config.moduleName).toBe('Front Desk & Reception');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Front Desk Overview');
+    });
+
+    it('9. resolves Fees & Finance config for /app/fees routes without dead links', () => {
+      const config = getSidebarConfigForPath('/app/fees');
+      expect(config.moduleKey).toBe('fees');
+      expect(config.moduleName).toBe('Fees & Finance');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Fees Overview');
+      expect(labels).not.toContain('Fee Structures');
+      expect(labels).not.toContain('Collection Receipts');
+    });
+
+    it('10. resolves Transport config for /app/transport routes', () => {
+      const config = getSidebarConfigForPath('/app/transport');
+      expect(config.moduleKey).toBe('transport');
+      expect(config.moduleName).toBe('Transport & Fleet');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Transport Overview');
+    });
+
+    it('11. resolves Library config for /app/library routes', () => {
+      const config = getSidebarConfigForPath('/app/library');
+      expect(config.moduleKey).toBe('library');
+      expect(config.moduleName).toBe('Library & Catalog');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Library Overview');
+    });
+
+    it('12. resolves Hostel config for /app/hostel routes', () => {
+      const config = getSidebarConfigForPath('/app/hostel');
+      expect(config.moduleKey).toBe('hostel');
+      expect(config.moduleName).toBe('Hostel & Housing');
+      expect(config.badge).toBe('Soon');
+
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Hostel Overview');
+    });
   });
 
-  it('resolves Academics config with academic-specific features for /app/academics routes', () => {
-    const config = getSidebarConfigForPath('/app/academics/classes');
-    expect(config.moduleKey).toBe('academics');
-    expect(config.moduleName).toBe('Academics');
+  // 2. Default & Overview Fallback
+  describe('Default Overview Fallback', () => {
+    it('falls back to overview config for root /workspace with all 12 modules', () => {
+      const config = getSidebarConfigForPath('/workspace');
+      expect(config.moduleKey).toBe('workspace-overview');
+      expect(config.moduleName).toBe('School ERP');
 
-    const itemLabels = config.items.map((i) => i.label);
-    expect(itemLabels).toContain('Branches Master');
-    expect(itemLabels).toContain('Classes & Sections');
-    expect(itemLabels).toContain('Curriculum & Subjects');
-    expect(itemLabels).toContain('Class Timetable');
-    expect(itemLabels).not.toContain('User Management');
-    expect(itemLabels).not.toContain('Subscriptions & Billing');
-  });
+      const labels = config.items.map((i) => i.label);
+      expect(labels).toContain('Workspace Overview');
+      expect(labels).toContain('Administration');
+      expect(labels).toContain('Academics');
+      expect(labels).toContain('Staff & HR');
+      expect(labels).toContain('Students');
+      expect(labels).toContain('Fees & Finance');
+      expect(labels).toContain('Attendance');
+      expect(labels).toContain('Timetable');
+      expect(labels).toContain('Examinations');
+      expect(labels).toContain('Front Desk');
+      expect(labels).toContain('Transport');
+      expect(labels).toContain('Library');
+      expect(labels).toContain('Hostel');
+    });
 
-  it('resolves Teachers & Staff config with staff-specific features for /app/staff routes', () => {
-    const config = getSidebarConfigForPath('/app/staff/allocations');
-    expect(config.moduleKey).toBe('staff');
-    expect(config.moduleName).toBe('Teachers & Staff');
-
-    const itemLabels = config.items.map((i) => i.label);
-    expect(itemLabels).toContain('Staff Directory');
-    expect(itemLabels).toContain('Subject Allocations');
-    expect(itemLabels).toContain('Staff Leaves & Approvals');
-    expect(itemLabels).not.toContain('Organization Management');
-  });
-
-  it('resolves Students config for /app/students routes', () => {
-    const config = getSidebarConfigForPath('/app/students');
-    expect(config.moduleKey).toBe('students');
-    expect(config.moduleName).toBe('Students');
-
-    const itemLabels = config.items.map((i) => i.label);
-    expect(itemLabels).toContain('Student Directory');
-    expect(itemLabels).toContain('Admissions Pipeline');
-  });
-
-  it('resolves Fees config for /app/fees routes', () => {
-    const config = getSidebarConfigForPath('/app/fees/structures');
-    expect(config.moduleKey).toBe('fees');
-    expect(config.moduleName).toBe('Fees & Finance');
-  });
-
-  it('resolves Attendance config for /app/attendance routes', () => {
-    const config = getSidebarConfigForPath('/app/attendance');
-    expect(config.moduleKey).toBe('attendance');
-    expect(config.moduleName).toBe('Attendance');
-  });
-
-  it('resolves Examinations config for /app/exams routes', () => {
-    const config = getSidebarConfigForPath('/app/exams/grades');
-    expect(config.moduleKey).toBe('exams');
-    expect(config.moduleName).toBe('Examinations');
-  });
-
-  it('falls back to overview config for root /workspace', () => {
-    const config = getSidebarConfigForPath('/workspace');
-    expect(config.moduleKey).toBe('workspace-overview');
-    expect(config.items.length).toBeGreaterThan(0);
+    it('falls back to overview config for unrecognized routes', () => {
+      const config = getSidebarConfigForPath('/some/unknown/route');
+      expect(config.moduleKey).toBe('workspace-overview');
+    });
   });
 });
-

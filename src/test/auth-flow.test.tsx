@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from '@/features/auth';
 import { SelectWorkspacePage, WorkspaceLauncherPage } from '@/features/workspace';
 import { useAuthStore } from '@/stores/auth-store';
+import { queryClient } from '@/lib/query-client';
+import { rbacQueryKeys } from '@/features/roles-permissions/utils/query-keys';
 
 describe('Authentication Flow & Workspace Launcher', () => {
   beforeEach(() => {
@@ -114,6 +116,12 @@ describe('Authentication Flow & Workspace Launcher', () => {
       activeWorkspaceId: 'ws-st-marys',
     });
 
+    queryClient.setQueryData(rbacQueryKeys.effectivePermissions('ws-st-marys', null), {
+      permissions: ['academics', 'attendance'],
+      count: 2,
+      computedAt: new Date().toISOString(),
+    });
+
     render(
       <MemoryRouter>
         <SelectWorkspacePage />
@@ -174,6 +182,12 @@ describe('Authentication Flow & Workspace Launcher', () => {
         },
       ],
       activeWorkspaceId: 'ws-st-marys',
+    });
+
+    queryClient.setQueryData(rbacQueryKeys.effectivePermissions('ws-st-marys', null), {
+      permissions: ['academics', 'attendance'],
+      count: 2,
+      computedAt: new Date().toISOString(),
     });
 
     render(

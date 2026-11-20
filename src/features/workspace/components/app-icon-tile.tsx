@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import type { ModuleConfig } from '@/app/config/modules.config';
+import { useToast } from '@/components/feedback/toast';
 import {
   AcademicsIcon,
   StudentsIcon,
@@ -18,24 +19,62 @@ import {
   AdministrationIcon,
 } from './module-icons';
 
+export type ModuleAccessStatus =
+  | 'available'       // Subscribed, authorized, and operational
+  | 'unauthorized'    // Subscribed, but user lacks permission
+  | 'unsubscribed'    // Not subscribed by organization
+  | 'unimplemented';  // Subscribed & authorized, but feature route not yet operational in ERP
+
 export interface AppIconTileProps {
   module: ModuleConfig;
-  isPermitted: boolean;
-  onSelect?: (module: ModuleConfig) => void;
+  status?: ModuleAccessStatus;
+  isPermitted?: boolean;
+  onSelect?: (module: ModuleConfig, status: ModuleAccessStatus) => void;
 }
 
 export const AppIconTile: React.FC<AppIconTileProps> = ({
   module,
+  status,
   isPermitted,
   onSelect,
 }) => {
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const effectiveStatus: ModuleAccessStatus =
+    status ?? (isPermitted ? 'available' : 'unauthorized');
 
   const handleClick = () => {
     if (onSelect) {
-      onSelect(module);
-    } else if (isPermitted) {
-      navigate(module.route);
+      onSelect(module, effectiveStatus);
+      return;
+    }
+
+    switch (effectiveStatus) {
+      case 'available':
+        navigate(module.route);
+        break;
+
+      case 'unauthorized':
+        toast.warning(
+          'Access Restricted',
+          `Your account does not possess the required permission (${module.requiredPermission}) to access ${module.name}.`
+        );
+        break;
+
+      case 'unsubscribed':
+        toast.info(
+          'Module Not Subscribed',
+          `${module.name} is not included in your institution's enabled module subscription.`
+        );
+        break;
+
+      case 'unimplemented':
+        toast.info(
+          'Module in Development',
+          `${module.name} is scheduled in the School ERP roadmap and is not yet operational.`
+        );
+        break;
     }
   };
 
@@ -88,6 +127,45 @@ export const AppIconTile: React.FC<AppIconTileProps> = ({
     }
   };
 
+  const getContainerStyles = () => {
+    switch (effectiveStatus) {
+      case 'available':
+        return 'cursor-pointer opacity-100';
+      case 'unimplemented':
+        return 'cursor-pointer opacity-85';
+      case 'unauthorized':
+        return 'cursor-not-allowed opacity-70';
+      case 'unsubscribed':
+        return 'cursor-not-allowed opacity-45 grayscale';
+    }
+  };
+
+  const getAriaLabel = () => {
+    switch (effectiveStatus) {
+      case 'available':
+        return `${module.name} - Available (Permitted)`;
+      case 'unauthorized':
+        return `${module.name} - Restricted (Permission Required: ${module.requiredPermission})`;
+      case 'unsubscribed':
+        return `${module.name} - Not Subscribed`;
+      case 'unimplemented':
+        return `${module.name} - Planned (Coming Soon)`;
+    }
+  };
+
+  const getScreenReaderStatus = () => {
+    switch (effectiveStatus) {
+      case 'available':
+        return 'Permitted';
+      case 'unauthorized':
+        return 'Restricted';
+      case 'unsubscribed':
+        return 'Not Subscribed (Restricted)';
+      case 'unimplemented':
+        return 'Permitted (In Development)';
+    }
+  };
+
   return (
     <div
       role="button"
@@ -99,22 +177,38 @@ export const AppIconTile: React.FC<AppIconTileProps> = ({
           handleClick();
         }
       }}
-      aria-label={`${module.name} - ${isPermitted ? 'Permitted' : 'Restricted'}`}
-      className={`group relative flex flex-col items-center justify-start text-center cursor-pointer select-none focus:outline-hidden transition-all duration-200 ${
-        isPermitted ? 'opacity-100' : 'opacity-70'
-      }`}
+      aria-label={getAriaLabel()}
+      className={`group relative flex flex-col items-center justify-start text-center select-none focus:outline-hidden transition-all duration-200 ${getContainerStyles()}`}
     >
       {/* Squircle Tile Container with Spring Scale & Elevation */}
       <div className="relative w-[76px] h-[76px] sm:w-[82px] sm:h-[82px] transition-all duration-250 ease-out group-hover:scale-108 group-hover:-translate-y-1.5 group-active:scale-95 group-hover:shadow-[0_16px_30px_-6px_rgba(124,58,237,0.25)] rounded-[22px]">
         {renderIcon()}
 
-        {/* Restricted Lock Overlay */}
-        {!isPermitted && (
+        {/* Status Overlays */}
+        {effectiveStatus === 'unauthorized' && (
           <div
-            title="Access Restricted"
+            title={`Access Restricted: Requires ${module.requiredPermission}`}
             className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-white shadow-xs backdrop-blur-xs ring-2 ring-background"
           >
             <Lock className="h-2.5 w-2.5" />
+          </div>
+        )}
+
+        {effectiveStatus === 'unsubscribed' && (
+          <div
+            title="Module Not Subscribed"
+            className="absolute -top-1.5 -right-1.5 flex h-5 items-center justify-center rounded-full bg-slate-700/90 px-1.5 text-[9px] font-bold text-slate-200 shadow-xs backdrop-blur-xs ring-2 ring-background"
+          >
+            Unsubscribed
+          </div>
+        )}
+
+        {effectiveStatus === 'unimplemented' && (
+          <div
+            title="Module in Development (Coming Soon)"
+            className="absolute -top-1.5 -right-1.5 flex h-5 items-center justify-center rounded-full bg-amber-500/95 px-1.5 text-[9px] font-bold text-white shadow-xs backdrop-blur-xs ring-2 ring-background"
+          >
+            Soon
           </div>
         )}
       </div>
@@ -126,7 +220,7 @@ export const AppIconTile: React.FC<AppIconTileProps> = ({
 
       {/* Hidden Accessible Status for Screen Readers & Tests */}
       <span className="sr-only">
-        {isPermitted ? 'Permitted' : 'Restricted'}
+        {getScreenReaderStatus()}
       </span>
     </div>
   );

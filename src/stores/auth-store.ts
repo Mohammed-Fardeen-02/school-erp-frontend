@@ -15,6 +15,7 @@ interface AuthState {
   login: (credentials: LoginCredentials) => Promise<{ workspaceCount: number }>;
   logout: () => Promise<void>;
   setActiveWorkspace: (workspaceId: string, locationId?: string) => void;
+  setActiveLocation: (locationId: string | null, campusName?: string) => void;
   setTenantContext: (organizationId: string | null, locationId?: string | null) => void;
   getActiveWorkspace: () => SchoolWorkspace | null;
   hasModuleAccess: (moduleId: string) => boolean;
@@ -134,8 +135,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setActiveWorkspace: (workspaceId: string, locationId?: string) => {
     const { user, workspaces } = get();
-    const exists = workspaces.some(w => w.id === workspaceId);
-    if (!exists) return;
+    const isPlatformAdmin = user?.role === 'SUPER_ADMIN' || user?.userType === 'PLATFORM';
+    const exists = workspaces.some((w) => w.id === workspaceId);
+    if (!exists && !isPlatformAdmin) return;
 
     // Abort inflight queries and purge tenant cache to prevent cross-tenant data leaks
     queryClient.cancelQueries();
@@ -156,6 +158,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         activeWorkspaceId: workspaceId,
         activeLocationId: chosenLocId,
         token: get().accessToken,
+      });
+    }
+  },
+
+  setActiveLocation: (locationId: string | null, campusName?: string) => {
+    const { user, workspaces, activeWorkspaceId, accessToken } = get();
+    apiClient.setTenantContext(activeWorkspaceId, locationId);
+
+    let updatedWorkspaces = workspaces;
+    if (activeWorkspaceId && campusName) {
+      updatedWorkspaces = workspaces.map((ws) =>
+        ws.id === activeWorkspaceId ? { ...ws, campusName } : ws
+      );
+    }
+
+    set({
+      activeLocationId: locationId,
+      workspaces: updatedWorkspaces,
+    });
+
+    if (user) {
+      saveSession({
+        user,
+        workspaces: updatedWorkspaces,
+        activeWorkspaceId,
+        activeLocationId: locationId,
+        token: accessToken,
       });
     }
   },
@@ -182,7 +211,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   hasModuleAccess: (moduleId: string) => {
     const { workspaces, activeWorkspaceId, user } = get();
-    if (user?.role === 'SUPER_ADMIN' || user?.role === 'SCHOOL_ADMIN') {
+    // Platform administrators possess universal module entitlement
+    if (user?.role === 'SUPER_ADMIN' || user?.userType === 'PLATFORM') {
       return true;
     }
     const activeWs =

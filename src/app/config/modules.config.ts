@@ -26,8 +26,9 @@ export interface ModuleConfig {
   description: string;
   icon?: React.ElementType;
   route: string;
-  category: 'core' | 'academic' | 'administrative' | 'financial' | 'system';
+  category: 'academic' | 'administrative' | 'financial' | 'campus-life';
   requiredPermission: string;
+  isImplemented?: boolean;
   shortcuts?: ModuleShortcut[];
 }
 
@@ -39,14 +40,12 @@ export const ERP_MODULES: ModuleConfig[] = [
     shortName: 'Academics',
     description: 'Classes, sections, curriculum syllabi, lesson plans, and classroom timetables.',
     icon: BookOpen,
-    route: '/app/academics',
+    route: '/app/academics/branches',
     category: 'academic',
     requiredPermission: 'academics',
+    isImplemented: false,
     shortcuts: [
       { label: 'Branches Master', href: '/app/academics/branches' },
-      { label: 'Classes & Sections', href: '/app/academics' },
-      { label: 'Curriculum Syllabi', href: '/app/academics' },
-      { label: 'Lesson Plans', href: '/app/academics' },
     ],
   },
   // 2. Students & Admissions
@@ -59,6 +58,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/students',
     category: 'academic',
     requiredPermission: 'students',
+    isImplemented: false,
     shortcuts: [
       { label: 'Student Directory', href: '/app/students' },
       { label: 'Admissions Pipeline', href: '/app/students' },
@@ -75,6 +75,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/attendance',
     category: 'academic',
     requiredPermission: 'attendance',
+    isImplemented: false,
     shortcuts: [
       { label: 'Daily Registers', href: '/app/attendance' },
       { label: 'Monthly Reports', href: '/app/attendance' },
@@ -91,6 +92,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/fees',
     category: 'financial',
     requiredPermission: 'fees',
+    isImplemented: false,
     shortcuts: [
       { label: 'Fee Invoices', href: '/app/fees' },
       { label: 'Fee Structures', href: '/app/fees' },
@@ -107,6 +109,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/staff',
     category: 'administrative',
     requiredPermission: 'staff',
+    isImplemented: false,
     shortcuts: [
       { label: 'Faculty Directory', href: '/app/staff' },
       { label: 'Subject Allocations', href: '/app/staff' },
@@ -123,6 +126,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/exams',
     category: 'academic',
     requiredPermission: 'exams',
+    isImplemented: false,
     shortcuts: [
       { label: 'Exam Schedules', href: '/app/exams' },
       { label: 'Gradebook Entries', href: '/app/exams' },
@@ -138,7 +142,8 @@ export const ERP_MODULES: ModuleConfig[] = [
     icon: Bell,
     route: '/app/front-office',
     category: 'administrative',
-    requiredPermission: 'front-office',
+    requiredPermission: 'front_office',
+    isImplemented: false,
     shortcuts: [
       { label: 'Visitor Logs', href: '/app/front-office' },
       { label: 'General Inquiries', href: '/app/front-office' },
@@ -155,6 +160,7 @@ export const ERP_MODULES: ModuleConfig[] = [
     route: '/app/timetable',
     category: 'academic',
     requiredPermission: 'timetable',
+    isImplemented: false,
     shortcuts: [
       { label: 'Weekly Schedule', href: '/app/timetable' },
       { label: 'Teacher Timetables', href: '/app/timetable' },
@@ -169,8 +175,9 @@ export const ERP_MODULES: ModuleConfig[] = [
     description: 'School bus routes, pickup stops, vehicle GPS tracking, and driver directories.',
     icon: Bus,
     route: '/app/transport',
-    category: 'core',
+    category: 'campus-life',
     requiredPermission: 'transport',
+    isImplemented: false,
     shortcuts: [
       { label: 'Bus Routes & Stops', href: '/app/transport' },
       { label: 'Vehicle Fleet', href: '/app/transport' },
@@ -185,8 +192,9 @@ export const ERP_MODULES: ModuleConfig[] = [
     description: 'Book catalog, barcode circulation, issue/return desks, and overdue fine tracking.',
     icon: Library,
     route: '/app/library',
-    category: 'core',
+    category: 'campus-life',
     requiredPermission: 'library',
+    isImplemented: false,
     shortcuts: [
       { label: 'Book Catalogue', href: '/app/library' },
       { label: 'Issue & Returns', href: '/app/library' },
@@ -201,8 +209,9 @@ export const ERP_MODULES: ModuleConfig[] = [
     description: 'Campus residence halls, student room allocations, wardens, and mess timings.',
     icon: Building,
     route: '/app/hostel',
-    category: 'core',
+    category: 'campus-life',
     requiredPermission: 'hostel',
+    isImplemented: false,
     shortcuts: [
       { label: 'Room Allocation', href: '/app/hostel' },
       { label: 'Hostel Rosters', href: '/app/hostel' },
@@ -217,8 +226,9 @@ export const ERP_MODULES: ModuleConfig[] = [
     description: 'Centralized institutional management: organization profiles, campuses, user directory, RBAC permissions, security policies, cloud billing, and audit logs.',
     icon: ShieldCheck,
     route: '/admin',
-    category: 'system',
+    category: 'administrative',
     requiredPermission: 'settings',
+    isImplemented: true,
     shortcuts: [
       { label: 'Organizations', href: '/admin/organizations' },
       { label: 'User Directory', href: '/admin/users' },
@@ -230,3 +240,70 @@ export const ERP_MODULES: ModuleConfig[] = [
     ],
   },
 ];
+
+/**
+ * Authoritative module-level permission evaluator.
+ * A tenant user must satisfy effective RBAC permission conditions to access a module.
+ *
+ * Implements canonical Level 1 root node matching, alias resolution,
+ * institutional administration capability aggregation, and hierarchical prefix inheritance.
+ */
+export function checkModulePermission(
+  module: ModuleConfig,
+  permissionsSet: Set<string> | undefined,
+  checkPermission: (code: string) => boolean,
+  isSuperAdmin: boolean
+): boolean {
+  // Platform super-admins possess universal administrative authority
+  if (isSuperAdmin) {
+    return true;
+  }
+
+  // Fail-closed security rule: unmapped or empty permission requirement is denied
+  if (!module.requiredPermission) {
+    return false;
+  }
+
+  // 1. Direct canonical permission check
+  if (checkPermission(module.requiredPermission)) {
+    return true;
+  }
+
+  // 2. Canonical alias resolution (e.g. front_office vs front-office)
+  if (
+    (module.requiredPermission === 'front_office' || module.requiredPermission === 'front-office') &&
+    (checkPermission('front_office') || checkPermission('front-office'))
+  ) {
+    return true;
+  }
+
+  // 3. Institutional Administration module access through standard admin capabilities
+  if (
+    module.id === 'settings' &&
+    (checkPermission('settings.roles_permissions.rbac.view') ||
+      checkPermission('organizations.manage') ||
+      checkPermission('settings.audit_logs.trail.view'))
+  ) {
+    return true;
+  }
+
+  // 4. Hierarchical prefix inheritance: check if user possesses any granular sub-capability
+  if (permissionsSet && permissionsSet.size > 0) {
+    const prefix = `${module.requiredPermission}.`;
+    for (const perm of permissionsSet) {
+      if (perm.startsWith(prefix)) {
+        return true;
+      }
+    }
+    if (module.id === 'front-office') {
+      for (const perm of permissionsSet) {
+        if (perm.startsWith('front_office.') || perm.startsWith('front-office.')) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+

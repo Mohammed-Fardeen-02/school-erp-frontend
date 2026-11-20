@@ -224,6 +224,8 @@ export interface PlansAndEntitlementsDto {
 export interface AuditLogRecord {
   id: string;
   organizationId?: string | null;
+  locationId?: string | null;
+  campusName?: string | null;
   userId?: string | null;
   actorName: string;
   actorEmail: string;
@@ -242,8 +244,19 @@ export interface AuditLogFilters {
   action?: string;
   entity?: string;
   userId?: string;
+  locationId?: string;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   limit?: number;
+}
+
+export interface PaginatedAuditLogsResult {
+  logs: AuditLogRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 // ==========================================

@@ -125,7 +125,7 @@ describe('AdminRoutes Feature Router', () => {
 
   it('renders AuditLogsPage on /admin/audit-logs', () => {
     render(<AdminRoutes />, { wrapper: createWrapper('/admin/audit-logs') });
-    expect(screen.getByRole('heading', { level: 1, name: 'Audit & Activity Logs' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Audit & Compliance Logs' })).toBeInTheDocument();
     expect(screen.getByText('Total Audit Trails')).toBeInTheDocument();
   });
 

@@ -104,10 +104,10 @@ export const adminSidebarConfig: WorkspaceModuleSidebarConfig = {
       permission: 'organizations.manage',
     },
     {
-      label: 'Audit & Activity Logs',
+      label: 'Audit & Compliance Logs',
       href: '/admin/audit-logs',
       icon: History,
-      permission: 'settings.roles_permissions.rbac.view',
+      permission: 'settings.audit_logs.trail.view',
     },
     {
       label: 'Tenant Configuration',

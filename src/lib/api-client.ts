@@ -195,6 +195,93 @@ export class ApiClient {
   public delete<TResponse>(path: string, options?: RequestOptions): Promise<TResponse> {
     return this.request<TResponse>(path, { ...options, method: 'DELETE' });
   }
+
+  public async downloadFile(
+    path: string,
+    options: RequestOptions = {}
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { params, timeoutMs = this.defaultTimeout, headers, ...init } = options;
+    const url = this.buildUrl(path, params);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const defaultHeaders: Record<string, string> = {
+      'X-Requested-With': 'XMLHttpRequest',
+    };
+
+    if (this.token) {
+      defaultHeaders['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (this.activeOrganizationId) {
+      defaultHeaders['X-Organization-Id'] = this.activeOrganizationId;
+    }
+
+    if (this.activeLocationId) {
+      defaultHeaders['X-Location-Id'] = this.activeLocationId;
+    }
+
+    if (this.isPlatformSuperAdmin) {
+      defaultHeaders['X-Platform-Override'] = 'true';
+      defaultHeaders['X-Override-Reason'] = 'Platform Super Admin institutional administration';
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...init,
+        method: init.method || 'GET',
+        credentials: 'include',
+        signal: controller.signal,
+        headers: {
+          ...defaultHeaders,
+          ...headers,
+        },
+      });
+
+      if (!response.ok) {
+        let message = response.statusText || 'Download failed';
+        let code = `HTTP_${response.status}`;
+        let details: unknown;
+        try {
+          const errJson = await response.json();
+          if (errJson?.error) {
+            message = errJson.error.message || message;
+            code = errJson.error.code || code;
+            details = errJson.error.details;
+          }
+        } catch {
+          // not json
+        }
+        throw new ApiClientError(message, response.status, code, details);
+      }
+
+      let filename = 'download';
+      const disposition = response.headers.get('content-disposition');
+      if (disposition) {
+        const filenameMatch = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '').trim();
+        }
+      }
+
+      const blob = await response.blob();
+      return { blob, filename };
+    } catch (err: unknown) {
+      if (err instanceof ApiClientError) {
+        throw err;
+      }
+
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new ApiClientError('Request timed out', 408, 'REQUEST_TIMEOUT');
+      }
+
+      const message = err instanceof Error ? err.message : 'Unknown network error';
+      throw new ApiClientError(message, 0, 'NETWORK_ERROR');
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

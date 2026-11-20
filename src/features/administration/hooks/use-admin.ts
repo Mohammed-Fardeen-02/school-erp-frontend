@@ -31,6 +31,7 @@ export const adminQueryKeys = {
   invoices: () => ['admin', 'billing', 'invoices'] as const,
   plans: (orgId?: string) => ['admin', 'plans', orgId] as const,
   auditLogs: (filters?: AuditLogFilters) => ['admin', 'audit-logs', filters] as const,
+  auditLogDetail: (id: string) => ['admin', 'audit-logs', 'detail', id] as const,
   configuration: (orgId?: string) => ['admin', 'configuration', orgId] as const,
 };
 
@@ -330,6 +331,21 @@ export function useAuditLogs(filters: AuditLogFilters = {}) {
     queryKey: adminQueryKeys.auditLogs(filters),
     queryFn: () => AdminApi.listAuditLogs(filters),
     staleTime: 15 * 1000,
+  });
+}
+
+export function useAuditLogDetail(id: string | null) {
+  return useQuery({
+    queryKey: adminQueryKeys.auditLogDetail(id || ''),
+    queryFn: () => AdminApi.getAuditLogById(id!),
+    enabled: Boolean(id),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useExportAuditLogs() {
+  return useMutation({
+    mutationFn: (filters: AuditLogFilters) => AdminApi.exportAuditLogs(filters),
   });
 }
 

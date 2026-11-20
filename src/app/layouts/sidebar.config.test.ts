@@ -17,7 +17,7 @@ describe('Modular Workspace-Scoped Sidebar Configuration', () => {
     expect(itemLabels).toContain('Authentication & Security');
     expect(itemLabels).toContain('Subscriptions & Billing');
     expect(itemLabels).toContain('Plans & Entitlements');
-    expect(itemLabels).toContain('Audit & Activity Logs');
+    expect(itemLabels).toContain('Audit & Compliance Logs');
     expect(itemLabels).toContain('Tenant Configuration');
   });
 

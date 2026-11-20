@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, ArrowRight, Shield, LogOut, Star, MapPin } from 'lucide-react';
+import { Building2, ArrowRight, Shield, LogOut, Star, MapPin, Check } from 'lucide-react';
 import { ROUTES } from '@/app/router/routes';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,16 @@ import type { UserOrganizationSummary } from '../types/workspace.types';
 
 export const SelectWorkspacePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, workspaces, activeWorkspaceId, setActiveWorkspace, setTenantContext, logout } =
-    useAuthStore();
+  const {
+    user,
+    workspaces,
+    activeWorkspaceId,
+    activeLocationId,
+    setActiveWorkspace,
+    setActiveLocation,
+    setTenantContext,
+    logout,
+  } = useAuthStore();
 
   const [apiOrgs, setApiOrgs] = React.useState<UserOrganizationSummary[]>([]);
 
@@ -50,12 +58,22 @@ export const SelectWorkspacePage: React.FC = () => {
 
   const handleSelectWorkspace = async (organizationId: string, locationId?: string) => {
     try {
-      await WorkspaceApi.selectContext({ organizationId, locationId });
+      const response = await WorkspaceApi.selectContext({ organizationId, locationId });
+      const targetLocationId = response?.location?.id || locationId;
+      const targetCampusName = response?.location?.name;
+      setActiveWorkspace(organizationId, targetLocationId);
+      if (targetLocationId) {
+        setActiveLocation(targetLocationId, targetCampusName);
+      }
+      setTenantContext(organizationId, targetLocationId);
     } catch {
       // Fallback silently if offline/mock
+      setActiveWorkspace(organizationId, locationId);
+      if (locationId) {
+        setActiveLocation(locationId);
+      }
+      setTenantContext(organizationId, locationId);
     }
-    setActiveWorkspace(organizationId, locationId);
-    setTenantContext(organizationId, locationId);
     navigate(ROUTES.WORKSPACE);
   };
 
@@ -198,19 +216,37 @@ export const SelectWorkspacePage: React.FC = () => {
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" /> Campuses:
                         </span>
-                        {org.campuses.map((campus) => (
-                          <button
-                            key={campus.id}
-                            type="button"
-                            onClick={() => handleSelectWorkspace(org.id, campus.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                          >
-                            <span>{campus.name}</span>
-                            {campus.isMainCampus && (
-                              <span className="text-[10px] text-muted-foreground">(Main)</span>
-                            )}
-                          </button>
-                        ))}
+                        {org.campuses.map((campus) => {
+                          const isCampusSelected =
+                            isActive &&
+                            (activeLocationId === campus.id ||
+                              (!activeLocationId && campus.isMainCampus));
+
+                          return (
+                            <button
+                              key={campus.id}
+                              type="button"
+                              onClick={() => handleSelectWorkspace(org.id, campus.id)}
+                              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+                                isCampusSelected
+                                  ? 'border-primary bg-primary/10 text-primary font-bold shadow-2xs'
+                                  : 'border-border text-foreground hover:border-primary hover:bg-primary/5 hover:text-primary'
+                              }`}
+                            >
+                              <span>{campus.name}</span>
+                              {campus.isMainCampus && (
+                                <span
+                                  className={`text-[10px] ${
+                                    isCampusSelected ? 'text-primary' : 'text-muted-foreground'
+                                  }`}
+                                >
+                                  (Main)
+                                </span>
+                              )}
+                              {isCampusSelected && <Check className="h-3 w-3 text-primary ml-0.5" />}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

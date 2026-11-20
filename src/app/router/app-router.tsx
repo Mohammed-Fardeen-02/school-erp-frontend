@@ -109,7 +109,14 @@ export const AppRouter: React.FC = () => {
         }
       >
         {/* Modular Feature Sub-Routers */}
-        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route
+          path="/admin/*"
+          element={
+            <ModuleAccessGuard moduleId="settings">
+              <AdminRoutes />
+            </ModuleAccessGuard>
+          }
+        />
         <Route path="/tenants/*" element={<Navigate to="/admin/organizations" replace />} />
         <Route path="/roles/*" element={<Navigate to="/admin/roles" replace />} />
         <Route path="/users/*" element={<Navigate to="/admin/users" replace />} />
@@ -117,7 +124,14 @@ export const AppRouter: React.FC = () => {
         <Route path="/settings/*" element={<Navigate to="/admin" replace />} />
 
         {/* Academics Feature Domain Routes */}
-        <Route path="/app/academics/branches" element={<BranchesPage />} />
+        <Route
+          path="/app/academics/branches"
+          element={
+            <ModuleAccessGuard moduleId="academics">
+              <BranchesPage />
+            </ModuleAccessGuard>
+          }
+        />
 
         {/* Catch-All Business Module Container */}
         <Route

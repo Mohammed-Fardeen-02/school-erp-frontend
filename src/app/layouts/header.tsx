@@ -15,9 +15,12 @@ import {
   Laptop,
   RefreshCw,
   LayoutGrid,
+  MapPin,
+  Calendar,
 } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { CampusSelector } from '@/components/navigation/campus-selector';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -25,14 +28,18 @@ export const Header: React.FC = () => {
     useUiStore();
 
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
-  const [unreadNotifications] = React.useState(3);
+  const [showNotifications, setShowNotifications] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const notificationRef = React.useRef<HTMLDivElement>(null);
 
-  // Close profile menu on outside click
+  // Close menus on outside click
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -77,7 +84,7 @@ export const Header: React.FC = () => {
     if (customName) {
       const parts = customName.trim().split(/\s+/);
       if (parts.length > 1) {
-        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+        return `${parts[0]?.[0] || ''}${parts[1]?.[0] || ''}`.toUpperCase();
       }
       return (customName[0] || 'U').toUpperCase();
     }
@@ -125,10 +132,17 @@ export const Header: React.FC = () => {
           <span className="hidden sm:inline">Workspaces</span>
         </button>
 
-        {/* School Tenant Badge */}
-        <div className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold text-foreground md:flex">
-          <Building2 className="h-3.5 w-3.5 text-primary" />
-          <span className="truncate max-w-[150px]">{schoolName}</span>
+        {/* School Tenant & Campus Context */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold text-foreground md:flex">
+            <Building2 className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="truncate max-w-[140px]">{schoolName}</span>
+          </div>
+          <span className="hidden text-border/80 md:inline font-light">|</span>
+          <CampusSelector />
+
+          {/* Academic Year Context Integration Point (Slot reserved for future Stage A0/A1 Academics) */}
+          {/* Enables drop-in integration of AcademicYearSelector without header redesign or dimensions conflict */}
         </div>
 
         {/* Theme mode buttons */}
@@ -174,21 +188,43 @@ export const Header: React.FC = () => {
           </button>
         </div>
 
-        {/* Notification Bell */}
-        <div className="relative">
+        {/* Notification Bell (Non-navigating Informational State) */}
+        <div className="relative" ref={notificationRef}>
           <button
             type="button"
-            onClick={() => navigate('/notifications')}
+            onClick={() => setShowNotifications(!showNotifications)}
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="View notifications"
+            aria-expanded={showNotifications}
+            aria-haspopup="dialog"
           >
             <Bell className="h-4 w-4" />
-            {unreadNotifications > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-extrabold text-white shadow-xs">
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
-              </span>
-            )}
           </button>
+
+          {/* Informational Non-navigating Popover */}
+          {showNotifications && (
+            <div
+              role="dialog"
+              aria-label="Notifications"
+              className="absolute right-0 z-50 mt-2.5 w-72 rounded-2xl border border-border bg-surface p-4 shadow-xl animate-in fade-in-0 zoom-in-95"
+            >
+              <div className="flex items-center justify-between border-b border-border pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-bold text-foreground">Notifications</span>
+                </div>
+                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  Planned
+                </span>
+              </div>
+              <div className="py-4 text-center">
+                <p className="text-xs font-semibold text-foreground">No Active Notifications</p>
+                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                  Institutional alerts, system notices, and broadcast messages will be displayed here in an upcoming release.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* User Profile Card Popover */}
@@ -268,6 +304,30 @@ export const Header: React.FC = () => {
                     {schoolName}
                   </span>
                 </div>
+
+                {activeWorkspace?.campusName && (
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-surface-muted p-2.5 text-xs">
+                    <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 text-primary" />
+                      Campus
+                    </span>
+                    <span className="max-w-[140px] truncate rounded-lg border border-border bg-surface px-2 py-0.5 text-[11px] font-bold text-foreground">
+                      {activeWorkspace.campusName}
+                    </span>
+                  </div>
+                )}
+
+                {activeWorkspace?.academicYear && (
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-surface-muted p-2.5 text-xs">
+                    <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5 text-amber-500" />
+                      Session
+                    </span>
+                    <span className="max-w-[140px] truncate rounded-lg border border-border bg-surface px-2 py-0.5 text-[11px] font-bold text-foreground">
+                      {activeWorkspace.academicYear}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Navigation Actions */}
@@ -308,13 +368,13 @@ export const Header: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setShowProfileMenu(false);
-                    navigate('/app/settings');
+                    navigate('/admin');
                   }}
                   className="group flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-surface-muted"
                 >
                   <span className="flex items-center gap-2">
                     <Settings className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
-                    School Settings
+                    Administration & Settings
                   </span>
                   <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
                 </button>

@@ -4,6 +4,7 @@ import { GraduationCap, Search, LogOut } from 'lucide-react';
 import { ROUTES } from '@/app/router/routes';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
+import { CampusSelector } from '@/components/navigation/campus-selector';
 
 export interface WorkspaceHeaderProps {
   searchQuery: string;
@@ -30,7 +31,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     if (customName) {
       const parts = customName.trim().split(/\s+/);
       if (parts.length > 1) {
-        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+        return `${parts[0]?.[0] || ''}${parts[1]?.[0] || ''}`.toUpperCase();
       }
       return (customName[0] || 'U').toUpperCase();
     }
@@ -109,8 +110,12 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: User Profile & Actions */}
-        <div className="flex items-center gap-3">
+        {/* Right: Campus Context & User Profile & Actions */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <CampusSelector />
+
+          <div className="h-5 w-px bg-border/80 mx-1 hidden sm:block" />
+
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary ring-2 ring-primary/20">
               {userInitials}
@@ -120,7 +125,6 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                 {userDisplayName}
               </div>
               <div className="text-[10px] font-medium text-muted-foreground capitalize">
-                {user?.role ? String(user.role).toLowerCase().replace(/_/g, ' ') : 'Admin'}
                 {userRole}
               </div>
             </div>

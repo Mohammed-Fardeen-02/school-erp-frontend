@@ -135,7 +135,7 @@ export const AdminRoutes: React.FC = () => {
       <Route
         path="audit-logs"
         element={
-          <PermissionGuard permission="settings.roles_permissions.rbac.view">
+          <PermissionGuard permission="settings.audit_logs.trail.view">
             <AuditLogsPage />
           </PermissionGuard>
         }

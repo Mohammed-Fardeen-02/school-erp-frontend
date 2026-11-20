@@ -204,6 +204,7 @@ export class AuthApi {
           lastName: backendUser.lastName,
           role: userRole,
           avatarUrl: backendUser.avatarUrl || undefined,
+          userType: backendUser.userType,
         },
         workspaces,
         token: tokens.accessToken,

@@ -19,6 +19,7 @@ import type {
   QuotaEntitlement,
   AuditLogRecord,
   AuditLogFilters,
+  PaginatedAuditLogsResult,
   TenantConfigurationDto,
   TenantStorageConfig,
   TenantRazorpayConfig,
@@ -148,62 +149,6 @@ const MOCK_INVOICES: BillingInvoice[] = [
     paymentMethod: 'Visa •••• 4242',
     paidAt: '2025-01-15T09:30:00Z',
     downloadUrl: '#',
-  },
-];
-
-const MOCK_AUDIT_LOGS: AuditLogRecord[] = [
-  {
-    id: 'aud_001',
-    actorName: 'Eleanor Vance',
-    actorEmail: 'admin@erp.com',
-    action: 'ROLE_CAPABILITIES_UPDATED',
-    entity: 'Role',
-    entityId: 'role-exam-officer',
-    previousState: {
-      roleCode: 'EXAM_OFFICER',
-      permissionsCount: 8,
-    },
-    newState: {
-      roleCode: 'EXAM_OFFICER',
-      permissionsCount: 14,
-      updatedActions: ['exams.grades.publish', 'exams.hall_tickets.generate'],
-    },
-    ipAddress: '192.168.1.45',
-    userAgent: 'Chrome 131 on Windows 11',
-    createdAt: '2026-11-12T10:14:22Z',
-  },
-  {
-    id: 'aud_002',
-    actorName: 'Arthur Pendelton',
-    actorEmail: 'orgadmin@greenwood.edu',
-    action: 'USER_ROLE_ASSIGNED',
-    entity: 'UserRole',
-    entityId: 'usr_teacher_003',
-    previousState: null,
-    newState: {
-      userId: 'usr_teacher_003',
-      roleCode: 'TEACHER',
-      locationId: 'loc_north_002',
-    },
-    ipAddress: '10.0.0.12',
-    userAgent: 'Safari 18 on macOS',
-    createdAt: '2026-11-12T09:32:00Z',
-  },
-  {
-    id: 'aud_003',
-    actorName: 'System Security',
-    actorEmail: 'security@erp.internal',
-    action: 'LOGIN_SUCCESS',
-    entity: 'Session',
-    entityId: 'sess_001',
-    previousState: null,
-    newState: {
-      ipAddress: '192.168.1.45',
-      device: 'Windows 11 PC',
-    },
-    ipAddress: '192.168.1.45',
-    userAgent: 'Chrome 131',
-    createdAt: '2026-11-12T08:00:00Z',
   },
 ];
 
@@ -590,39 +535,56 @@ export class AdminApi {
   // ----------------------------------------
   // 7. Audit & Activity Logs
   // ----------------------------------------
-  static async listAuditLogs(filters: AuditLogFilters = {}): Promise<{
-    logs: AuditLogRecord[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    try {
-      const params = new URLSearchParams();
-      if (filters.search) params.append('search', filters.search);
-      if (filters.action) params.append('action', filters.action);
-      if (filters.entity) params.append('entity', filters.entity);
-      if (filters.page) params.append('page', String(filters.page));
-      if (filters.limit) params.append('limit', String(filters.limit));
+  static async listAuditLogs(filters: AuditLogFilters = {}): Promise<PaginatedAuditLogsResult> {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.action && filters.action !== 'ALL') params.append('action', filters.action);
+    if (filters.entity && filters.entity !== 'ALL') params.append('entity', filters.entity);
+    if (filters.userId) params.append('userId', filters.userId);
+    if (filters.locationId && filters.locationId !== 'ALL') params.append('locationId', filters.locationId);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.limit) params.append('limit', String(filters.limit));
 
-      const queryStr = params.toString() ? `?${params.toString()}` : '';
-      const res = await apiClient.get<PaginatedApiResponse<AuditLogRecord>>(`/audit-logs${queryStr}`);
-      return {
-        logs: res.data || MOCK_AUDIT_LOGS,
-        total: res.meta?.total ?? MOCK_AUDIT_LOGS.length,
-        page: res.meta?.page ?? filters.page ?? 1,
-        limit: res.meta?.limit ?? filters.limit ?? 10,
-        totalPages: res.meta?.totalPages ?? 1,
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiClient.get<{
+      success: boolean;
+      data: AuditLogRecord[];
+      meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
       };
-    } catch {
-      return {
-        logs: MOCK_AUDIT_LOGS,
-        total: MOCK_AUDIT_LOGS.length,
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-      };
-    }
+      message?: string;
+    }>(`/audit-logs${queryStr}`);
+
+    return {
+      logs: res.data || [],
+      total: res.meta?.total ?? res.data?.length ?? 0,
+      page: res.meta?.page ?? filters.page ?? 1,
+      limit: res.meta?.limit ?? filters.limit ?? 10,
+      totalPages: res.meta?.totalPages ?? 1,
+    };
+  }
+
+  static async getAuditLogById(id: string): Promise<AuditLogRecord> {
+    const res = await apiClient.get<ApiResponse<AuditLogRecord>>(`/audit-logs/${id}`);
+    return res.data;
+  }
+
+  static async exportAuditLogs(filters: AuditLogFilters = {}): Promise<{ blob: Blob; filename: string }> {
+    const params: Record<string, string | number> = { format: 'csv' };
+    if (filters.search) params.search = filters.search;
+    if (filters.action && filters.action !== 'ALL') params.action = filters.action;
+    if (filters.entity && filters.entity !== 'ALL') params.entity = filters.entity;
+    if (filters.userId) params.userId = filters.userId;
+    if (filters.locationId && filters.locationId !== 'ALL') params.locationId = filters.locationId;
+    if (filters.startDate) params.startDate = filters.startDate;
+    if (filters.endDate) params.endDate = filters.endDate;
+
+    return apiClient.downloadFile('/audit-logs/export', { params });
   }
 
   // ----------------------------------------

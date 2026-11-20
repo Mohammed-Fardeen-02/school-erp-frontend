@@ -16,6 +16,7 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   phone?: string;
+  userType?: 'PLATFORM' | 'TENANT';
 }
 
 export interface SchoolWorkspace {
@@ -57,7 +58,7 @@ export interface ModuleDefinition {
   id: string;
   name: string;
   description: string;
-  category: 'academic' | 'administrative' | 'financial' | 'system';
+  category: 'academic' | 'administrative' | 'financial' | 'campus-life';
   icon: string;
   route: string;
   permissionKey: string;

@@ -1,24 +1,58 @@
 import * as React from 'react';
 import { Search, Sparkles } from 'lucide-react';
-import { ERP_MODULES } from '@/app/config/modules.config';
+import { ERP_MODULES, checkModulePermission, type ModuleConfig } from '@/app/config/modules.config';
 import { useAuthStore } from '@/stores/auth-store';
-import { WorkspaceHeader, AppIconTile } from '../components';
+import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
+import { useEffectivePermissions } from '@/features/roles-permissions/hooks/use-effective-permissions';
+import { WorkspaceHeader, AppIconTile, type ModuleAccessStatus } from '../components';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Modules' },
   { id: 'academic', label: 'Academic Core' },
   { id: 'administrative', label: 'Administration' },
   { id: 'financial', label: 'Finance' },
-  { id: 'core', label: 'Campus Life' },
-  { id: 'system', label: 'System' },
+  { id: 'campus-life', label: 'Campus Life' },
 ];
 
 export const WorkspaceLauncherPage: React.FC = () => {
-  const { hasModuleAccess, getActiveWorkspace } = useAuthStore();
+  const { user, hasModuleAccess, getActiveWorkspace } = useAuthStore();
   const activeWorkspace = getActiveWorkspace();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.userType === 'PLATFORM';
+
+  const { checkPermission } = usePermission();
+  const { permissionsSet } = useEffectivePermissions();
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
+
+  // Authoritative permission evaluator for module access using shared helper
+  const isModulePermitted = React.useCallback(
+    (module: ModuleConfig): boolean => {
+      return checkModulePermission(module, permissionsSet, checkPermission, isSuperAdmin);
+    },
+    [isSuperAdmin, checkPermission, permissionsSet]
+  );
+
+  // Authoritative 4-state availability resolver
+  const getModuleStatus = React.useCallback(
+    (module: ModuleConfig): ModuleAccessStatus => {
+      const isSubscribed = hasModuleAccess(module.id);
+      const hasPermission = isModulePermitted(module);
+      const isOperational = Boolean(module.isImplemented);
+
+      if (!isSubscribed) {
+        return 'unsubscribed';
+      }
+      if (!hasPermission) {
+        return 'unauthorized';
+      }
+      if (!isOperational) {
+        return 'unimplemented';
+      }
+      return 'available';
+    },
+    [hasModuleAccess, checkModulePermission]
+  );
 
   // Filter modules by search and category
   const filteredModules = ERP_MODULES.filter(m => {
@@ -33,6 +67,8 @@ export const WorkspaceLauncherPage: React.FC = () => {
     if (selectedCategory === 'all') return true;
     return m.category === selectedCategory;
   });
+
+  const accessibleCount = filteredModules.filter(m => getModuleStatus(m) === 'available').length;
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
@@ -52,7 +88,7 @@ export const WorkspaceLauncherPage: React.FC = () => {
               </h1>
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
-                {filteredModules.length} Accessible
+                {filteredModules.length} Modules ({accessibleCount} Accessible)
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -86,7 +122,8 @@ export const WorkspaceLauncherPage: React.FC = () => {
               <AppIconTile
                 key={module.id}
                 module={module}
-                isPermitted={hasModuleAccess(module.id)}
+                status={getModuleStatus(module)}
+                isPermitted={getModuleStatus(module) === 'available'}
               />
             ))}
           </div>

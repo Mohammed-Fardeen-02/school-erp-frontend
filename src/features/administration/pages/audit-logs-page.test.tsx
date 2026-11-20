@@ -228,5 +228,46 @@ describe('AuditLogsPage Directory Component', () => {
 
     expect(await screen.findByText('Eleanor Vance')).toBeInTheDocument();
   });
+
+  it('restricts campus selector and locks query when user is campus-scoped', async () => {
+    const { useAuthStore } = await import('@/stores/auth-store');
+    useAuthStore.setState({
+      activeLocationId: 'loc_north',
+      user: {
+        id: 'usr_campus_lead',
+        email: 'lead@school.edu',
+        firstName: 'Campus',
+        lastName: 'Lead',
+        role: 'STAFF',
+      },
+    });
+
+    renderPage();
+
+    const campusSelect = screen.getByRole('combobox', { name: /filter by campus location/i });
+    expect(campusSelect).toBeDisabled();
+    expect(await screen.findByText('North Campus (Assigned Scope)')).toBeInTheDocument();
+    expect(screen.queryByText('All Campus Scopes')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(AdminApi.listAuditLogs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          locationId: 'loc_north',
+        })
+      );
+    });
+
+    // Reset store
+    useAuthStore.setState({ activeLocationId: null, user: null });
+  });
+
+  it('displays explicitly labelled current-page metrics alongside server total', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Total Audit Trails')).toBeInTheDocument();
+    expect(screen.getByText('Page RBAC Mutations')).toBeInTheDocument();
+    expect(screen.getByText('Page Auth Events')).toBeInTheDocument();
+    expect(screen.getByText('Page Target Entities')).toBeInTheDocument();
+  });
 });
 

@@ -259,9 +259,20 @@ export class ApiClient {
       let filename = 'download';
       const disposition = response.headers.get('content-disposition');
       if (disposition) {
-        const filenameMatch = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '').trim();
+        // RFC 5987 / RFC 6266: check for UTF-8 encoded filename*
+        const utf8Match = disposition.match(/filename\*\s*=\s*(?:UTF-8'')?([^;\n]+)/i);
+        if (utf8Match && utf8Match[1]) {
+          try {
+            filename = decodeURIComponent(utf8Match[1].replace(/['"]/g, '').trim());
+          } catch {
+            filename = utf8Match[1].replace(/['"]/g, '').trim();
+          }
+        } else {
+          // Standard filename="..." or filename=...
+          const standardMatch = disposition.match(/filename\s*=\s*((['"]).*?\2|[^;\n]*)/i);
+          if (standardMatch && standardMatch[1]) {
+            filename = standardMatch[1].replace(/['"]/g, '').trim();
+          }
         }
       }
 

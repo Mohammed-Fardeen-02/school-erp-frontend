@@ -21,15 +21,21 @@ import { useToast } from '@/components/feedback/toast';
 import { useAuditLogs, useAdminCampuses, useExportAuditLogs } from '../hooks/use-admin';
 import { usePermission } from '@/features/roles-permissions/hooks/use-permission';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useAuthStore } from '@/stores/auth-store';
 import type { AuditLogRecord, AuditLogFilters } from '../types/admin.types';
 
 export const AuditLogsPage: React.FC = () => {
+  // Authorization & Tenancy Scoping
+  const activeLocationId = useAuthStore((s) => s.activeLocationId);
+  const isSuperAdmin = useAuthStore((s) => s.user?.role === 'SUPER_ADMIN');
+  const isCampusScoped = Boolean(!isSuperAdmin && activeLocationId);
+
   // Filter States
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, 300);
   const [actionFilter, setActionFilter] = useState('ALL');
   const [entityFilter, setEntityFilter] = useState('ALL');
-  const [campusFilter, setCampusFilter] = useState('ALL');
+  const [campusFilter, setCampusFilter] = useState(() => (isCampusScoped ? activeLocationId! : 'ALL'));
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
@@ -55,7 +61,11 @@ export const AuditLogsPage: React.FC = () => {
     if (debouncedSearch.trim()) f.search = debouncedSearch.trim();
     if (actionFilter !== 'ALL') f.action = actionFilter;
     if (entityFilter !== 'ALL') f.entity = entityFilter;
-    if (campusFilter !== 'ALL') f.locationId = campusFilter;
+    if (isCampusScoped) {
+      f.locationId = activeLocationId!;
+    } else if (campusFilter !== 'ALL') {
+      f.locationId = campusFilter;
+    }
     if (startDate) f.startDate = new Date(startDate).toISOString();
     if (endDate) {
       const end = new Date(endDate);
@@ -63,7 +73,7 @@ export const AuditLogsPage: React.FC = () => {
       f.endDate = end.toISOString();
     }
     return f;
-  }, [debouncedSearch, actionFilter, entityFilter, campusFilter, startDate, endDate, page, limit]);
+  }, [debouncedSearch, actionFilter, entityFilter, isCampusScoped, activeLocationId, campusFilter, startDate, endDate, page, limit]);
 
   // Query audit logs
   const {
@@ -113,7 +123,7 @@ export const AuditLogsPage: React.FC = () => {
     setSearchInput('');
     setActionFilter('ALL');
     setEntityFilter('ALL');
-    setCampusFilter('ALL');
+    setCampusFilter(isCampusScoped ? activeLocationId! : 'ALL');
     setStartDate('');
     setEndDate('');
     setPage(1);
@@ -147,7 +157,7 @@ export const AuditLogsPage: React.FC = () => {
     }
   };
 
-  // KPI Metrics (Calculated from real data and server totals)
+  // KPI Metrics (Accurately partitioned: server-wide totals vs current-page metrics)
   const stats: AdminStatItem[] = useMemo(() => {
     const authCount = allLogs.filter((l) =>
       l.action.includes('LOGIN') || l.action.includes('LOGOUT') || l.action.includes('PASSWORD') || l.action.includes('SESSION')
@@ -162,28 +172,28 @@ export const AuditLogsPage: React.FC = () => {
         title: 'Total Audit Trails',
         value: totalCount,
         icon: History,
-        subtitle: 'Recorded institutional events',
+        subtitle: 'System-wide recorded events',
         color: 'purple',
       },
       {
-        title: 'RBAC & Access Mutations',
+        title: 'Page RBAC Mutations',
         value: rbacCount,
         icon: ShieldCheck,
-        subtitle: 'Role & permission changes (page)',
+        subtitle: 'Role & permission changes (current page)',
         color: 'orange',
       },
       {
-        title: 'Authentication & Session Events',
+        title: 'Page Auth Events',
         value: authCount,
         icon: History,
-        subtitle: 'Sign-in & credential events (page)',
+        subtitle: 'Sign-in & credential events (current page)',
         color: 'green',
       },
       {
-        title: 'Monitored Target Entities',
+        title: 'Page Target Entities',
         value: uniqueEntities,
         icon: Layers,
-        subtitle: 'Distinct resources modified (page)',
+        subtitle: 'Distinct entities modified (current page)',
         color: 'blue',
       },
     ];
@@ -333,15 +343,21 @@ export const AuditLogsPage: React.FC = () => {
           {/* Campus Filter */}
           <div>
             <select
-              value={campusFilter}
+              value={isCampusScoped ? activeLocationId! : campusFilter}
               onChange={(e) => handleCampusChange(e.target.value)}
+              disabled={isCampusScoped}
               aria-label="Filter by Campus Location"
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+              className={`w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
+                isCampusScoped ? 'opacity-75 cursor-not-allowed bg-surface-muted/50' : ''
+              }`}
             >
-              <option value="ALL">All Campus Scopes</option>
-              {campuses.map((campus) => (
+              {!isCampusScoped && <option value="ALL">All Campus Scopes</option>}
+              {(isCampusScoped
+                ? campuses.filter((c) => c.id === activeLocationId)
+                : campuses
+              ).map((campus) => (
                 <option key={campus.id} value={campus.id}>
-                  {campus.name}
+                  {campus.name} {isCampusScoped ? '(Assigned Scope)' : ''}
                 </option>
               ))}
             </select>
